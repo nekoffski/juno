@@ -1,0 +1,2 @@
+# jbeam
+Home automatization server.
