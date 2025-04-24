@@ -3,15 +3,16 @@
 #include <vector>
 #include <functional>
 
-#include <kstd/Scope.hh>
-
 #include <grpcpp/grpcpp.h>
 
 #include <kstd/Core.hh>
+#include <kstd/Scope.hh>
 #include <kstd/memory/UniquePtr.hh>
 #include <kstd/async/Utils.hh>
 #include <kstd/async/Core.hh>
 #include <kstd/Log.hh>
+
+#include "Core.hh"
 
 namespace juno {
 
@@ -193,7 +194,7 @@ public:
 
     struct Config {
         std::string host;
-        kstd::u16 port;
+        u16 port;
     };
 
     explicit AsyncGrpcServer(boost::asio::io_context& ctx, const Config& config);

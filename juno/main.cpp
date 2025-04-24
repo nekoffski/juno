@@ -1,52 +1,23 @@
-#include <iostream>
-#include <memory>
-#include <string>
-#include <thread>
 
-#include <fmt/core.h>
+#include "Core.hh"
+#include "Config.hh"
+#include "Server.hh"
 
-#include "proto/juno.pb.h"
-#include "proto/juno.grpc.pb.h"
+int main(int argc, char** argv) {
+    juno::log::init("juno");
+    juno::log::expect(argc == 2, "Config path is required as input argument");
 
-#include "net/AsyncGrpcServer.hh"
+    kstd::GlobalFileSystem fs;
 
-class GrpcServer : public juno::AsyncGrpcServer {
-public:
-    explicit GrpcServer(boost::asio::io_context& ctx
-    ) : AsyncGrpcServer(ctx, Config{ .host = "0.0.0.0", .port = 8001 }) {}
-
-    void build(Builder&& builder) override {
-        builder.addService<test::JunoService::AsyncService>()
-          .addRequest<test::PingRequest, test::PongResponse>(
-            &test::JunoService::AsyncService::RequestPing,
-            [](const test::PingRequest& r
-            ) -> juno::ResponseWrapper<test::PongResponse> {
-                test::PongResponse res{};
-                res.set_uuid("ping");
-                co_return std::make_pair(res, grpc::Status::OK);
-            }
-          )
-          .addRequest<test::PingRequest, test::PongResponse>(
-            &test::JunoService::AsyncService::RequestTest,
-            [](const test::PingRequest& r
-            ) -> juno::ResponseWrapper<test::PongResponse> {
-                test::PongResponse res{};
-                res.set_uuid("test");
-                co_return std::make_pair(res, grpc::Status::OK);
-            }
-          );
+    try {
+        auto config = juno::Config::fromFile(std::string{ argv[1] }, fs);
+        return juno::Server{ config, fs }.start();
+    } catch (const juno::Error& e) {
+        juno::log::error("Unhandled exception: {} - {}", e.what(), e.where());
+        return -1;
+    } catch (const std::exception& e) {
+        juno::log::error("Unhandled unknown exception: {}", e.what());
+        return -2;
     }
-};
-
-int main() {
-    kstd::log::init("juno");
-
-    boost::asio::io_context ctx;
-
-    GrpcServer server{ ctx };
-    server.startAsync();
-
-    ctx.run();
-
     return 0;
 }
