@@ -3,7 +3,6 @@ project(juno-server)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_BUILD_TYPE Debug)
-set(JUNO_INCLUDE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 # set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
 # set (CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
@@ -12,8 +11,14 @@ set(GCC_COVERAGE_COMPILE_FLAGS "--coverage -O0 -fprofile-arcs -ftest-coverage -f
 set(GCC_COVERAGE_LINK_FLAGS "-lgcov")
 set(JUNO_COMPILER_FLAGS "")
 
-find_package(kstd CONFIG)
-set(JUNO_LIBS kstd::kstd)
+find_package(kstd CONFIG REQUIRED)
+find_package(Protobuf REQUIRED)
+find_package(gRPC REQUIRED)
+
+set(JUNO_LIBS kstd::kstd gRPC::grpc++ protobuf::libprotobuf)
+set(PROTO_DIR ${CMAKE_CURRENT_SOURCE_DIR}/proto)
+set(PROTO_FILES ${PROTO_DIR}/juno.proto)
+set(JUNO_INCLUDE ${CMAKE_CURRENT_SOURCE_DIR}/juno)
 
 option(JUNO_ENABLE_UNIT_TESTS "Build unit tests" OFF)
 option(JUNO_ENABLE_BENCHMARKS "Build benchmakrs " OFF)
@@ -28,7 +33,7 @@ else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O1")
 endif()
 
-set(JUNO_COMPILER_FLAGS -Wall -Wextra -Wpedantic -Werror)
+set(JUNO_COMPILER_FLAGS -Wall -Wextra -Wpedantic)
 
 if(JUNO_ENABLE_UNIT_TESTS)
     enable_testing()

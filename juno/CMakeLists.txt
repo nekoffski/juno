@@ -2,7 +2,27 @@
 set(JUNO_TARGET juno-server)
 file(GLOB_RECURSE JUNO_SRC ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 
-add_executable(${JUNO_TARGET} ${JUNO_SRC})
-target_include_directories(${JUNO_TARGET} PRIVATE ${JUNO_INCLUDE})
+add_executable(${JUNO_TARGET} ${JUNO_SRC} ${PROTO_SRCS})
+
+protobuf_generate(
+    TARGET ${JUNO_TARGET} 
+    OUT_VAR PROTO_GENERATED_FILES
+    IMPORT_DIRS ${PROTO_DIR}
+    PROTOS ${PROTO_FILES}
+    PROTOC_OUT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/proto)
+set_source_files_properties(${PROTO_GENERATED_FILES} PROPERTIES SKIP_UNITY_BUILD_INCLUSION on)
+
+protobuf_generate(
+    TARGET ${JUNO_TARGET} 
+    OUT_VAR PROTO_GENERATED_FILES
+    LANGUAGE grpc
+    GENERATE_EXTENSIONS .grpc.pb.h .grpc.pb.cc
+    PROTOS ${PROTO_FILES}
+    PLUGIN "protoc-gen-grpc=\$<TARGET_FILE:gRPC::grpc_cpp_plugin>"
+    IMPORT_DIRS ${PROTO_DIR}
+    PROTOC_OUT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/proto)
+set_source_files_properties(${PROTO_GENERATED_FILES} PROPERTIES SKIP_UNITY_BUILD_INCLUSION on)
+
+target_include_directories(${JUNO_TARGET} PRIVATE ${JUNO_INCLUDE} ${Protobuf_INCLUDE_DIRS})
 target_link_libraries(${JUNO_TARGET} PUBLIC ${JUNO_LIBS})
 target_compile_options(${JUNO_TARGET} PRIVATE ${JUNO_COMPILER_FLAGS})
