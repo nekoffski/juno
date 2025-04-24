@@ -1,3 +1,5 @@
+./juno/proto/*pb*
+
 CMakeUserPresets.json
 *_legacy*
 .idea
