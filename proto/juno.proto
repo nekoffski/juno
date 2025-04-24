@@ -1,15 +1,14 @@
 syntax = "proto3";
 
-package test;
+package juno.api;
 
 message PingRequest {
-    string uuid = 1;
+    string magic = 1;
 }
 message PongResponse {
-    string uuid = 1;
+    string magic = 1;
 }
 
 service JunoService {
     rpc Ping (PingRequest) returns (PongResponse);
-    rpc Test(PingRequest) returns (PongResponse);
 }

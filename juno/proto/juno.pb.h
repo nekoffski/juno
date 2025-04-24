@@ -51,20 +51,23 @@ struct TableStruct_juno_2eproto {
 };
 extern const ::google::protobuf::internal::DescriptorTable
     descriptor_table_juno_2eproto;
-namespace test {
+namespace juno {
+namespace api {
 class PingRequest;
 struct PingRequestDefaultTypeInternal;
 extern PingRequestDefaultTypeInternal _PingRequest_default_instance_;
 class PongResponse;
 struct PongResponseDefaultTypeInternal;
 extern PongResponseDefaultTypeInternal _PongResponse_default_instance_;
-}  // namespace test
+}  // namespace api
+}  // namespace juno
 namespace google {
 namespace protobuf {
 }  // namespace protobuf
 }  // namespace google
 
-namespace test {
+namespace juno {
+namespace api {
 
 // ===================================================================
 
@@ -73,7 +76,7 @@ namespace test {
 
 class PongResponse final
     : public ::google::protobuf::Message
-/* @@protoc_insertion_point(class_definition:test.PongResponse) */ {
+/* @@protoc_insertion_point(class_definition:juno.api.PongResponse) */ {
  public:
   inline PongResponse() : PongResponse(nullptr) {}
   ~PongResponse() PROTOBUF_FINAL;
@@ -197,7 +200,7 @@ class PongResponse final
   template <typename T>
   friend ::absl::string_view(
       ::google::protobuf::internal::GetAnyMessageName)();
-  static ::absl::string_view FullMessageName() { return "test.PongResponse"; }
+  static ::absl::string_view FullMessageName() { return "juno.api.PongResponse"; }
 
  protected:
   explicit PongResponse(::google::protobuf::Arena* arena);
@@ -218,31 +221,31 @@ class PongResponse final
 
   // accessors -------------------------------------------------------
   enum : int {
-    kUuidFieldNumber = 1,
+    kMagicFieldNumber = 1,
   };
-  // string uuid = 1;
-  void clear_uuid() ;
-  const std::string& uuid() const;
+  // string magic = 1;
+  void clear_magic() ;
+  const std::string& magic() const;
   template <typename Arg_ = const std::string&, typename... Args_>
-  void set_uuid(Arg_&& arg, Args_... args);
-  std::string* mutable_uuid();
-  PROTOBUF_NODISCARD std::string* release_uuid();
-  void set_allocated_uuid(std::string* value);
+  void set_magic(Arg_&& arg, Args_... args);
+  std::string* mutable_magic();
+  PROTOBUF_NODISCARD std::string* release_magic();
+  void set_allocated_magic(std::string* value);
 
   private:
-  const std::string& _internal_uuid() const;
-  inline PROTOBUF_ALWAYS_INLINE void _internal_set_uuid(
+  const std::string& _internal_magic() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_magic(
       const std::string& value);
-  std::string* _internal_mutable_uuid();
+  std::string* _internal_mutable_magic();
 
   public:
-  // @@protoc_insertion_point(class_scope:test.PongResponse)
+  // @@protoc_insertion_point(class_scope:juno.api.PongResponse)
  private:
   class _Internal;
   friend class ::google::protobuf::internal::TcParser;
   static const ::google::protobuf::internal::TcParseTable<
       0, 1, 0,
-      30, 2>
+      35, 2>
       _table_;
 
   friend class ::google::protobuf::MessageLite;
@@ -259,7 +262,7 @@ class PongResponse final
     inline explicit Impl_(::google::protobuf::internal::InternalVisibility visibility,
                           ::google::protobuf::Arena* arena, const Impl_& from,
                           const PongResponse& from_msg);
-    ::google::protobuf::internal::ArenaStringPtr uuid_;
+    ::google::protobuf::internal::ArenaStringPtr magic_;
     ::google::protobuf::internal::CachedSize _cached_size_;
     PROTOBUF_TSAN_DECLARE_MEMBER
   };
@@ -270,7 +273,7 @@ class PongResponse final
 
 class PingRequest final
     : public ::google::protobuf::Message
-/* @@protoc_insertion_point(class_definition:test.PingRequest) */ {
+/* @@protoc_insertion_point(class_definition:juno.api.PingRequest) */ {
  public:
   inline PingRequest() : PingRequest(nullptr) {}
   ~PingRequest() PROTOBUF_FINAL;
@@ -394,7 +397,7 @@ class PingRequest final
   template <typename T>
   friend ::absl::string_view(
       ::google::protobuf::internal::GetAnyMessageName)();
-  static ::absl::string_view FullMessageName() { return "test.PingRequest"; }
+  static ::absl::string_view FullMessageName() { return "juno.api.PingRequest"; }
 
  protected:
   explicit PingRequest(::google::protobuf::Arena* arena);
@@ -415,31 +418,31 @@ class PingRequest final
 
   // accessors -------------------------------------------------------
   enum : int {
-    kUuidFieldNumber = 1,
+    kMagicFieldNumber = 1,
   };
-  // string uuid = 1;
-  void clear_uuid() ;
-  const std::string& uuid() const;
+  // string magic = 1;
+  void clear_magic() ;
+  const std::string& magic() const;
   template <typename Arg_ = const std::string&, typename... Args_>
-  void set_uuid(Arg_&& arg, Args_... args);
-  std::string* mutable_uuid();
-  PROTOBUF_NODISCARD std::string* release_uuid();
-  void set_allocated_uuid(std::string* value);
+  void set_magic(Arg_&& arg, Args_... args);
+  std::string* mutable_magic();
+  PROTOBUF_NODISCARD std::string* release_magic();
+  void set_allocated_magic(std::string* value);
 
   private:
-  const std::string& _internal_uuid() const;
-  inline PROTOBUF_ALWAYS_INLINE void _internal_set_uuid(
+  const std::string& _internal_magic() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_magic(
       const std::string& value);
-  std::string* _internal_mutable_uuid();
+  std::string* _internal_mutable_magic();
 
   public:
-  // @@protoc_insertion_point(class_scope:test.PingRequest)
+  // @@protoc_insertion_point(class_scope:juno.api.PingRequest)
  private:
   class _Internal;
   friend class ::google::protobuf::internal::TcParser;
   static const ::google::protobuf::internal::TcParseTable<
       0, 1, 0,
-      29, 2>
+      34, 2>
       _table_;
 
   friend class ::google::protobuf::MessageLite;
@@ -456,7 +459,7 @@ class PingRequest final
     inline explicit Impl_(::google::protobuf::internal::InternalVisibility visibility,
                           ::google::protobuf::Arena* arena, const Impl_& from,
                           const PingRequest& from_msg);
-    ::google::protobuf::internal::ArenaStringPtr uuid_;
+    ::google::protobuf::internal::ArenaStringPtr magic_;
     ::google::protobuf::internal::CachedSize _cached_size_;
     PROTOBUF_TSAN_DECLARE_MEMBER
   };
@@ -480,104 +483,104 @@ class PingRequest final
 
 // PingRequest
 
-// string uuid = 1;
-inline void PingRequest::clear_uuid() {
+// string magic = 1;
+inline void PingRequest::clear_magic() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
-  _impl_.uuid_.ClearToEmpty();
+  _impl_.magic_.ClearToEmpty();
 }
-inline const std::string& PingRequest::uuid() const
+inline const std::string& PingRequest::magic() const
     ABSL_ATTRIBUTE_LIFETIME_BOUND {
-  // @@protoc_insertion_point(field_get:test.PingRequest.uuid)
-  return _internal_uuid();
+  // @@protoc_insertion_point(field_get:juno.api.PingRequest.magic)
+  return _internal_magic();
 }
 template <typename Arg_, typename... Args_>
-inline PROTOBUF_ALWAYS_INLINE void PingRequest::set_uuid(Arg_&& arg,
+inline PROTOBUF_ALWAYS_INLINE void PingRequest::set_magic(Arg_&& arg,
                                                      Args_... args) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
-  _impl_.uuid_.Set(static_cast<Arg_&&>(arg), args..., GetArena());
-  // @@protoc_insertion_point(field_set:test.PingRequest.uuid)
+  _impl_.magic_.Set(static_cast<Arg_&&>(arg), args..., GetArena());
+  // @@protoc_insertion_point(field_set:juno.api.PingRequest.magic)
 }
-inline std::string* PingRequest::mutable_uuid() ABSL_ATTRIBUTE_LIFETIME_BOUND {
-  std::string* _s = _internal_mutable_uuid();
-  // @@protoc_insertion_point(field_mutable:test.PingRequest.uuid)
+inline std::string* PingRequest::mutable_magic() ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  std::string* _s = _internal_mutable_magic();
+  // @@protoc_insertion_point(field_mutable:juno.api.PingRequest.magic)
   return _s;
 }
-inline const std::string& PingRequest::_internal_uuid() const {
+inline const std::string& PingRequest::_internal_magic() const {
   ::google::protobuf::internal::TSanRead(&_impl_);
-  return _impl_.uuid_.Get();
+  return _impl_.magic_.Get();
 }
-inline void PingRequest::_internal_set_uuid(const std::string& value) {
+inline void PingRequest::_internal_set_magic(const std::string& value) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
-  _impl_.uuid_.Set(value, GetArena());
+  _impl_.magic_.Set(value, GetArena());
 }
-inline std::string* PingRequest::_internal_mutable_uuid() {
+inline std::string* PingRequest::_internal_mutable_magic() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
-  return _impl_.uuid_.Mutable( GetArena());
+  return _impl_.magic_.Mutable( GetArena());
 }
-inline std::string* PingRequest::release_uuid() {
+inline std::string* PingRequest::release_magic() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
-  // @@protoc_insertion_point(field_release:test.PingRequest.uuid)
-  return _impl_.uuid_.Release();
+  // @@protoc_insertion_point(field_release:juno.api.PingRequest.magic)
+  return _impl_.magic_.Release();
 }
-inline void PingRequest::set_allocated_uuid(std::string* value) {
+inline void PingRequest::set_allocated_magic(std::string* value) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
-  _impl_.uuid_.SetAllocated(value, GetArena());
-  if (::google::protobuf::internal::DebugHardenForceCopyDefaultString() && _impl_.uuid_.IsDefault()) {
-    _impl_.uuid_.Set("", GetArena());
+  _impl_.magic_.SetAllocated(value, GetArena());
+  if (::google::protobuf::internal::DebugHardenForceCopyDefaultString() && _impl_.magic_.IsDefault()) {
+    _impl_.magic_.Set("", GetArena());
   }
-  // @@protoc_insertion_point(field_set_allocated:test.PingRequest.uuid)
+  // @@protoc_insertion_point(field_set_allocated:juno.api.PingRequest.magic)
 }
 
 // -------------------------------------------------------------------
 
 // PongResponse
 
-// string uuid = 1;
-inline void PongResponse::clear_uuid() {
+// string magic = 1;
+inline void PongResponse::clear_magic() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
-  _impl_.uuid_.ClearToEmpty();
+  _impl_.magic_.ClearToEmpty();
 }
-inline const std::string& PongResponse::uuid() const
+inline const std::string& PongResponse::magic() const
     ABSL_ATTRIBUTE_LIFETIME_BOUND {
-  // @@protoc_insertion_point(field_get:test.PongResponse.uuid)
-  return _internal_uuid();
+  // @@protoc_insertion_point(field_get:juno.api.PongResponse.magic)
+  return _internal_magic();
 }
 template <typename Arg_, typename... Args_>
-inline PROTOBUF_ALWAYS_INLINE void PongResponse::set_uuid(Arg_&& arg,
+inline PROTOBUF_ALWAYS_INLINE void PongResponse::set_magic(Arg_&& arg,
                                                      Args_... args) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
-  _impl_.uuid_.Set(static_cast<Arg_&&>(arg), args..., GetArena());
-  // @@protoc_insertion_point(field_set:test.PongResponse.uuid)
+  _impl_.magic_.Set(static_cast<Arg_&&>(arg), args..., GetArena());
+  // @@protoc_insertion_point(field_set:juno.api.PongResponse.magic)
 }
-inline std::string* PongResponse::mutable_uuid() ABSL_ATTRIBUTE_LIFETIME_BOUND {
-  std::string* _s = _internal_mutable_uuid();
-  // @@protoc_insertion_point(field_mutable:test.PongResponse.uuid)
+inline std::string* PongResponse::mutable_magic() ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  std::string* _s = _internal_mutable_magic();
+  // @@protoc_insertion_point(field_mutable:juno.api.PongResponse.magic)
   return _s;
 }
-inline const std::string& PongResponse::_internal_uuid() const {
+inline const std::string& PongResponse::_internal_magic() const {
   ::google::protobuf::internal::TSanRead(&_impl_);
-  return _impl_.uuid_.Get();
+  return _impl_.magic_.Get();
 }
-inline void PongResponse::_internal_set_uuid(const std::string& value) {
+inline void PongResponse::_internal_set_magic(const std::string& value) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
-  _impl_.uuid_.Set(value, GetArena());
+  _impl_.magic_.Set(value, GetArena());
 }
-inline std::string* PongResponse::_internal_mutable_uuid() {
+inline std::string* PongResponse::_internal_mutable_magic() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
-  return _impl_.uuid_.Mutable( GetArena());
+  return _impl_.magic_.Mutable( GetArena());
 }
-inline std::string* PongResponse::release_uuid() {
+inline std::string* PongResponse::release_magic() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
-  // @@protoc_insertion_point(field_release:test.PongResponse.uuid)
-  return _impl_.uuid_.Release();
+  // @@protoc_insertion_point(field_release:juno.api.PongResponse.magic)
+  return _impl_.magic_.Release();
 }
-inline void PongResponse::set_allocated_uuid(std::string* value) {
+inline void PongResponse::set_allocated_magic(std::string* value) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
-  _impl_.uuid_.SetAllocated(value, GetArena());
-  if (::google::protobuf::internal::DebugHardenForceCopyDefaultString() && _impl_.uuid_.IsDefault()) {
-    _impl_.uuid_.Set("", GetArena());
+  _impl_.magic_.SetAllocated(value, GetArena());
+  if (::google::protobuf::internal::DebugHardenForceCopyDefaultString() && _impl_.magic_.IsDefault()) {
+    _impl_.magic_.Set("", GetArena());
   }
-  // @@protoc_insertion_point(field_set_allocated:test.PongResponse.uuid)
+  // @@protoc_insertion_point(field_set_allocated:juno.api.PongResponse.magic)
 }
 
 #ifdef __GNUC__
@@ -585,7 +588,8 @@ inline void PongResponse::set_allocated_uuid(std::string* value) {
 #endif  // __GNUC__
 
 // @@protoc_insertion_point(namespace_scope)
-}  // namespace test
+}  // namespace api
+}  // namespace juno
 
 
 // @@protoc_insertion_point(global_scope)

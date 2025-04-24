@@ -26,71 +26,52 @@
 #include <grpcpp/support/sync_stream.h>
 #include <grpcpp/ports_def.inc>
 
-namespace test {
+namespace juno {
+namespace api {
 
 class JunoService final {
  public:
   static constexpr char const* service_full_name() {
-    return "test.JunoService";
+    return "juno.api.JunoService";
   }
   class StubInterface {
    public:
     virtual ~StubInterface() {}
-    virtual ::grpc::Status Ping(::grpc::ClientContext* context, const ::test::PingRequest& request, ::test::PongResponse* response) = 0;
-    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::test::PongResponse>> AsyncPing(::grpc::ClientContext* context, const ::test::PingRequest& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::test::PongResponse>>(AsyncPingRaw(context, request, cq));
+    virtual ::grpc::Status Ping(::grpc::ClientContext* context, const ::juno::api::PingRequest& request, ::juno::api::PongResponse* response) = 0;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::juno::api::PongResponse>> AsyncPing(::grpc::ClientContext* context, const ::juno::api::PingRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::juno::api::PongResponse>>(AsyncPingRaw(context, request, cq));
     }
-    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::test::PongResponse>> PrepareAsyncPing(::grpc::ClientContext* context, const ::test::PingRequest& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::test::PongResponse>>(PrepareAsyncPingRaw(context, request, cq));
-    }
-    virtual ::grpc::Status Test(::grpc::ClientContext* context, const ::test::PingRequest& request, ::test::PongResponse* response) = 0;
-    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::test::PongResponse>> AsyncTest(::grpc::ClientContext* context, const ::test::PingRequest& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::test::PongResponse>>(AsyncTestRaw(context, request, cq));
-    }
-    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::test::PongResponse>> PrepareAsyncTest(::grpc::ClientContext* context, const ::test::PingRequest& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::test::PongResponse>>(PrepareAsyncTestRaw(context, request, cq));
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::juno::api::PongResponse>> PrepareAsyncPing(::grpc::ClientContext* context, const ::juno::api::PingRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::juno::api::PongResponse>>(PrepareAsyncPingRaw(context, request, cq));
     }
     class async_interface {
      public:
       virtual ~async_interface() {}
-      virtual void Ping(::grpc::ClientContext* context, const ::test::PingRequest* request, ::test::PongResponse* response, std::function<void(::grpc::Status)>) = 0;
-      virtual void Ping(::grpc::ClientContext* context, const ::test::PingRequest* request, ::test::PongResponse* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      virtual void Test(::grpc::ClientContext* context, const ::test::PingRequest* request, ::test::PongResponse* response, std::function<void(::grpc::Status)>) = 0;
-      virtual void Test(::grpc::ClientContext* context, const ::test::PingRequest* request, ::test::PongResponse* response, ::grpc::ClientUnaryReactor* reactor) = 0;
+      virtual void Ping(::grpc::ClientContext* context, const ::juno::api::PingRequest* request, ::juno::api::PongResponse* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void Ping(::grpc::ClientContext* context, const ::juno::api::PingRequest* request, ::juno::api::PongResponse* response, ::grpc::ClientUnaryReactor* reactor) = 0;
     };
     typedef class async_interface experimental_async_interface;
     virtual class async_interface* async() { return nullptr; }
     class async_interface* experimental_async() { return async(); }
    private:
-    virtual ::grpc::ClientAsyncResponseReaderInterface< ::test::PongResponse>* AsyncPingRaw(::grpc::ClientContext* context, const ::test::PingRequest& request, ::grpc::CompletionQueue* cq) = 0;
-    virtual ::grpc::ClientAsyncResponseReaderInterface< ::test::PongResponse>* PrepareAsyncPingRaw(::grpc::ClientContext* context, const ::test::PingRequest& request, ::grpc::CompletionQueue* cq) = 0;
-    virtual ::grpc::ClientAsyncResponseReaderInterface< ::test::PongResponse>* AsyncTestRaw(::grpc::ClientContext* context, const ::test::PingRequest& request, ::grpc::CompletionQueue* cq) = 0;
-    virtual ::grpc::ClientAsyncResponseReaderInterface< ::test::PongResponse>* PrepareAsyncTestRaw(::grpc::ClientContext* context, const ::test::PingRequest& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::juno::api::PongResponse>* AsyncPingRaw(::grpc::ClientContext* context, const ::juno::api::PingRequest& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::juno::api::PongResponse>* PrepareAsyncPingRaw(::grpc::ClientContext* context, const ::juno::api::PingRequest& request, ::grpc::CompletionQueue* cq) = 0;
   };
   class Stub final : public StubInterface {
    public:
     Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options = ::grpc::StubOptions());
-    ::grpc::Status Ping(::grpc::ClientContext* context, const ::test::PingRequest& request, ::test::PongResponse* response) override;
-    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::test::PongResponse>> AsyncPing(::grpc::ClientContext* context, const ::test::PingRequest& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::test::PongResponse>>(AsyncPingRaw(context, request, cq));
+    ::grpc::Status Ping(::grpc::ClientContext* context, const ::juno::api::PingRequest& request, ::juno::api::PongResponse* response) override;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::juno::api::PongResponse>> AsyncPing(::grpc::ClientContext* context, const ::juno::api::PingRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::juno::api::PongResponse>>(AsyncPingRaw(context, request, cq));
     }
-    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::test::PongResponse>> PrepareAsyncPing(::grpc::ClientContext* context, const ::test::PingRequest& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::test::PongResponse>>(PrepareAsyncPingRaw(context, request, cq));
-    }
-    ::grpc::Status Test(::grpc::ClientContext* context, const ::test::PingRequest& request, ::test::PongResponse* response) override;
-    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::test::PongResponse>> AsyncTest(::grpc::ClientContext* context, const ::test::PingRequest& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::test::PongResponse>>(AsyncTestRaw(context, request, cq));
-    }
-    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::test::PongResponse>> PrepareAsyncTest(::grpc::ClientContext* context, const ::test::PingRequest& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::test::PongResponse>>(PrepareAsyncTestRaw(context, request, cq));
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::juno::api::PongResponse>> PrepareAsyncPing(::grpc::ClientContext* context, const ::juno::api::PingRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::juno::api::PongResponse>>(PrepareAsyncPingRaw(context, request, cq));
     }
     class async final :
       public StubInterface::async_interface {
      public:
-      void Ping(::grpc::ClientContext* context, const ::test::PingRequest* request, ::test::PongResponse* response, std::function<void(::grpc::Status)>) override;
-      void Ping(::grpc::ClientContext* context, const ::test::PingRequest* request, ::test::PongResponse* response, ::grpc::ClientUnaryReactor* reactor) override;
-      void Test(::grpc::ClientContext* context, const ::test::PingRequest* request, ::test::PongResponse* response, std::function<void(::grpc::Status)>) override;
-      void Test(::grpc::ClientContext* context, const ::test::PingRequest* request, ::test::PongResponse* response, ::grpc::ClientUnaryReactor* reactor) override;
+      void Ping(::grpc::ClientContext* context, const ::juno::api::PingRequest* request, ::juno::api::PongResponse* response, std::function<void(::grpc::Status)>) override;
+      void Ping(::grpc::ClientContext* context, const ::juno::api::PingRequest* request, ::juno::api::PongResponse* response, ::grpc::ClientUnaryReactor* reactor) override;
      private:
       friend class Stub;
       explicit async(Stub* stub): stub_(stub) { }
@@ -102,12 +83,9 @@ class JunoService final {
    private:
     std::shared_ptr< ::grpc::ChannelInterface> channel_;
     class async async_stub_{this};
-    ::grpc::ClientAsyncResponseReader< ::test::PongResponse>* AsyncPingRaw(::grpc::ClientContext* context, const ::test::PingRequest& request, ::grpc::CompletionQueue* cq) override;
-    ::grpc::ClientAsyncResponseReader< ::test::PongResponse>* PrepareAsyncPingRaw(::grpc::ClientContext* context, const ::test::PingRequest& request, ::grpc::CompletionQueue* cq) override;
-    ::grpc::ClientAsyncResponseReader< ::test::PongResponse>* AsyncTestRaw(::grpc::ClientContext* context, const ::test::PingRequest& request, ::grpc::CompletionQueue* cq) override;
-    ::grpc::ClientAsyncResponseReader< ::test::PongResponse>* PrepareAsyncTestRaw(::grpc::ClientContext* context, const ::test::PingRequest& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::juno::api::PongResponse>* AsyncPingRaw(::grpc::ClientContext* context, const ::juno::api::PingRequest& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::juno::api::PongResponse>* PrepareAsyncPingRaw(::grpc::ClientContext* context, const ::juno::api::PingRequest& request, ::grpc::CompletionQueue* cq) override;
     const ::grpc::internal::RpcMethod rpcmethod_Ping_;
-    const ::grpc::internal::RpcMethod rpcmethod_Test_;
   };
   static std::unique_ptr<Stub> NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options = ::grpc::StubOptions());
 
@@ -115,8 +93,7 @@ class JunoService final {
    public:
     Service();
     virtual ~Service();
-    virtual ::grpc::Status Ping(::grpc::ServerContext* context, const ::test::PingRequest* request, ::test::PongResponse* response);
-    virtual ::grpc::Status Test(::grpc::ServerContext* context, const ::test::PingRequest* request, ::test::PongResponse* response);
+    virtual ::grpc::Status Ping(::grpc::ServerContext* context, const ::juno::api::PingRequest* request, ::juno::api::PongResponse* response);
   };
   template <class BaseClass>
   class WithAsyncMethod_Ping : public BaseClass {
@@ -130,35 +107,15 @@ class JunoService final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status Ping(::grpc::ServerContext* /*context*/, const ::test::PingRequest* /*request*/, ::test::PongResponse* /*response*/) override {
+    ::grpc::Status Ping(::grpc::ServerContext* /*context*/, const ::juno::api::PingRequest* /*request*/, ::juno::api::PongResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    void RequestPing(::grpc::ServerContext* context, ::test::PingRequest* request, ::grpc::ServerAsyncResponseWriter< ::test::PongResponse>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+    void RequestPing(::grpc::ServerContext* context, ::juno::api::PingRequest* request, ::grpc::ServerAsyncResponseWriter< ::juno::api::PongResponse>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
       ::grpc::Service::RequestAsyncUnary(0, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
-  template <class BaseClass>
-  class WithAsyncMethod_Test : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
-    WithAsyncMethod_Test() {
-      ::grpc::Service::MarkMethodAsync(1);
-    }
-    ~WithAsyncMethod_Test() override {
-      BaseClassMustBeDerivedFromService(this);
-    }
-    // disable synchronous version of this method
-    ::grpc::Status Test(::grpc::ServerContext* /*context*/, const ::test::PingRequest* /*request*/, ::test::PongResponse* /*response*/) override {
-      abort();
-      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
-    }
-    void RequestTest(::grpc::ServerContext* context, ::test::PingRequest* request, ::grpc::ServerAsyncResponseWriter< ::test::PongResponse>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(1, context, request, response, new_call_cq, notification_cq, tag);
-    }
-  };
-  typedef WithAsyncMethod_Ping<WithAsyncMethod_Test<Service > > AsyncService;
+  typedef WithAsyncMethod_Ping<Service > AsyncService;
   template <class BaseClass>
   class WithCallbackMethod_Ping : public BaseClass {
    private:
@@ -166,54 +123,27 @@ class JunoService final {
    public:
     WithCallbackMethod_Ping() {
       ::grpc::Service::MarkMethodCallback(0,
-          new ::grpc::internal::CallbackUnaryHandler< ::test::PingRequest, ::test::PongResponse>(
+          new ::grpc::internal::CallbackUnaryHandler< ::juno::api::PingRequest, ::juno::api::PongResponse>(
             [this](
-                   ::grpc::CallbackServerContext* context, const ::test::PingRequest* request, ::test::PongResponse* response) { return this->Ping(context, request, response); }));}
+                   ::grpc::CallbackServerContext* context, const ::juno::api::PingRequest* request, ::juno::api::PongResponse* response) { return this->Ping(context, request, response); }));}
     void SetMessageAllocatorFor_Ping(
-        ::grpc::MessageAllocator< ::test::PingRequest, ::test::PongResponse>* allocator) {
+        ::grpc::MessageAllocator< ::juno::api::PingRequest, ::juno::api::PongResponse>* allocator) {
       ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(0);
-      static_cast<::grpc::internal::CallbackUnaryHandler< ::test::PingRequest, ::test::PongResponse>*>(handler)
+      static_cast<::grpc::internal::CallbackUnaryHandler< ::juno::api::PingRequest, ::juno::api::PongResponse>*>(handler)
               ->SetMessageAllocator(allocator);
     }
     ~WithCallbackMethod_Ping() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status Ping(::grpc::ServerContext* /*context*/, const ::test::PingRequest* /*request*/, ::test::PongResponse* /*response*/) override {
+    ::grpc::Status Ping(::grpc::ServerContext* /*context*/, const ::juno::api::PingRequest* /*request*/, ::juno::api::PongResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     virtual ::grpc::ServerUnaryReactor* Ping(
-      ::grpc::CallbackServerContext* /*context*/, const ::test::PingRequest* /*request*/, ::test::PongResponse* /*response*/)  { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::juno::api::PingRequest* /*request*/, ::juno::api::PongResponse* /*response*/)  { return nullptr; }
   };
-  template <class BaseClass>
-  class WithCallbackMethod_Test : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
-    WithCallbackMethod_Test() {
-      ::grpc::Service::MarkMethodCallback(1,
-          new ::grpc::internal::CallbackUnaryHandler< ::test::PingRequest, ::test::PongResponse>(
-            [this](
-                   ::grpc::CallbackServerContext* context, const ::test::PingRequest* request, ::test::PongResponse* response) { return this->Test(context, request, response); }));}
-    void SetMessageAllocatorFor_Test(
-        ::grpc::MessageAllocator< ::test::PingRequest, ::test::PongResponse>* allocator) {
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(1);
-      static_cast<::grpc::internal::CallbackUnaryHandler< ::test::PingRequest, ::test::PongResponse>*>(handler)
-              ->SetMessageAllocator(allocator);
-    }
-    ~WithCallbackMethod_Test() override {
-      BaseClassMustBeDerivedFromService(this);
-    }
-    // disable synchronous version of this method
-    ::grpc::Status Test(::grpc::ServerContext* /*context*/, const ::test::PingRequest* /*request*/, ::test::PongResponse* /*response*/) override {
-      abort();
-      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
-    }
-    virtual ::grpc::ServerUnaryReactor* Test(
-      ::grpc::CallbackServerContext* /*context*/, const ::test::PingRequest* /*request*/, ::test::PongResponse* /*response*/)  { return nullptr; }
-  };
-  typedef WithCallbackMethod_Ping<WithCallbackMethod_Test<Service > > CallbackService;
+  typedef WithCallbackMethod_Ping<Service > CallbackService;
   typedef CallbackService ExperimentalCallbackService;
   template <class BaseClass>
   class WithGenericMethod_Ping : public BaseClass {
@@ -227,24 +157,7 @@ class JunoService final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status Ping(::grpc::ServerContext* /*context*/, const ::test::PingRequest* /*request*/, ::test::PongResponse* /*response*/) override {
-      abort();
-      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
-    }
-  };
-  template <class BaseClass>
-  class WithGenericMethod_Test : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
-    WithGenericMethod_Test() {
-      ::grpc::Service::MarkMethodGeneric(1);
-    }
-    ~WithGenericMethod_Test() override {
-      BaseClassMustBeDerivedFromService(this);
-    }
-    // disable synchronous version of this method
-    ::grpc::Status Test(::grpc::ServerContext* /*context*/, const ::test::PingRequest* /*request*/, ::test::PongResponse* /*response*/) override {
+    ::grpc::Status Ping(::grpc::ServerContext* /*context*/, const ::juno::api::PingRequest* /*request*/, ::juno::api::PongResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -261,32 +174,12 @@ class JunoService final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status Ping(::grpc::ServerContext* /*context*/, const ::test::PingRequest* /*request*/, ::test::PongResponse* /*response*/) override {
+    ::grpc::Status Ping(::grpc::ServerContext* /*context*/, const ::juno::api::PingRequest* /*request*/, ::juno::api::PongResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     void RequestPing(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
       ::grpc::Service::RequestAsyncUnary(0, context, request, response, new_call_cq, notification_cq, tag);
-    }
-  };
-  template <class BaseClass>
-  class WithRawMethod_Test : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
-    WithRawMethod_Test() {
-      ::grpc::Service::MarkMethodRaw(1);
-    }
-    ~WithRawMethod_Test() override {
-      BaseClassMustBeDerivedFromService(this);
-    }
-    // disable synchronous version of this method
-    ::grpc::Status Test(::grpc::ServerContext* /*context*/, const ::test::PingRequest* /*request*/, ::test::PongResponse* /*response*/) override {
-      abort();
-      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
-    }
-    void RequestTest(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(1, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
@@ -304,33 +197,11 @@ class JunoService final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status Ping(::grpc::ServerContext* /*context*/, const ::test::PingRequest* /*request*/, ::test::PongResponse* /*response*/) override {
+    ::grpc::Status Ping(::grpc::ServerContext* /*context*/, const ::juno::api::PingRequest* /*request*/, ::juno::api::PongResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     virtual ::grpc::ServerUnaryReactor* Ping(
-      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
-  };
-  template <class BaseClass>
-  class WithRawCallbackMethod_Test : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
-    WithRawCallbackMethod_Test() {
-      ::grpc::Service::MarkMethodRawCallback(1,
-          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
-            [this](
-                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->Test(context, request, response); }));
-    }
-    ~WithRawCallbackMethod_Test() override {
-      BaseClassMustBeDerivedFromService(this);
-    }
-    // disable synchronous version of this method
-    ::grpc::Status Test(::grpc::ServerContext* /*context*/, const ::test::PingRequest* /*request*/, ::test::PongResponse* /*response*/) override {
-      abort();
-      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
-    }
-    virtual ::grpc::ServerUnaryReactor* Test(
       ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
@@ -341,10 +212,10 @@ class JunoService final {
     WithStreamedUnaryMethod_Ping() {
       ::grpc::Service::MarkMethodStreamed(0,
         new ::grpc::internal::StreamedUnaryHandler<
-          ::test::PingRequest, ::test::PongResponse>(
+          ::juno::api::PingRequest, ::juno::api::PongResponse>(
             [this](::grpc::ServerContext* context,
                    ::grpc::ServerUnaryStreamer<
-                     ::test::PingRequest, ::test::PongResponse>* streamer) {
+                     ::juno::api::PingRequest, ::juno::api::PongResponse>* streamer) {
                        return this->StreamedPing(context,
                          streamer);
                   }));
@@ -353,46 +224,20 @@ class JunoService final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable regular version of this method
-    ::grpc::Status Ping(::grpc::ServerContext* /*context*/, const ::test::PingRequest* /*request*/, ::test::PongResponse* /*response*/) override {
+    ::grpc::Status Ping(::grpc::ServerContext* /*context*/, const ::juno::api::PingRequest* /*request*/, ::juno::api::PongResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     // replace default version of method with streamed unary
-    virtual ::grpc::Status StreamedPing(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::test::PingRequest,::test::PongResponse>* server_unary_streamer) = 0;
+    virtual ::grpc::Status StreamedPing(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::juno::api::PingRequest,::juno::api::PongResponse>* server_unary_streamer) = 0;
   };
-  template <class BaseClass>
-  class WithStreamedUnaryMethod_Test : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
-    WithStreamedUnaryMethod_Test() {
-      ::grpc::Service::MarkMethodStreamed(1,
-        new ::grpc::internal::StreamedUnaryHandler<
-          ::test::PingRequest, ::test::PongResponse>(
-            [this](::grpc::ServerContext* context,
-                   ::grpc::ServerUnaryStreamer<
-                     ::test::PingRequest, ::test::PongResponse>* streamer) {
-                       return this->StreamedTest(context,
-                         streamer);
-                  }));
-    }
-    ~WithStreamedUnaryMethod_Test() override {
-      BaseClassMustBeDerivedFromService(this);
-    }
-    // disable regular version of this method
-    ::grpc::Status Test(::grpc::ServerContext* /*context*/, const ::test::PingRequest* /*request*/, ::test::PongResponse* /*response*/) override {
-      abort();
-      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
-    }
-    // replace default version of method with streamed unary
-    virtual ::grpc::Status StreamedTest(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::test::PingRequest,::test::PongResponse>* server_unary_streamer) = 0;
-  };
-  typedef WithStreamedUnaryMethod_Ping<WithStreamedUnaryMethod_Test<Service > > StreamedUnaryService;
+  typedef WithStreamedUnaryMethod_Ping<Service > StreamedUnaryService;
   typedef Service SplitStreamedService;
-  typedef WithStreamedUnaryMethod_Ping<WithStreamedUnaryMethod_Test<Service > > StreamedService;
+  typedef WithStreamedUnaryMethod_Ping<Service > StreamedService;
 };
 
-}  // namespace test
+}  // namespace api
+}  // namespace juno
 
 
 #include <grpcpp/ports_undef.inc>

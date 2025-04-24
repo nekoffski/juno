@@ -24,11 +24,12 @@ PROTOBUF_PRAGMA_INIT_SEG
 namespace _pb = ::google::protobuf;
 namespace _pbi = ::google::protobuf::internal;
 namespace _fl = ::google::protobuf::internal::field_layout;
-namespace test {
+namespace juno {
+namespace api {
 
 inline constexpr PongResponse::Impl_::Impl_(
     ::_pbi::ConstantInitialized) noexcept
-      : uuid_(
+      : magic_(
             &::google::protobuf::internal::fixed_address_empty_string,
             ::_pbi::ConstantInitialized()),
         _cached_size_{0} {}
@@ -55,7 +56,7 @@ PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
 
 inline constexpr PingRequest::Impl_::Impl_(
     ::_pbi::ConstantInitialized) noexcept
-      : uuid_(
+      : magic_(
             &::google::protobuf::internal::fixed_address_empty_string,
             ::_pbi::ConstantInitialized()),
         _cached_size_{0} {}
@@ -79,7 +80,8 @@ struct PingRequestDefaultTypeInternal {
 
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
     PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 PingRequestDefaultTypeInternal _PingRequest_default_instance_;
-}  // namespace test
+}  // namespace api
+}  // namespace juno
 static constexpr const ::_pb::EnumDescriptor**
     file_level_enum_descriptors_juno_2eproto = nullptr;
 static constexpr const ::_pb::ServiceDescriptor**
@@ -88,47 +90,47 @@ const ::uint32_t
     TableStruct_juno_2eproto::offsets[] ABSL_ATTRIBUTE_SECTION_VARIABLE(
         protodesc_cold) = {
         ~0u,  // no _has_bits_
-        PROTOBUF_FIELD_OFFSET(::test::PingRequest, _internal_metadata_),
+        PROTOBUF_FIELD_OFFSET(::juno::api::PingRequest, _internal_metadata_),
         ~0u,  // no _extensions_
         ~0u,  // no _oneof_case_
         ~0u,  // no _weak_field_map_
         ~0u,  // no _inlined_string_donated_
         ~0u,  // no _split_
         ~0u,  // no sizeof(Split)
-        PROTOBUF_FIELD_OFFSET(::test::PingRequest, _impl_.uuid_),
+        PROTOBUF_FIELD_OFFSET(::juno::api::PingRequest, _impl_.magic_),
         ~0u,  // no _has_bits_
-        PROTOBUF_FIELD_OFFSET(::test::PongResponse, _internal_metadata_),
+        PROTOBUF_FIELD_OFFSET(::juno::api::PongResponse, _internal_metadata_),
         ~0u,  // no _extensions_
         ~0u,  // no _oneof_case_
         ~0u,  // no _weak_field_map_
         ~0u,  // no _inlined_string_donated_
         ~0u,  // no _split_
         ~0u,  // no sizeof(Split)
-        PROTOBUF_FIELD_OFFSET(::test::PongResponse, _impl_.uuid_),
+        PROTOBUF_FIELD_OFFSET(::juno::api::PongResponse, _impl_.magic_),
 };
 
 static const ::_pbi::MigrationSchema
     schemas[] ABSL_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
-        {0, -1, -1, sizeof(::test::PingRequest)},
-        {9, -1, -1, sizeof(::test::PongResponse)},
+        {0, -1, -1, sizeof(::juno::api::PingRequest)},
+        {9, -1, -1, sizeof(::juno::api::PongResponse)},
 };
 static const ::_pb::Message* const file_default_instances[] = {
-    &::test::_PingRequest_default_instance_._instance,
-    &::test::_PongResponse_default_instance_._instance,
+    &::juno::api::_PingRequest_default_instance_._instance,
+    &::juno::api::_PongResponse_default_instance_._instance,
 };
 const char descriptor_table_protodef_juno_2eproto[] ABSL_ATTRIBUTE_SECTION_VARIABLE(
     protodesc_cold) = {
-    "\n\njuno.proto\022\004test\"\033\n\013PingRequest\022\014\n\004uui"
-    "d\030\001 \001(\t\"\034\n\014PongResponse\022\014\n\004uuid\030\001 \001(\t2k\n"
-    "\013JunoService\022-\n\004Ping\022\021.test.PingRequest\032"
-    "\022.test.PongResponse\022-\n\004Test\022\021.test.PingR"
-    "equest\032\022.test.PongResponseb\006proto3"
+    "\n\njuno.proto\022\010juno.api\"\034\n\013PingRequest\022\r\n"
+    "\005magic\030\001 \001(\t\"\035\n\014PongResponse\022\r\n\005magic\030\001 "
+    "\001(\t2D\n\013JunoService\0225\n\004Ping\022\025.juno.api.Pi"
+    "ngRequest\032\026.juno.api.PongResponseb\006proto"
+    "3"
 };
 static ::absl::once_flag descriptor_table_juno_2eproto_once;
 PROTOBUF_CONSTINIT const ::_pbi::DescriptorTable descriptor_table_juno_2eproto = {
     false,
     false,
-    194,
+    161,
     descriptor_table_protodef_juno_2eproto,
     "juno.proto",
     &descriptor_table_juno_2eproto_once,
@@ -141,7 +143,8 @@ PROTOBUF_CONSTINIT const ::_pbi::DescriptorTable descriptor_table_juno_2eproto =
     file_level_enum_descriptors_juno_2eproto,
     file_level_service_descriptors_juno_2eproto,
 };
-namespace test {
+namespace juno {
+namespace api {
 // ===================================================================
 
 class PingRequest::_Internal {
@@ -155,12 +158,12 @@ PingRequest::PingRequest(::google::protobuf::Arena* arena)
     : ::google::protobuf::Message(arena) {
 #endif  // PROTOBUF_CUSTOM_VTABLE
   SharedCtor(arena);
-  // @@protoc_insertion_point(arena_constructor:test.PingRequest)
+  // @@protoc_insertion_point(arena_constructor:juno.api.PingRequest)
 }
 inline PROTOBUF_NDEBUG_INLINE PingRequest::Impl_::Impl_(
     ::google::protobuf::internal::InternalVisibility visibility, ::google::protobuf::Arena* arena,
-    const Impl_& from, const ::test::PingRequest& from_msg)
-      : uuid_(arena, from.uuid_),
+    const Impl_& from, const ::juno::api::PingRequest& from_msg)
+      : magic_(arena, from.magic_),
         _cached_size_{0} {}
 
 PingRequest::PingRequest(
@@ -177,26 +180,26 @@ PingRequest::PingRequest(
       from._internal_metadata_);
   new (&_impl_) Impl_(internal_visibility(), arena, from._impl_, from);
 
-  // @@protoc_insertion_point(copy_constructor:test.PingRequest)
+  // @@protoc_insertion_point(copy_constructor:juno.api.PingRequest)
 }
 inline PROTOBUF_NDEBUG_INLINE PingRequest::Impl_::Impl_(
     ::google::protobuf::internal::InternalVisibility visibility,
     ::google::protobuf::Arena* arena)
-      : uuid_(arena),
+      : magic_(arena),
         _cached_size_{0} {}
 
 inline void PingRequest::SharedCtor(::_pb::Arena* arena) {
   new (&_impl_) Impl_(internal_visibility(), arena);
 }
 PingRequest::~PingRequest() {
-  // @@protoc_insertion_point(destructor:test.PingRequest)
+  // @@protoc_insertion_point(destructor:juno.api.PingRequest)
   SharedDtor(*this);
 }
 inline void PingRequest::SharedDtor(MessageLite& self) {
   PingRequest& this_ = static_cast<PingRequest&>(self);
   this_._internal_metadata_.Delete<::google::protobuf::UnknownFieldSet>();
   ABSL_DCHECK(this_.GetArena() == nullptr);
-  this_._impl_.uuid_.Destroy();
+  this_._impl_.magic_.Destroy();
   this_._impl_.~Impl_();
 }
 
@@ -236,7 +239,7 @@ const ::google::protobuf::internal::ClassData* PingRequest::GetClassData() const
   return _class_data_.base();
 }
 PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
-const ::_pbi::TcParseTable<0, 1, 0, 29, 2> PingRequest::_table_ = {
+const ::_pbi::TcParseTable<0, 1, 0, 34, 2> PingRequest::_table_ = {
   {
     0,  // no _has_bits_
     0, // no _extensions_
@@ -251,35 +254,35 @@ const ::_pbi::TcParseTable<0, 1, 0, 29, 2> PingRequest::_table_ = {
     nullptr,  // post_loop_handler
     ::_pbi::TcParser::GenericFallback,  // fallback
     #ifdef PROTOBUF_PREFETCH_PARSE_TABLE
-    ::_pbi::TcParser::GetTable<::test::PingRequest>(),  // to_prefetch
+    ::_pbi::TcParser::GetTable<::juno::api::PingRequest>(),  // to_prefetch
     #endif  // PROTOBUF_PREFETCH_PARSE_TABLE
   }, {{
-    // string uuid = 1;
+    // string magic = 1;
     {::_pbi::TcParser::FastUS1,
-     {10, 63, 0, PROTOBUF_FIELD_OFFSET(PingRequest, _impl_.uuid_)}},
+     {10, 63, 0, PROTOBUF_FIELD_OFFSET(PingRequest, _impl_.magic_)}},
   }}, {{
     65535, 65535
   }}, {{
-    // string uuid = 1;
-    {PROTOBUF_FIELD_OFFSET(PingRequest, _impl_.uuid_), 0, 0,
+    // string magic = 1;
+    {PROTOBUF_FIELD_OFFSET(PingRequest, _impl_.magic_), 0, 0,
     (0 | ::_fl::kFcSingular | ::_fl::kUtf8String | ::_fl::kRepAString)},
   }},
   // no aux_entries
   {{
-    "\20\4\0\0\0\0\0\0"
-    "test.PingRequest"
-    "uuid"
+    "\24\5\0\0\0\0\0\0"
+    "juno.api.PingRequest"
+    "magic"
   }},
 };
 
 PROTOBUF_NOINLINE void PingRequest::Clear() {
-// @@protoc_insertion_point(message_clear_start:test.PingRequest)
+// @@protoc_insertion_point(message_clear_start:juno.api.PingRequest)
   ::google::protobuf::internal::TSanWrite(&_impl_);
   ::uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  _impl_.uuid_.ClearToEmpty();
+  _impl_.magic_.ClearToEmpty();
   _internal_metadata_.Clear<::google::protobuf::UnknownFieldSet>();
 }
 
@@ -294,15 +297,15 @@ PROTOBUF_NOINLINE void PingRequest::Clear() {
             ::google::protobuf::io::EpsCopyOutputStream* stream) const {
           const PingRequest& this_ = *this;
 #endif  // PROTOBUF_CUSTOM_VTABLE
-          // @@protoc_insertion_point(serialize_to_array_start:test.PingRequest)
+          // @@protoc_insertion_point(serialize_to_array_start:juno.api.PingRequest)
           ::uint32_t cached_has_bits = 0;
           (void)cached_has_bits;
 
-          // string uuid = 1;
-          if (!this_._internal_uuid().empty()) {
-            const std::string& _s = this_._internal_uuid();
+          // string magic = 1;
+          if (!this_._internal_magic().empty()) {
+            const std::string& _s = this_._internal_magic();
             ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-                _s.data(), static_cast<int>(_s.length()), ::google::protobuf::internal::WireFormatLite::SERIALIZE, "test.PingRequest.uuid");
+                _s.data(), static_cast<int>(_s.length()), ::google::protobuf::internal::WireFormatLite::SERIALIZE, "juno.api.PingRequest.magic");
             target = stream->WriteStringMaybeAliased(1, _s, target);
           }
 
@@ -311,7 +314,7 @@ PROTOBUF_NOINLINE void PingRequest::Clear() {
                 ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
                     this_._internal_metadata_.unknown_fields<::google::protobuf::UnknownFieldSet>(::google::protobuf::UnknownFieldSet::default_instance), target, stream);
           }
-          // @@protoc_insertion_point(serialize_to_array_end:test.PingRequest)
+          // @@protoc_insertion_point(serialize_to_array_end:juno.api.PingRequest)
           return target;
         }
 
@@ -322,7 +325,7 @@ PROTOBUF_NOINLINE void PingRequest::Clear() {
         ::size_t PingRequest::ByteSizeLong() const {
           const PingRequest& this_ = *this;
 #endif  // PROTOBUF_CUSTOM_VTABLE
-          // @@protoc_insertion_point(message_byte_size_start:test.PingRequest)
+          // @@protoc_insertion_point(message_byte_size_start:juno.api.PingRequest)
           ::size_t total_size = 0;
 
           ::uint32_t cached_has_bits = 0;
@@ -330,10 +333,10 @@ PROTOBUF_NOINLINE void PingRequest::Clear() {
           (void)cached_has_bits;
 
            {
-            // string uuid = 1;
-            if (!this_._internal_uuid().empty()) {
+            // string magic = 1;
+            if (!this_._internal_magic().empty()) {
               total_size += 1 + ::google::protobuf::internal::WireFormatLite::StringSize(
-                                              this_._internal_uuid());
+                                              this_._internal_magic());
             }
           }
           return this_.MaybeComputeUnknownFieldsSize(total_size,
@@ -343,19 +346,19 @@ PROTOBUF_NOINLINE void PingRequest::Clear() {
 void PingRequest::MergeImpl(::google::protobuf::MessageLite& to_msg, const ::google::protobuf::MessageLite& from_msg) {
   auto* const _this = static_cast<PingRequest*>(&to_msg);
   auto& from = static_cast<const PingRequest&>(from_msg);
-  // @@protoc_insertion_point(class_specific_merge_from_start:test.PingRequest)
+  // @@protoc_insertion_point(class_specific_merge_from_start:juno.api.PingRequest)
   ABSL_DCHECK_NE(&from, _this);
   ::uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  if (!from._internal_uuid().empty()) {
-    _this->_internal_set_uuid(from._internal_uuid());
+  if (!from._internal_magic().empty()) {
+    _this->_internal_set_magic(from._internal_magic());
   }
   _this->_internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(from._internal_metadata_);
 }
 
 void PingRequest::CopyFrom(const PingRequest& from) {
-// @@protoc_insertion_point(class_specific_copy_from_start:test.PingRequest)
+// @@protoc_insertion_point(class_specific_copy_from_start:juno.api.PingRequest)
   if (&from == this) return;
   Clear();
   MergeFrom(from);
@@ -367,7 +370,7 @@ void PingRequest::InternalSwap(PingRequest* PROTOBUF_RESTRICT other) {
   auto* arena = GetArena();
   ABSL_DCHECK_EQ(arena, other->GetArena());
   _internal_metadata_.InternalSwap(&other->_internal_metadata_);
-  ::_pbi::ArenaStringPtr::InternalSwap(&_impl_.uuid_, &other->_impl_.uuid_, arena);
+  ::_pbi::ArenaStringPtr::InternalSwap(&_impl_.magic_, &other->_impl_.magic_, arena);
 }
 
 ::google::protobuf::Metadata PingRequest::GetMetadata() const {
@@ -386,12 +389,12 @@ PongResponse::PongResponse(::google::protobuf::Arena* arena)
     : ::google::protobuf::Message(arena) {
 #endif  // PROTOBUF_CUSTOM_VTABLE
   SharedCtor(arena);
-  // @@protoc_insertion_point(arena_constructor:test.PongResponse)
+  // @@protoc_insertion_point(arena_constructor:juno.api.PongResponse)
 }
 inline PROTOBUF_NDEBUG_INLINE PongResponse::Impl_::Impl_(
     ::google::protobuf::internal::InternalVisibility visibility, ::google::protobuf::Arena* arena,
-    const Impl_& from, const ::test::PongResponse& from_msg)
-      : uuid_(arena, from.uuid_),
+    const Impl_& from, const ::juno::api::PongResponse& from_msg)
+      : magic_(arena, from.magic_),
         _cached_size_{0} {}
 
 PongResponse::PongResponse(
@@ -408,26 +411,26 @@ PongResponse::PongResponse(
       from._internal_metadata_);
   new (&_impl_) Impl_(internal_visibility(), arena, from._impl_, from);
 
-  // @@protoc_insertion_point(copy_constructor:test.PongResponse)
+  // @@protoc_insertion_point(copy_constructor:juno.api.PongResponse)
 }
 inline PROTOBUF_NDEBUG_INLINE PongResponse::Impl_::Impl_(
     ::google::protobuf::internal::InternalVisibility visibility,
     ::google::protobuf::Arena* arena)
-      : uuid_(arena),
+      : magic_(arena),
         _cached_size_{0} {}
 
 inline void PongResponse::SharedCtor(::_pb::Arena* arena) {
   new (&_impl_) Impl_(internal_visibility(), arena);
 }
 PongResponse::~PongResponse() {
-  // @@protoc_insertion_point(destructor:test.PongResponse)
+  // @@protoc_insertion_point(destructor:juno.api.PongResponse)
   SharedDtor(*this);
 }
 inline void PongResponse::SharedDtor(MessageLite& self) {
   PongResponse& this_ = static_cast<PongResponse&>(self);
   this_._internal_metadata_.Delete<::google::protobuf::UnknownFieldSet>();
   ABSL_DCHECK(this_.GetArena() == nullptr);
-  this_._impl_.uuid_.Destroy();
+  this_._impl_.magic_.Destroy();
   this_._impl_.~Impl_();
 }
 
@@ -467,7 +470,7 @@ const ::google::protobuf::internal::ClassData* PongResponse::GetClassData() cons
   return _class_data_.base();
 }
 PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
-const ::_pbi::TcParseTable<0, 1, 0, 30, 2> PongResponse::_table_ = {
+const ::_pbi::TcParseTable<0, 1, 0, 35, 2> PongResponse::_table_ = {
   {
     0,  // no _has_bits_
     0, // no _extensions_
@@ -482,35 +485,35 @@ const ::_pbi::TcParseTable<0, 1, 0, 30, 2> PongResponse::_table_ = {
     nullptr,  // post_loop_handler
     ::_pbi::TcParser::GenericFallback,  // fallback
     #ifdef PROTOBUF_PREFETCH_PARSE_TABLE
-    ::_pbi::TcParser::GetTable<::test::PongResponse>(),  // to_prefetch
+    ::_pbi::TcParser::GetTable<::juno::api::PongResponse>(),  // to_prefetch
     #endif  // PROTOBUF_PREFETCH_PARSE_TABLE
   }, {{
-    // string uuid = 1;
+    // string magic = 1;
     {::_pbi::TcParser::FastUS1,
-     {10, 63, 0, PROTOBUF_FIELD_OFFSET(PongResponse, _impl_.uuid_)}},
+     {10, 63, 0, PROTOBUF_FIELD_OFFSET(PongResponse, _impl_.magic_)}},
   }}, {{
     65535, 65535
   }}, {{
-    // string uuid = 1;
-    {PROTOBUF_FIELD_OFFSET(PongResponse, _impl_.uuid_), 0, 0,
+    // string magic = 1;
+    {PROTOBUF_FIELD_OFFSET(PongResponse, _impl_.magic_), 0, 0,
     (0 | ::_fl::kFcSingular | ::_fl::kUtf8String | ::_fl::kRepAString)},
   }},
   // no aux_entries
   {{
-    "\21\4\0\0\0\0\0\0"
-    "test.PongResponse"
-    "uuid"
+    "\25\5\0\0\0\0\0\0"
+    "juno.api.PongResponse"
+    "magic"
   }},
 };
 
 PROTOBUF_NOINLINE void PongResponse::Clear() {
-// @@protoc_insertion_point(message_clear_start:test.PongResponse)
+// @@protoc_insertion_point(message_clear_start:juno.api.PongResponse)
   ::google::protobuf::internal::TSanWrite(&_impl_);
   ::uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  _impl_.uuid_.ClearToEmpty();
+  _impl_.magic_.ClearToEmpty();
   _internal_metadata_.Clear<::google::protobuf::UnknownFieldSet>();
 }
 
@@ -525,15 +528,15 @@ PROTOBUF_NOINLINE void PongResponse::Clear() {
             ::google::protobuf::io::EpsCopyOutputStream* stream) const {
           const PongResponse& this_ = *this;
 #endif  // PROTOBUF_CUSTOM_VTABLE
-          // @@protoc_insertion_point(serialize_to_array_start:test.PongResponse)
+          // @@protoc_insertion_point(serialize_to_array_start:juno.api.PongResponse)
           ::uint32_t cached_has_bits = 0;
           (void)cached_has_bits;
 
-          // string uuid = 1;
-          if (!this_._internal_uuid().empty()) {
-            const std::string& _s = this_._internal_uuid();
+          // string magic = 1;
+          if (!this_._internal_magic().empty()) {
+            const std::string& _s = this_._internal_magic();
             ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-                _s.data(), static_cast<int>(_s.length()), ::google::protobuf::internal::WireFormatLite::SERIALIZE, "test.PongResponse.uuid");
+                _s.data(), static_cast<int>(_s.length()), ::google::protobuf::internal::WireFormatLite::SERIALIZE, "juno.api.PongResponse.magic");
             target = stream->WriteStringMaybeAliased(1, _s, target);
           }
 
@@ -542,7 +545,7 @@ PROTOBUF_NOINLINE void PongResponse::Clear() {
                 ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
                     this_._internal_metadata_.unknown_fields<::google::protobuf::UnknownFieldSet>(::google::protobuf::UnknownFieldSet::default_instance), target, stream);
           }
-          // @@protoc_insertion_point(serialize_to_array_end:test.PongResponse)
+          // @@protoc_insertion_point(serialize_to_array_end:juno.api.PongResponse)
           return target;
         }
 
@@ -553,7 +556,7 @@ PROTOBUF_NOINLINE void PongResponse::Clear() {
         ::size_t PongResponse::ByteSizeLong() const {
           const PongResponse& this_ = *this;
 #endif  // PROTOBUF_CUSTOM_VTABLE
-          // @@protoc_insertion_point(message_byte_size_start:test.PongResponse)
+          // @@protoc_insertion_point(message_byte_size_start:juno.api.PongResponse)
           ::size_t total_size = 0;
 
           ::uint32_t cached_has_bits = 0;
@@ -561,10 +564,10 @@ PROTOBUF_NOINLINE void PongResponse::Clear() {
           (void)cached_has_bits;
 
            {
-            // string uuid = 1;
-            if (!this_._internal_uuid().empty()) {
+            // string magic = 1;
+            if (!this_._internal_magic().empty()) {
               total_size += 1 + ::google::protobuf::internal::WireFormatLite::StringSize(
-                                              this_._internal_uuid());
+                                              this_._internal_magic());
             }
           }
           return this_.MaybeComputeUnknownFieldsSize(total_size,
@@ -574,19 +577,19 @@ PROTOBUF_NOINLINE void PongResponse::Clear() {
 void PongResponse::MergeImpl(::google::protobuf::MessageLite& to_msg, const ::google::protobuf::MessageLite& from_msg) {
   auto* const _this = static_cast<PongResponse*>(&to_msg);
   auto& from = static_cast<const PongResponse&>(from_msg);
-  // @@protoc_insertion_point(class_specific_merge_from_start:test.PongResponse)
+  // @@protoc_insertion_point(class_specific_merge_from_start:juno.api.PongResponse)
   ABSL_DCHECK_NE(&from, _this);
   ::uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  if (!from._internal_uuid().empty()) {
-    _this->_internal_set_uuid(from._internal_uuid());
+  if (!from._internal_magic().empty()) {
+    _this->_internal_set_magic(from._internal_magic());
   }
   _this->_internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(from._internal_metadata_);
 }
 
 void PongResponse::CopyFrom(const PongResponse& from) {
-// @@protoc_insertion_point(class_specific_copy_from_start:test.PongResponse)
+// @@protoc_insertion_point(class_specific_copy_from_start:juno.api.PongResponse)
   if (&from == this) return;
   Clear();
   MergeFrom(from);
@@ -598,14 +601,15 @@ void PongResponse::InternalSwap(PongResponse* PROTOBUF_RESTRICT other) {
   auto* arena = GetArena();
   ABSL_DCHECK_EQ(arena, other->GetArena());
   _internal_metadata_.InternalSwap(&other->_internal_metadata_);
-  ::_pbi::ArenaStringPtr::InternalSwap(&_impl_.uuid_, &other->_impl_.uuid_, arena);
+  ::_pbi::ArenaStringPtr::InternalSwap(&_impl_.magic_, &other->_impl_.magic_, arena);
 }
 
 ::google::protobuf::Metadata PongResponse::GetMetadata() const {
   return ::google::protobuf::Message::GetMetadataImpl(GetClassData()->full());
 }
 // @@protoc_insertion_point(namespace_scope)
-}  // namespace test
+}  // namespace api
+}  // namespace juno
 namespace google {
 namespace protobuf {
 }  // namespace protobuf

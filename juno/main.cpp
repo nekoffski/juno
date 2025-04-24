@@ -11,7 +11,7 @@ int main(int argc, char** argv) {
 
     try {
         auto config = juno::Config::fromFile(std::string{ argv[1] }, fs);
-        return juno::Server{ config, fs }.start();
+        return juno::Server{ config }.start();
     } catch (const juno::Error& e) {
         juno::log::error("Unhandled exception: {} - {}", e.what(), e.where());
         return -1;
@@ -19,5 +19,4 @@ int main(int argc, char** argv) {
         juno::log::error("Unhandled unknown exception: {}", e.what());
         return -2;
     }
-    return 0;
 }
