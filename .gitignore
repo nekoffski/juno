@@ -1,4 +1,4 @@
-./juno/proto/*pb*
+juno/proto/*pb*
 
 CMakeUserPresets.json
 *_legacy*
