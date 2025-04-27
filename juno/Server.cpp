@@ -1,10 +1,14 @@
 #include "Server.hh"
 
+#include "api/GrpcApi.hh"
+#include "devices/DeviceProxy.hh"
+
 namespace juno {
 
 Server::Server(const Config& config
 ) : m_signals(m_io, SIGTERM, SIGINT), m_config(config), m_messenger(m_io) {
     addService<GrpcApi>(m_io, m_messenger, m_config);
+    addService<DeviceProxy>(m_io, m_messenger);
 
     m_signals.async_wait([&](const boost::system::error_code& ec, i32 signal) {
         if (!ec) {

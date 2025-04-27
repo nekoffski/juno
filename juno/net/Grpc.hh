@@ -16,8 +16,20 @@
 
 namespace juno {
 
-template <typename Response>
-using ResponseWrapper = kstd::Coro<std::pair<Response, grpc::Status>>;
+class GrpcError : public Error {
+public:
+    template <typename... Args>
+    explicit GrpcError(
+      grpc::StatusCode code, kstd::log::details::FormatWithLocation format,
+      Args&&... args
+    ) : Error(std::move(format), std::forward<Args>(args)...), m_code(code) {}
+
+    grpc::StatusCode code() const;
+    grpc::Status status() const;
+
+private:
+    grpc::StatusCode m_code;
+};
 
 namespace details {
 
@@ -39,11 +51,11 @@ struct CallData {
 
 template <typename Service, typename Request, typename Response>
 class CallDataBase : public CallData {
-    using Callback = std::function<ResponseWrapper<Response>(const Request&)>;
+    using Callback = std::function<kstd::Coro<Response>(const Request&)>;
 
 public:
     template <typename Callback>
-    requires kstd::Callable<Callback, ResponseWrapper<Response>, const Request&>
+    requires kstd::Callable<Callback, kstd::Coro<Response>, const Request&>
     explicit CallDataBase(
       grpc::ServerCompletionQueue* cq, Service* service,
       InternalHandler<Service, Request, Response> internalHandler,
@@ -62,8 +74,16 @@ public:
         if (m_status == Status::processing) {
             new CallDataBase{ m_cq, m_service, m_internalHandler, m_callback };
 
-            const auto [response, status] = co_await m_callback(m_request);
-            m_responder.Finish(response, status, this);
+            try {
+                const auto response = co_await m_callback(m_request);
+                m_responder.Finish(response, grpc::Status::OK, this);
+            } catch (const GrpcError& e) {
+                log::warn(
+                  "Error handling GRPC request: {} - '{}' - '{}'",
+                  static_cast<i32>(e.code()), e.what(), e.where()
+                );
+                m_responder.FinishWithError(e.status(), this);
+            }
 
             m_status = Status::finishing;
         } else {
@@ -156,8 +176,7 @@ public:
             explicit ServiceBuilder(ServiceBase<T>* service) : m_service(service) {}
 
             template <typename Request, typename Response, typename Callback>
-            requires kstd::Callable<
-              Callback, ResponseWrapper<Response>, const Request&>
+            requires kstd::Callable<Callback, kstd::Coro<Response>, const Request&>
             ServiceBuilder& addRequest(
               details::InternalHandler<T, Request, Response> rawHandler,
               Callback&& callback

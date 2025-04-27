@@ -1,9 +1,9 @@
 #include "GrpcApi.hh"
 
-#include "messages/Queues.hh"
-
 #include "proto/juno.pb.h"
 #include "proto/juno.grpc.pb.h"
+
+#include "Endpoints.hh"
 
 namespace juno {
 
@@ -28,18 +28,21 @@ void GrpcApi::shutdown() {
 
 void GrpcApi::build(Builder&& builder) {
     auto&& service = builder.addService<api::JunoService::AsyncService>();
+    using Service  = api::JunoService::AsyncService;
 
-    service.addRequest<api::PingRequest, api::PongResponse>(
-      &api::JunoService::AsyncService::RequestPing,
-      [&](const api::PingRequest& req) -> ResponseWrapper<api::PongResponse> {
-          const auto magic = req.magic();
-          log::debug("Received ping request, magic: '{}'", magic);
-
-          api::PongResponse res;
-          res.set_magic(magic);
-          co_return std::make_pair(res, grpc::Status::OK);
-      }
-    );
+    service
+      .addRequest<api::PingRequest, api::PongResponse>(
+        &Service::RequestPing,
+        [&](const auto& req) -> kstd::Coro<api::PongResponse> {
+            co_return (co_await pingEndpoint(req));
+        }
+      )
+      .addRequest<api::ListDevicesRequest, api::ListDevicesResponse>(
+        &Service::RequestListDevices,
+        [&]([[maybe_unused]] const auto&) -> kstd::Coro<api::ListDevicesResponse> {
+            co_return (co_await listDevicesEndpoint(m_messageQueue));
+        }
+      );
 }
 
 }  // namespace juno

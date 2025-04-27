@@ -2,13 +2,32 @@ syntax = "proto3";
 
 package juno.api;
 
+enum DeviceType {
+    UNSPECIFIED = 0;
+    BULB = 1;
+};
+
+
+message Device {
+    DeviceType type = 1;
+    string uuid = 2;
+};
+
 message PingRequest {
     string magic = 1;
 }
+
 message PongResponse {
     string magic = 1;
 }
 
+message ListDevicesRequest {};
+
+message ListDevicesResponse {
+    repeated Device devices = 1;
+};
+
 service JunoService {
     rpc Ping (PingRequest) returns (PongResponse);
-}
+    rpc ListDevices (ListDevicesRequest) returns (ListDevicesResponse);
+};

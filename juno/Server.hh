@@ -10,7 +10,6 @@
 #include "Core.hh"
 #include "Config.hh"
 
-#include "api/GrpcApi.hh"
 #include "Service.hh"
 
 namespace juno {

@@ -2,8 +2,7 @@
 
 #include <kstd/async/AsyncMessenger.hh>
 
-#include "messages/Queues.hh"
-#include "net/AsyncGrpcServer.hh"
+#include "net/Grpc.hh"
 #include "Config.hh"
 
 #include "Service.hh"

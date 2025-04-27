@@ -10,6 +10,8 @@
 
 namespace juno {
 
+using namespace std::chrono_literals;
+
 namespace log {
 using namespace kstd::log;
 }

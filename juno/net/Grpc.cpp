@@ -1,6 +1,9 @@
-#include "AsyncGrpcServer.hh"
+#include "Grpc.hh"
 
 namespace juno {
+
+grpc::StatusCode GrpcError::code() const { return m_code; }
+grpc::Status GrpcError::status() const { return grpc::Status{ m_code, what() }; }
 
 AsyncGrpcServer::Builder::Builder(
   AsyncGrpcServer& server, grpc::ServerBuilder& serverBuilder

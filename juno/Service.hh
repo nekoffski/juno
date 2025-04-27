@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Queues.hh"
+
 namespace juno {
 
 struct Service {
