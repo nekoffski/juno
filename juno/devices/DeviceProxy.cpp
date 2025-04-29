@@ -1,6 +1,6 @@
 #include "DeviceProxy.hh"
 
-#include "vendors/Yeelight.hh"
+#include "yeelight/Yeelight.hh"
 #include "Messages.hh"
 
 namespace juno {

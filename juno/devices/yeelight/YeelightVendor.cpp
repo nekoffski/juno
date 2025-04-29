@@ -1,10 +1,12 @@
-#include "Yeelight.hh"
+#include "YeelightVendor.hh"
 
 #include <boost/algorithm/string.hpp>
 #include <kstd/async/Utils.hh>
 #include <kstd/String.hh>
 
 #include "Core.hh"
+
+#include "YeelightBulb.hh"
 
 namespace juno {
 
@@ -33,7 +35,7 @@ YeelightVendor::YeelightVendor(boost::asio::io_context& io) :
 }
 
 kstd::Coro<void> YeelightVendor::scan() {
-    log::debug("Scanning for Yeelight devices, multicasting discover message");
+    log::info("Scanning for Yeelight devices, multicasting discover message");
 
     co_await m_socket.async_send_to(
       boost::asio::buffer(m_discoverMessage), m_yeelightEndpoint,
@@ -45,7 +47,7 @@ kstd::Coro<void> YeelightVendor::scan() {
 
     kstd::callLater(ex, scanDeadline, [&]() { m_socket.cancel(); });
 
-    log::debug("Waiting for devices to respond");
+    log::info("Waiting for devices to respond");
     std::array<char, 1024> buffer;
     while (true) {
         try {
@@ -60,11 +62,11 @@ kstd::Coro<void> YeelightVendor::scan() {
             break;
         }
     }
-    log::debug("Scanning finished");
+    log::info("Scanning finished");
 }
 
 kstd::Coro<void> YeelightVendor::processNewDevice(const std::string& payload) {
-    log::debug("Processing new device");
+    log::info("Processing new device");
     std::unordered_map<std::string, std::string> headers;
 
     for (const auto& line : kstd::split(payload, "\r\n")) {
@@ -91,8 +93,17 @@ kstd::Coro<void> YeelightVendor::processNewDevice(const std::string& payload) {
         }
     }
 
+    const auto id = std::stoi(headers.at("id"), 0, 16u);
+
+    for (auto& device : m_devices) {
+        if (static_cast<YeelightBulb*>(device.get())->yeelightId == id) {
+            log::info("Device already stored, skipping");
+            co_return;
+        }
+    }
+
     if (const auto model = headers["model"]; model == "strip6") {
-        m_devices.push_back(kstd::makeShared<YeelightBulb>(headers));
+        m_devices.push_back(co_await YeelightBulb::create(m_io, headers));
     } else {
         log::warn("Device model not supported: '{}'", model);
     }
@@ -101,11 +112,5 @@ kstd::Coro<void> YeelightVendor::processNewDevice(const std::string& payload) {
 }
 
 Devices YeelightVendor::getDevices() const { return m_devices; }
-
-YeelightBulb::YeelightBulb(
-  const std::unordered_map<std::string, std::string>& headers
-) {}
-
-const std::string& YeelightBulb::getName() const { return "somename"; }
 
 }  // namespace juno

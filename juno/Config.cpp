@@ -12,7 +12,7 @@ void from_json(const nlohmann::json& j, Config& out) {
 }
 
 Config Config::fromFile(const std::string& path, const kstd::FileSystem& fs) {
-    log::debug("Loading config file: {}", path);
+    log::info("Loading config file: {}", path);
 
     if (not fs.isFile(path)) throw Error{ "Config file doesn't exist: {}", path };
 

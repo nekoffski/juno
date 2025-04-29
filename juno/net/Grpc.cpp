@@ -22,7 +22,7 @@ void AsyncGrpcServer::startAsync() {
     grpc::ServerBuilder serverBuilder;
 
     const auto addr = fmt::format("{}:{}", m_config.host, m_config.port);
-    kstd::log::debug("GRPC listening address: {}", addr);
+    log::info("GRPC listening address: {}", addr);
     serverBuilder.AddListeningPort(addr, grpc::InsecureServerCredentials());
 
     build(Builder{ *this, serverBuilder });

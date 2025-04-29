@@ -10,7 +10,7 @@ namespace juno {
 
 kstd::Coro<api::PongResponse> pingEndpoint(const api::PingRequest& req) {
     const auto magic = req.magic();
-    log::debug("Received ping request, magic: '{}'", magic);
+    log::trace("Received ping request, magic: '{}'", magic);
 
     api::PongResponse res;
     res.set_magic(magic);
@@ -25,7 +25,7 @@ kstd::Coro<api::ListDevicesResponse> listDevicesEndpoint(
 
     api::ListDevicesResponse res;
     for (auto& device : response->as<ListDevices::Response>()->devices)
-        toProto(device.get(), res.add_devices());
+        device->toProto(res.add_devices());
     co_return res;
 }
 

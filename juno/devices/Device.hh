@@ -5,8 +5,10 @@
 #include <kstd/memory/SharedPtr.hh>
 #include <kstd/RTTI.hh>
 #include <kstd/Id.hh>
+#include <kstd/async/Core.hh>
 
 #include "Core.hh"
+#include "proto/juno.pb.h"
 
 namespace juno {
 
@@ -16,6 +18,8 @@ struct Device {
     explicit Device() : uuid(kstd::generateUuid()) {}
     virtual ~Device() = default;
 
+    virtual void toProto(api::Device*) const = 0;
+
     virtual Type getDeviceType() const         = 0;
     virtual const std::string& getName() const = 0;
 
@@ -24,8 +28,13 @@ struct Device {
 
 using Devices = std::vector<kstd::SharedPtr<Device>>;
 
-struct Bulb : Device {
+class Bulb : public Device {
+public:
     Type getDeviceType() const override;
+    virtual kstd::Coro<void> toggle() = 0;
+
+private:
+    void toProto(api::Device*) const override;
 };
 
 }  // namespace juno

@@ -29,13 +29,4 @@ private:
     std::string m_discoverMessage;
 };
 
-class YeelightBulb : public Bulb {
-public:
-    YeelightBulb(const std::unordered_map<std::string, std::string>& headers);
-
-    const std::string& getName() const override;
-
-private:
-};
-
 }  // namespace juno

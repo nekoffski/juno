@@ -6,6 +6,7 @@
 #include <kstd/Log.hh>
 #include <kstd/FileSystem.hh>
 
+#include <limits>
 #include <fmt/core.h>
 
 namespace juno {
@@ -42,6 +43,21 @@ public:
 
 private:
     spdlog::source_loc m_source;
+};
+
+template <u64 Max> class SequenceGenerator {
+    static_assert(Max < std::numeric_limits<u64>::max());
+
+public:
+    SequenceGenerator() : m_current(0u) {}
+
+    u64 get() {
+        m_current %= Max;
+        return m_current++;
+    }
+
+private:
+    u64 m_current;
 };
 
 }  // namespace juno
