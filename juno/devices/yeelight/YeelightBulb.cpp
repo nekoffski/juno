@@ -14,7 +14,7 @@ kstd::Coro<kstd::SharedPtr<YeelightBulb>> YeelightBulb::create(
     const auto colon     = loc.find_last_of(":");
     const auto addrStart = loc.find_last_of("/");
     const auto addr      = loc.substr(addrStart + 1, colon - addrStart - 1);
-    const auto port      = std::stoul(loc.substr(colon + 1));
+    const auto port      = std::stoull(loc.substr(colon + 1));
 
     log::info("Yeelight Bulb endpoint {}:{}", addr, port);
 

@@ -21,6 +21,7 @@ public:
 
 private:
     kstd::Coro<void> handleMessages();
+    kstd::Coro<void> handleMessage(kstd::AsyncMessage& message);
 
     template <typename T, typename... Args>
     requires(std::derived_from<T, Vendor> && std::constructible_from<T, Args...>)

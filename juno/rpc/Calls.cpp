@@ -12,15 +12,29 @@ static void handleError(kstd::AsyncResponse* res, const std::string& requestName
     };
 }
 
-kstd::Coro<Devices> getDevices(
-  kstd::AsyncMessenger::Queue& mq, const std::vector<std::string>& uuids
+static kstd::Coro<Devices> getDevices(
+  kstd::AsyncMessenger::Queue& mq, GetDevices::Request&& request
 ) {
-    auto h = co_await mq.send<ListDevices::Request>(uuids).to(DEVICE_PROXY_QUEUE);
-    auto response = co_await h->wait();
+    auto handle =
+      co_await mq.send<GetDevices::Request>(std::move(request))
+        .to(DEVICE_PROXY_QUEUE);
+    auto response = co_await handle->wait();
 
-    if (response->is<ListDevices::Response>())
-        co_return response->as<ListDevices::Response>()->devices;
-    handleError(response.get(), "ListDevices");
+    if (response->is<GetDevices::Response>())
+        co_return response->as<GetDevices::Response>()->devices;
+    handleError(response.get(), "GetDevices");
+}
+
+kstd::Coro<Devices> getDevices(
+  kstd::AsyncMessenger::Queue& mq, const GetDevices::Request::Uuids& uuids
+) {
+    co_return (co_await getDevices(mq, GetDevices::Request{ uuids }));
+}
+
+kstd::Coro<Devices> getDevices(
+  kstd::AsyncMessenger::Queue& mq, const GetDevices::Request::Filter& filter
+) {
+    co_return (co_await getDevices(mq, GetDevices::Request{ filter }));
 }
 
 }  // namespace juno::rpc

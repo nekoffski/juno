@@ -43,7 +43,7 @@ private:
     kstd::UniquePtr<StreamSocket> m_socket;
 
 public:
-    const i32 yeelightId;
+    const u64 yeelightId;
 };
 
 }  // namespace juno

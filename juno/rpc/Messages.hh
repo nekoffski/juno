@@ -2,15 +2,20 @@
 
 #include <string>
 #include <vector>
+#include <variant>
+#include <functional>
 
 #include "Core.hh"
 #include "devices/Device.hh"
 
 namespace juno {
 
-struct ListDevices {
+struct GetDevices {
     struct Request {
-        std::vector<std::string> uuids;
+        using Uuids  = std::vector<std::string>;
+        using Filter = std::function<bool(Device&)>;
+
+        std::variant<Uuids, Filter> criteria;
     };
     struct Response {
         Devices devices;

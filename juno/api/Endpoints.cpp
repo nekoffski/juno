@@ -36,11 +36,30 @@ kstd::Coro<api::AckResponse> toggleDevicesEndpoint(
         };
     }
 
-    auto devices = co_await rpc::getDevices(mq, toVector(req.uuids()));
-    for (auto& device : devices) {
-        // todo: extend rtti to support flags about provided interfaces
-        co_await reinterpret_cast<Togglable*>(device.get())->toggle();
+    std::vector<Togglable*> devices;
+
+    if (req.uuids()[0] == "*") {
+        static auto filter = [](Device& device) -> bool {
+            return static_cast<bool>(
+              device.getImplementedInterfaces() & Device::Interface::togglable
+            );
+        };
+        for (auto& device : co_await rpc::getDevices(mq, filter))
+            devices.push_back(dynamic_cast<Togglable*>(device.get()));
+    } else {
+        for (auto& device : co_await rpc::getDevices(mq, toVector(req.uuids()))) {
+            if (auto togglable = dynamic_cast<Togglable*>(device.get()); togglable) {
+                devices.push_back(togglable);
+            } else {
+                throw Error{
+                    Error::Code::invalidArgument,
+                    "Device '{}' does not implement Togglabe interface", device->uuid
+                };
+            }
+        }
     }
+
+    for (auto& device : devices) co_await device->toggle();
 
     co_return api::AckResponse{};
 }

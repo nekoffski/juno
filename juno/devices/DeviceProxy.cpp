@@ -1,5 +1,7 @@
 #include "DeviceProxy.hh"
 
+#include <kstd/Functional.hh>
+
 #include "yeelight/Yeelight.hh"
 #include "rpc/Messages.hh"
 
@@ -20,34 +22,45 @@ void DeviceProxy::spawn() {
 
 void DeviceProxy::shutdown() {}
 
+kstd::Coro<void> DeviceProxy::handleMessage(kstd::AsyncMessage& message) {
+    if (message.is<GetDevices::Request>()) {
+        co_await std::visit(
+          kstd::Overloader{
+            [&](const GetDevices::Request::Uuids& uuids) -> kstd::Coro<void> {
+                if (uuids.size() == 0) {
+                    co_await message.respond<GetDevices::Response>(getDevices());
+                } else {
+                    Devices devices;
+                    for (const auto& uuid : uuids) {
+                        if (not m_devices.contains(uuid)) {
+                            co_await message.respond<Error>(
+                              Error::Code::notFound,
+                              "Could not find device with uuid: '{}'", uuid
+                            );
+                            co_return;
+                        }
+                        devices.push_back(m_devices.at(uuid));
+                    }
+                    co_await message.respond<GetDevices::Response>(std::move(devices)
+                    );
+                }
+            },
+            [&](const GetDevices::Request::Filter& filter) -> kstd::Coro<void> {
+                Devices devices;
+                for (auto& device : m_devices | std::views::values)
+                    if (filter(*device)) devices.push_back(device);
+                co_await message.respond<GetDevices::Response>(std::move(devices));
+            },
+          },
+          message.as<GetDevices::Request>()->criteria
+        );
+    }
+}
+
 kstd::Coro<void> DeviceProxy::handleMessages() {
     while (true) {
         auto message = co_await m_messageQueue->wait();
-
-        if (message->is<ListDevices::Request>()) {
-            const auto& uuids = message->as<ListDevices::Request>()->uuids;
-
-            if (uuids.size() == 0) {
-                co_await message->respond<ListDevices::Response>(getDevices());
-            } else {
-                Devices devices;
-                for (const auto& uuid : uuids) {
-                    if (not m_devices.contains(uuid)) {
-                        co_await message->respond<Error>(
-                          Error::Code::notFound,
-                          "Could not find device with uuid: '{}'", uuid
-                        );
-                        break;
-                    }
-                    devices.push_back(m_devices.at(uuid));
-                }
-                if (devices.size() == uuids.size()) {
-                    co_await message->respond<ListDevices::Response>(
-                      std::move(devices)
-                    );
-                }
-            }
-        }
+        co_await handleMessage(*message);
     }
 }
 

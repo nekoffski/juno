@@ -20,7 +20,7 @@ YeelightVendor::YeelightVendor(boost::asio::io_context& io) :
     ) {
     m_socket.open(boost::asio::ip::udp::v4());
 
-    m_socket.set_option(boost::asio::ip::multicast::hops{ 2 });
+    m_socket.set_option(boost::asio::ip::multicast::hops{ 3 });
     m_socket.set_option(boost::asio::ip::multicast::enable_loopback{ true });
 
     std::vector<std::string> headers = {
@@ -62,7 +62,7 @@ kstd::Coro<void> YeelightVendor::scan() {
             break;
         }
     }
-    log::info("Scanning finished");
+    log::info("Scanning finished, {} devices discovered", m_devices.size());
 }
 
 kstd::Coro<void> YeelightVendor::processNewDevice(const std::string& payload) {
@@ -93,11 +93,11 @@ kstd::Coro<void> YeelightVendor::processNewDevice(const std::string& payload) {
         }
     }
 
-    const auto id = std::stoi(headers.at("id"), 0, 16u);
+    const auto id = std::stoull(headers.at("id"), 0, 16u);
 
     for (auto& device : m_devices) {
         if (static_cast<YeelightBulb*>(device.get())->yeelightId == id) {
-            log::info("Device already stored, skipping");
+            log::info("Device ({}) already stored, skipping", id);
             co_return;
         }
     }
@@ -107,8 +107,6 @@ kstd::Coro<void> YeelightVendor::processNewDevice(const std::string& payload) {
     } else {
         log::warn("Device model not supported: '{}'", model);
     }
-
-    co_return;
 }
 
 Devices YeelightVendor::getDevices() const { return m_devices; }
