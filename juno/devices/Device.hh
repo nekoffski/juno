@@ -28,10 +28,13 @@ struct Device {
 
 using Devices = std::vector<kstd::SharedPtr<Device>>;
 
-class Bulb : public Device {
+struct Togglable {
+    virtual kstd::Coro<void> toggle() = 0;
+};
+
+class Bulb : public Device, public Togglable {
 public:
     Type getDeviceType() const override;
-    virtual kstd::Coro<void> toggle() = 0;
 
 private:
     void toProto(api::Device*) const override;

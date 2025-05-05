@@ -2,8 +2,21 @@
 
 namespace juno {
 
-grpc::StatusCode GrpcError::code() const { return m_code; }
-grpc::Status GrpcError::status() const { return grpc::Status{ m_code, what() }; }
+static grpc::StatusCode mapStatusCode(Error::Code e) {
+    switch (e) {
+        case Error::Code::notFound:
+            return grpc::StatusCode::NOT_FOUND;
+        case Error::Code::invalidArgument:
+            return grpc::StatusCode::INVALID_ARGUMENT;
+        case Error::Code::unspecified:
+        default:
+            return grpc::StatusCode::UNKNOWN;
+    }
+}
+
+grpc::Status juno::details::toGrpcStatus(const Error& e) {
+    return grpc::Status{ mapStatusCode(e.code()), e.what() };
+}
 
 AsyncGrpcServer::Builder::Builder(
   AsyncGrpcServer& server, grpc::ServerBuilder& serverBuilder

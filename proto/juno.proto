@@ -21,7 +21,15 @@ message PongResponse {
     string magic = 1;
 }
 
-message ListDevicesRequest {};
+message AckResponse {};
+
+message ToggleDevicesRequest {
+    repeated string uuids = 1;
+};
+
+message ListDevicesRequest {
+    string filter = 1;
+};
 
 message ListDevicesResponse {
     repeated Device devices = 1;
@@ -30,4 +38,5 @@ message ListDevicesResponse {
 service JunoService {
     rpc Ping (PingRequest) returns (PongResponse);
     rpc ListDevices (ListDevicesRequest) returns (ListDevicesResponse);
+    rpc ToggleDevices (ToggleDevicesRequest) returns (AckResponse);
 };

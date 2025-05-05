@@ -5,6 +5,7 @@
 #include <kstd/Core.hh>
 #include <kstd/Log.hh>
 #include <kstd/FileSystem.hh>
+#include <kstd/Error.hh>
 
 #include <limits>
 #include <fmt/core.h>
@@ -30,34 +31,24 @@ using kstd::u8;
 using kstd::f32;
 using kstd::f64;
 
-class Error : public std::runtime_error {
+class Error : public kstd::Error {
 public:
+    enum class Code { unspecified = 0, notFound, invalidArgument };
+
     template <typename... Args>
     explicit Error(kstd::log::details::FormatWithLocation format, Args&&... args) :
-        runtime_error(
-          fmt::format(fmt::runtime(format.fmt), std::forward<Args>(args)...)
-        ),
-        m_source(format.loc) {}
+        kstd::Error(std::move(format), std::forward<Args>(args)...),
+        m_code(Code::unspecified) {}
 
-    std::string where() const;
+    template <typename... Args>
+    explicit Error(
+      Code code, kstd::log::details::FormatWithLocation format, Args&&... args
+    ) : kstd::Error(std::move(format), std::forward<Args>(args)...), m_code(code) {}
 
-private:
-    spdlog::source_loc m_source;
-};
-
-template <u64 Max> class SequenceGenerator {
-    static_assert(Max < std::numeric_limits<u64>::max());
-
-public:
-    SequenceGenerator() : m_current(0u) {}
-
-    u64 get() {
-        m_current %= Max;
-        return m_current++;
-    }
+    Code code() const;
 
 private:
-    u64 m_current;
+    Code m_code;
 };
 
 }  // namespace juno

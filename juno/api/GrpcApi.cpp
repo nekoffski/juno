@@ -18,7 +18,7 @@ GrpcApi::GrpcApi(
         .port = cfg.grpcApiPort,
       }
     ),
-    m_messageQueue(messenger.registerQueue(GRPC_API_QUEUE)) {}
+    m_mq(messenger.registerQueue(GRPC_API_QUEUE)) {}
 
 void GrpcApi::spawn() { startAsync(); }
 
@@ -40,7 +40,13 @@ void GrpcApi::build(Builder&& builder) {
       .addRequest<api::ListDevicesRequest, api::ListDevicesResponse>(
         &Service::RequestListDevices,
         [&]([[maybe_unused]] const auto&) -> kstd::Coro<api::ListDevicesResponse> {
-            co_return (co_await listDevicesEndpoint(m_messageQueue));
+            co_return (co_await listDevicesEndpoint(*m_mq));
+        }
+      )
+      .addRequest<api::ToggleDevicesRequest, api::AckResponse>(
+        &Service::RequestToggleDevices,
+        [&](const auto& req) -> kstd::Coro<api::AckResponse> {
+            co_return (co_await toggleDevicesEndpoint(*m_mq, req));
         }
       );
 }

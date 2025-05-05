@@ -16,22 +16,9 @@
 
 namespace juno {
 
-class GrpcError : public Error {
-public:
-    template <typename... Args>
-    explicit GrpcError(
-      grpc::StatusCode code, kstd::log::details::FormatWithLocation format,
-      Args&&... args
-    ) : Error(std::move(format), std::forward<Args>(args)...), m_code(code) {}
-
-    grpc::StatusCode code() const;
-    grpc::Status status() const;
-
-private:
-    grpc::StatusCode m_code;
-};
-
 namespace details {
+
+grpc::Status toGrpcStatus(const Error& e);
 
 // clang-format off
 template <typename Service, typename Request, typename Response>
@@ -77,12 +64,12 @@ public:
             try {
                 const auto response = co_await m_callback(m_request);
                 m_responder.Finish(response, grpc::Status::OK, this);
-            } catch (const GrpcError& e) {
+            } catch (const Error& e) {
                 log::warn(
                   "Error handling GRPC request: {} - '{}' - '{}'",
                   static_cast<i32>(e.code()), e.what(), e.where()
                 );
-                m_responder.FinishWithError(e.status(), this);
+                m_responder.FinishWithError(toGrpcStatus(e), this);
             }
 
             m_status = Status::finishing;

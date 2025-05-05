@@ -1,0 +1,3 @@
+DECLARE JOB TYPE=oneshot,  NAME=job_0,  COMMAND=toggle_bulb, ARGS=(), DELAY=5s
+DECLARE JOB TYPE=repeated, NAME=job_0,  COMMAND=toggle_bulb, ARGS=(), INTERVAL=5s,  FINISH=NEVER
+DECLARE JOB TYPE=rule,     NAME=rule_0, COMMAND=toggle_bulb, ARGS=(), CONDITION=(), FINISH=NEVER 

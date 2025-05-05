@@ -2,6 +2,7 @@
 
 #include <kstd/async/Core.hh>
 #include <kstd/memory/SharedPtr.hh>
+#include <kstd/Id.hh>
 
 #include <nlohmann/json.hpp>
 
@@ -38,7 +39,7 @@ private:
         co_return requestId;
     }
 
-    SequenceGenerator<128u> m_idGenerator;
+    kstd::SequenceGenerator<0u, 128u> m_idGenerator;
     kstd::UniquePtr<StreamSocket> m_socket;
 
 public:

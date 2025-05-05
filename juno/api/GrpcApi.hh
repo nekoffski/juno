@@ -22,7 +22,7 @@ public:
 private:
     void build(Builder&&) override;
 
-    kstd::AsyncMessenger::Queue* m_messageQueue;
+    kstd::AsyncMessenger::Queue* m_mq;
 };
 
 }  // namespace juno

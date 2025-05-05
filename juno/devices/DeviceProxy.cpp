@@ -1,7 +1,7 @@
 #include "DeviceProxy.hh"
 
 #include "yeelight/Yeelight.hh"
-#include "Messages.hh"
+#include "rpc/Messages.hh"
 
 namespace juno {
 
@@ -24,24 +24,43 @@ kstd::Coro<void> DeviceProxy::handleMessages() {
     while (true) {
         auto message = co_await m_messageQueue->wait();
 
-        if (message->is<ListDevices::Request>())
-            co_await message->respond<ListDevices::Response>(getDevices());
+        if (message->is<ListDevices::Request>()) {
+            const auto& uuids = message->as<ListDevices::Request>()->uuids;
+
+            if (uuids.size() == 0) {
+                co_await message->respond<ListDevices::Response>(getDevices());
+            } else {
+                Devices devices;
+                for (const auto& uuid : uuids) {
+                    if (not m_devices.contains(uuid)) {
+                        co_await message->respond<Error>(
+                          Error::Code::notFound,
+                          "Could not find device with uuid: '{}'", uuid
+                        );
+                        break;
+                    }
+                    devices.push_back(m_devices.at(uuid));
+                }
+                if (devices.size() == uuids.size()) {
+                    co_await message->respond<ListDevices::Response>(
+                      std::move(devices)
+                    );
+                }
+            }
+        }
     }
 }
 
 Devices DeviceProxy::getDevices() const {
-    Devices allDevices;
-
-    for (auto& vendor : m_vendors) {
-        auto devices = vendor->getDevices();
-        std::ranges::move(devices, std::back_inserter(allDevices));
-    }
-
-    return allDevices;
+    auto values = m_devices | std::views::values;
+    return Devices{ values.begin(), values.end() };
 }
 
 kstd::Coro<void> DeviceProxy::scan() {
-    for (auto& vendor : m_vendors) co_await vendor->scan();
+    for (auto& vendor : m_vendors) {
+        co_await vendor->scan();
+        for (auto& device : vendor->getDevices()) m_devices[device->uuid] = device;
+    }
 }
 
 }  // namespace juno

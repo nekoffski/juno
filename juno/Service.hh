@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Queues.hh"
+#include "rpc/Queues.hh"
 
 namespace juno {
 
