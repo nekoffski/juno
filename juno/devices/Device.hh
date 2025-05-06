@@ -24,6 +24,8 @@ struct Device {
 
     virtual void toProto(api::Device*) const = 0;
 
+    bool implements(Interface interfaces) const;
+
     virtual Type getDeviceType() const                 = 0;
     virtual Interface getImplementedInterfaces() const = 0;
     virtual const std::string& getName() const         = 0;

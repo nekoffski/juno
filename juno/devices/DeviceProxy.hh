@@ -5,8 +5,9 @@
 
 #include "Vendor.hh"
 #include "Device.hh"
-
 #include "Service.hh"
+
+#include "rpc/Messages.hh"
 
 namespace juno {
 
@@ -20,15 +21,20 @@ public:
     void shutdown() override;
 
 private:
-    kstd::Coro<void> handleMessages();
-    kstd::Coro<void> handleMessage(kstd::AsyncMessage& message);
-
     template <typename T, typename... Args>
     requires(std::derived_from<T, Vendor> && std::constructible_from<T, Args...>)
     void addVendor(Args&&... args) {
         m_vendors.push_back(kstd::makeUnique<T>(std::forward<Args>(args)...));
     }
 
+    kstd::Coro<void> handleMessages();
+    kstd::Coro<void> handleMessage(kstd::AsyncMessage& message);
+    // -- message handlers
+    kstd::Coro<void> handleGetDevicesRequest(
+      kstd::AsyncMessage& handle, const GetDevices::Request& r
+    );
+
+    // --
     kstd::Coro<void> scan();
     Devices getDevices() const;
 

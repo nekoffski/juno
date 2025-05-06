@@ -7,8 +7,6 @@
 
 namespace juno {
 
-kstd::Coro<api::PongResponse> pingEndpoint(const api::PingRequest&);
-
 kstd::Coro<api::ListDevicesResponse>
   listDevicesEndpoint(kstd::AsyncMessenger::Queue&);
 

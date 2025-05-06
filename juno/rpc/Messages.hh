@@ -12,10 +12,13 @@ namespace juno {
 
 struct GetDevices {
     struct Request {
-        using Uuids  = std::vector<std::string>;
-        using Filter = std::function<bool(Device&)>;
+        struct All {};
 
-        std::variant<Uuids, Filter> criteria;
+        using Uuids    = std::vector<std::string>;
+        using Filter   = std::function<bool(Device&)>;
+        using Criteria = std::variant<All, Uuids, Filter, Device::Interface>;
+
+        Criteria criteria;
     };
     struct Response {
         Devices devices;

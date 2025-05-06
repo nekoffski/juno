@@ -3,7 +3,6 @@
 #include <kstd/Functional.hh>
 
 #include "yeelight/Yeelight.hh"
-#include "rpc/Messages.hh"
 
 namespace juno {
 
@@ -22,37 +21,53 @@ void DeviceProxy::spawn() {
 
 void DeviceProxy::shutdown() {}
 
+kstd::Coro<void> DeviceProxy::handleGetDevicesRequest(
+  kstd::AsyncMessage& handle, const GetDevices::Request& r
+) {
+    co_await std::visit(
+      kstd::Overloader{
+        [&]([[maybe_unused]] const GetDevices::Request::All&) -> kstd::Coro<void> {
+            co_await handle.respond<GetDevices::Response>(getDevices());
+        },
+        [&](const GetDevices::Request::Uuids& uuids) -> kstd::Coro<void> {
+            Devices devices;
+            devices.reserve(uuids.size());
+            for (const auto& uuid : uuids) {
+                if (not m_devices.contains(uuid)) {
+                    co_await handle.respond<Error>(
+                      Error::Code::notFound, "Could not find device with uuid: '{}'",
+                      uuid
+                    );
+                    co_return;
+                }
+                devices.push_back(m_devices.at(uuid));
+            }
+            co_await handle.respond<GetDevices::Response>(std::move(devices));
+        },
+        [&](const GetDevices::Request::Filter& filter) -> kstd::Coro<void> {
+            co_await handle.respond<GetDevices::Response>(
+              m_devices | std::views::values
+              | std::views::filter([&](auto& device) { return filter(*device); })
+              | kstd::toVector<kstd::SharedPtr<Device>>()
+            );
+        },
+        [&](const Device::Interface& interfaces) -> kstd::Coro<void> {
+            co_await handle.respond<GetDevices::Response>(
+              m_devices | std::views::values | std::views::filter([&](auto& device) {
+                  return device->implements(interfaces);
+              })
+              | kstd::toVector<kstd::SharedPtr<Device>>()
+            );
+        },
+      },
+      r.criteria
+    );
+}
+
 kstd::Coro<void> DeviceProxy::handleMessage(kstd::AsyncMessage& message) {
     if (message.is<GetDevices::Request>()) {
-        co_await std::visit(
-          kstd::Overloader{
-            [&](const GetDevices::Request::Uuids& uuids) -> kstd::Coro<void> {
-                if (uuids.size() == 0) {
-                    co_await message.respond<GetDevices::Response>(getDevices());
-                } else {
-                    Devices devices;
-                    for (const auto& uuid : uuids) {
-                        if (not m_devices.contains(uuid)) {
-                            co_await message.respond<Error>(
-                              Error::Code::notFound,
-                              "Could not find device with uuid: '{}'", uuid
-                            );
-                            co_return;
-                        }
-                        devices.push_back(m_devices.at(uuid));
-                    }
-                    co_await message.respond<GetDevices::Response>(std::move(devices)
-                    );
-                }
-            },
-            [&](const GetDevices::Request::Filter& filter) -> kstd::Coro<void> {
-                Devices devices;
-                for (auto& device : m_devices | std::views::values)
-                    if (filter(*device)) devices.push_back(device);
-                co_await message.respond<GetDevices::Response>(std::move(devices));
-            },
-          },
-          message.as<GetDevices::Request>()->criteria
+        co_await handleGetDevicesRequest(
+          message, *message.as<GetDevices::Request>()
         );
     }
 }
@@ -65,8 +80,8 @@ kstd::Coro<void> DeviceProxy::handleMessages() {
 }
 
 Devices DeviceProxy::getDevices() const {
-    auto values = m_devices | std::views::values;
-    return Devices{ values.begin(), values.end() };
+    return m_devices | std::views::values
+           | kstd::toVector<kstd::SharedPtr<Device>>();
 }
 
 kstd::Coro<void> DeviceProxy::scan() {

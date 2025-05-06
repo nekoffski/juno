@@ -1,4 +1,4 @@
-#include "Endpoints.hh"
+#include "DeviceEndpoints.hh"
 
 #include "net/Grpc.hh"
 
@@ -8,15 +8,6 @@
 #include "Helpers.hh"
 
 namespace juno {
-
-kstd::Coro<api::PongResponse> pingEndpoint(const api::PingRequest& req) {
-    const auto magic = req.magic();
-    log::trace("Received ping request, magic: '{}'", magic);
-
-    api::PongResponse res;
-    res.set_magic(magic);
-    co_return res;
-}
 
 kstd::Coro<api::ListDevicesResponse> listDevicesEndpoint(
   kstd::AsyncMessenger::Queue& mq
@@ -36,20 +27,21 @@ kstd::Coro<api::AckResponse> toggleDevicesEndpoint(
         };
     }
 
-    std::vector<Togglable*> devices;
+    std::vector<Togglable*> togglabeDevices;
 
     if (req.uuids()[0] == "*") {
-        static auto filter = [](Device& device) -> bool {
-            return static_cast<bool>(
-              device.getImplementedInterfaces() & Device::Interface::togglable
-            );
-        };
-        for (auto& device : co_await rpc::getDevices(mq, filter))
-            devices.push_back(dynamic_cast<Togglable*>(device.get()));
+        auto devices = co_await rpc::getDevices(mq, Device::Interface::togglable);
+        togglabeDevices.reserve(devices.size());
+        std::ranges::transform(
+          devices, std::back_inserter(togglabeDevices),
+          [](auto& device) { return dynamic_cast<Togglable*>(device.get()); }
+        );
     } else {
-        for (auto& device : co_await rpc::getDevices(mq, toVector(req.uuids()))) {
+        auto devices = co_await rpc::getDevices(mq, toVector(req.uuids()));
+        togglabeDevices.reserve(devices.size());
+        for (auto& device : devices) {
             if (auto togglable = dynamic_cast<Togglable*>(device.get()); togglable) {
-                devices.push_back(togglable);
+                togglabeDevices.push_back(togglable);
             } else {
                 throw Error{
                     Error::Code::invalidArgument,
@@ -58,9 +50,7 @@ kstd::Coro<api::AckResponse> toggleDevicesEndpoint(
             }
         }
     }
-
-    for (auto& device : devices) co_await device->toggle();
-
+    for (auto& device : togglabeDevices) co_await device->toggle();
     co_return api::AckResponse{};
 }
 

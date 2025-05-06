@@ -7,13 +7,9 @@
 
 namespace juno::rpc {
 
-// FIXME: separate overload for getting all devices
 kstd::Coro<Devices> getDevices(
-  kstd::AsyncMessenger::Queue& mq, const GetDevices::Request::Uuids& uuids = {}
-);
-
-kstd::Coro<Devices> getDevices(
-  kstd::AsyncMessenger::Queue& mq, const GetDevices::Request::Filter& filter
+  kstd::AsyncMessenger::Queue& mq,
+  GetDevices::Request::Criteria criteria = GetDevices::Request::All{}
 );
 
 }  // namespace juno::rpc

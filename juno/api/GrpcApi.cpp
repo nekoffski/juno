@@ -3,7 +3,8 @@
 #include "proto/juno.pb.h"
 #include "proto/juno.grpc.pb.h"
 
-#include "Endpoints.hh"
+#include "HealthEndpoints.hh"
+#include "DeviceEndpoints.hh"
 
 namespace juno {
 
@@ -27,24 +28,23 @@ void GrpcApi::shutdown() {
 }
 
 void GrpcApi::build(Builder&& builder) {
-    auto&& service = builder.addService<api::JunoService::AsyncService>();
-    using Service  = api::JunoService::AsyncService;
-
-    service
+    builder.addService<api::HealthService::AsyncService>()
       .addRequest<api::PingRequest, api::PongResponse>(
-        &Service::RequestPing,
+        &api::HealthService::AsyncService::RequestPing,
         [&](const auto& req) -> kstd::Coro<api::PongResponse> {
             co_return (co_await pingEndpoint(req));
         }
-      )
+      );
+
+    builder.addService<api::DeviceService::AsyncService>()
       .addRequest<api::ListDevicesRequest, api::ListDevicesResponse>(
-        &Service::RequestListDevices,
+        &api::DeviceService::AsyncService::RequestList,
         [&]([[maybe_unused]] const auto&) -> kstd::Coro<api::ListDevicesResponse> {
             co_return (co_await listDevicesEndpoint(*m_mq));
         }
       )
       .addRequest<api::ToggleDevicesRequest, api::AckResponse>(
-        &Service::RequestToggleDevices,
+        &api::DeviceService::AsyncService::RequestToggle,
         [&](const auto& req) -> kstd::Coro<api::AckResponse> {
             co_return (co_await toggleDevicesEndpoint(*m_mq, req));
         }

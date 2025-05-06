@@ -13,4 +13,8 @@ void Bulb::toProto(api::Device* device) const {
     device->set_type(api::BULB);
 }
 
+bool Device::implements(Interface interfaces) const {
+    return static_cast<bool>(getImplementedInterfaces() & interfaces);
+}
+
 }  // namespace juno
