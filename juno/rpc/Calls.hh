@@ -12,4 +12,8 @@ kstd::Coro<Devices> getDevices(
   GetDevices::Request::Criteria criteria = GetDevices::Request::All{}
 );
 
+kstd::Coro<void> removeJobs(
+  kstd::AsyncMessenger::Queue& mq, const std::vector<std::string>& uuids
+);
+
 }  // namespace juno::rpc

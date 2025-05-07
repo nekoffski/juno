@@ -25,4 +25,14 @@ struct GetDevices {
     };
 };
 
+struct RemoveJobs {
+    struct Request {
+        std::vector<std::string> uuids;
+    };
+
+    struct Response {
+        std::vector<std::string> missingJobs;
+    };
+};
+
 }  // namespace juno

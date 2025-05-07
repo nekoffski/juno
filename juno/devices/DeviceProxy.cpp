@@ -8,14 +8,16 @@ namespace juno {
 
 DeviceProxy::DeviceProxy(
   boost::asio::io_context& io, kstd::AsyncMessenger& messenger
-) : m_io(io), m_messageQueue(messenger.registerQueue(DEVICE_PROXY_QUEUE)) {
+) : RemoteCallee(this, messenger, DEVICE_PROXY_QUEUE), m_io(io) {
     addVendor<YeelightVendor>(m_io);
+
+    registerCall<GetDevices::Request>(&juno::DeviceProxy::handleGetDevicesRequest);
 }
 
 void DeviceProxy::spawn() {
     kstd::spawn(m_io.get_executor(), [&]() -> kstd::Coro<void> { co_await scan(); });
     kstd::spawn(m_io.get_executor(), [&]() -> kstd::Coro<void> {
-        co_await handleMessages();
+        co_await startHandling();
     });
 }
 
@@ -64,21 +66,6 @@ kstd::Coro<void> DeviceProxy::handleGetDevicesRequest(
     );
 }
 
-kstd::Coro<void> DeviceProxy::handleMessage(kstd::AsyncMessage& message) {
-    if (message.is<GetDevices::Request>()) {
-        co_await handleGetDevicesRequest(
-          message, *message.as<GetDevices::Request>()
-        );
-    }
-}
-
-kstd::Coro<void> DeviceProxy::handleMessages() {
-    while (true) {
-        auto message = co_await m_messageQueue->wait();
-        co_await handleMessage(*message);
-    }
-}
-
 Devices DeviceProxy::getDevices() const {
     return m_devices | std::views::values
            | kstd::toVector<kstd::SharedPtr<Device>>();
@@ -87,7 +74,8 @@ Devices DeviceProxy::getDevices() const {
 kstd::Coro<void> DeviceProxy::scan() {
     for (auto& vendor : m_vendors) {
         co_await vendor->scan();
-        for (auto& device : vendor->getDevices()) m_devices[device->uuid] = device;
+        for (auto& device : vendor->getDevices())
+            m_devices[device->getUuid()] = device;
     }
 }
 

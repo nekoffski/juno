@@ -8,10 +8,11 @@
 #include "Service.hh"
 
 #include "rpc/Messages.hh"
+#include "rpc/RemoteCallee.hh"
 
 namespace juno {
 
-class DeviceProxy : public Service {
+class DeviceProxy : public Service, public RemoteCallee<DeviceProxy> {
 public:
     explicit DeviceProxy(
       boost::asio::io_context& io, kstd::AsyncMessenger& messenger
@@ -27,8 +28,6 @@ private:
         m_vendors.push_back(kstd::makeUnique<T>(std::forward<Args>(args)...));
     }
 
-    kstd::Coro<void> handleMessages();
-    kstd::Coro<void> handleMessage(kstd::AsyncMessage& message);
     // -- message handlers
     kstd::Coro<void> handleGetDevicesRequest(
       kstd::AsyncMessage& handle, const GetDevices::Request& r

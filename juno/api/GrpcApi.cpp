@@ -3,8 +3,9 @@
 #include "proto/juno.pb.h"
 #include "proto/juno.grpc.pb.h"
 
-#include "HealthEndpoints.hh"
-#include "DeviceEndpoints.hh"
+#include "endpoints/HealthEndpoints.hh"
+#include "endpoints/DeviceEndpoints.hh"
+#include "endpoints/SchedulerEndpoints.hh"
 
 namespace juno {
 
@@ -47,6 +48,20 @@ void GrpcApi::build(Builder&& builder) {
         &api::DeviceService::AsyncService::RequestToggle,
         [&](const auto& req) -> kstd::Coro<api::AckResponse> {
             co_return (co_await toggleDevicesEndpoint(*m_mq, req));
+        }
+      );
+
+    builder.addService<api::SchedulerService::AsyncService>()
+      .addRequest<api::AddJobRequest, api::AddJobResponse>(
+        &api::SchedulerService::AsyncService::RequestAddJob,
+        [&](const auto& req) -> kstd::Coro<api::AddJobResponse> {
+            co_return (co_await addJobEndpoint(*m_mq, req));
+        }
+      )
+      .addRequest<api::RemoveJobsRequest, api::AckResponse>(
+        &api::SchedulerService::AsyncService::RequestRemoveJobs,
+        [&](const auto& req) -> kstd::Coro<api::AckResponse> {
+            co_return (co_await removeJobsEndpoint(*m_mq, req));
         }
       );
 }

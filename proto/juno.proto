@@ -35,6 +35,18 @@ message ListDevicesResponse {
     repeated Device devices = 1;
 };
 
+message AddJobRequest {
+    string job = 1;
+};
+
+message AddJobResponse {
+    string uuid = 1;
+};
+
+message RemoveJobsRequest {
+    repeated string uuids = 1;
+};
+
 service HealthService {
     rpc Ping (PingRequest) returns (PongResponse);
 };
@@ -42,4 +54,9 @@ service HealthService {
 service DeviceService {
     rpc List (ListDevicesRequest) returns (ListDevicesResponse);
     rpc Toggle (ToggleDevicesRequest) returns (AckResponse);
+};
+
+service SchedulerService {
+    rpc AddJob(AddJobRequest) returns (AddJobResponse);
+    rpc RemoveJobs(RemoveJobsRequest) returns (AckResponse);
 };

@@ -5,7 +5,7 @@
 #include "rpc/Messages.hh"
 #include "rpc/Queues.hh"
 #include "rpc/Calls.hh"
-#include "Helpers.hh"
+#include "api/Helpers.hh"
 
 namespace juno {
 
@@ -45,7 +45,8 @@ kstd::Coro<api::AckResponse> toggleDevicesEndpoint(
             } else {
                 throw Error{
                     Error::Code::invalidArgument,
-                    "Device '{}' does not implement Togglabe interface", device->uuid
+                    "Device '{}' does not implement Togglabe interface",
+                    device->getUuid()
                 };
             }
         }

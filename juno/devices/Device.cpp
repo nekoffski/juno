@@ -9,7 +9,7 @@ Device::Interface Bulb::getImplementedInterfaces() const {
 }
 
 void Bulb::toProto(api::Device* device) const {
-    device->set_uuid(uuid);
+    device->set_uuid(getUuid());
     device->set_type(api::BULB);
 }
 

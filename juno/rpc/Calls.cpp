@@ -25,4 +25,22 @@ kstd::Coro<Devices> getDevices(
     handleError(response.get(), "GetDevices");
 }
 
+kstd::Coro<void> removeJobs(
+  kstd::AsyncMessenger::Queue& mq, const std::vector<std::string>& uuids
+) {
+    auto handle   = co_await mq.send<RemoveJobs::Request>(uuids).to(SCHEDULER_QUEUE);
+    auto response = co_await handle->wait();
+    if (response->is<RemoveJobs::Response>()) {
+        auto notRemoved = response->as<RemoveJobs::Response>()->missingJobs;
+        if (notRemoved.size() > 0) {
+            // FIXME
+            // throw Error{
+            //
+            // };
+        }
+    } else {
+        handleError(response.get(), "RemoveJobs");
+    }
+}
+
 }  // namespace juno::rpc
