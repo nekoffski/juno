@@ -1,5 +1,7 @@
 #include "GrpcApi.hh"
 
+#include <kstd/Env.hh>
+
 #include "juno.pb.h"
 #include "juno.grpc.pb.h"
 
@@ -9,15 +11,15 @@
 
 namespace juno {
 
-GrpcApi::GrpcApi(
-  boost::asio::io_context& io, kstd::AsyncMessenger& messenger,
-  const juno::Config& cfg
-) :
+const auto grpcApiHost = kstd::getEnv("JUNO_GRPC_API_HOST").value_or("0.0.0.0");
+const auto grpcApiPort = kstd::getEnv<u64>("JUNO_GRPC_API_PORT").value_or(8888);
+
+GrpcApi::GrpcApi(boost::asio::io_context& io, kstd::AsyncMessenger& messenger) :
     AsyncGrpcServer(
       io,
       Config{
-        .host = cfg.grpcApiHost,
-        .port = cfg.grpcApiPort,
+        .host = grpcApiHost,
+        .port = static_cast<u16>(grpcApiPort),
       }
     ),
     m_mq(messenger.registerQueue(GRPC_API_QUEUE)) {}

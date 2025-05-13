@@ -25,7 +25,7 @@ void MetricService::spawn() {
         const auto lattitude = 50.049683f;
         const auto longitude = 19.944544f;
 
-        const auto apiKey = std::getenv("OPEN_WEATHER_API_KEY");
+        const auto apiKey = std::getenv("JUNO_OPEN_WEATHER_API_KEY");
 
         auto response = co_await httpsRequest({
           .host = "api.openweathermap.org",

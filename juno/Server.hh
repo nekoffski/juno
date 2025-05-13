@@ -8,7 +8,6 @@
 #include <kstd/async/AsyncMessenger.hh>
 
 #include "Core.hh"
-#include "Config.hh"
 
 #include "Service.hh"
 
@@ -16,7 +15,7 @@ namespace juno {
 
 class Server {
 public:
-    explicit Server(const Config& config);
+    explicit Server();
 
     i32 start();
 
@@ -32,8 +31,6 @@ private:
 
     boost::asio::io_context m_io;
     boost::asio::signal_set m_signals;
-
-    Config m_config;
 
     kstd::AsyncMessenger m_messenger;
 

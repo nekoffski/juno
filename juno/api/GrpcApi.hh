@@ -3,18 +3,13 @@
 #include <kstd/async/AsyncMessenger.hh>
 
 #include "net/Grpc.hh"
-#include "Config.hh"
-
 #include "Service.hh"
 
 namespace juno {
 
 class GrpcApi : public Service, private AsyncGrpcServer {
 public:
-    explicit GrpcApi(
-      boost::asio::io_context& io, kstd::AsyncMessenger& messenger,
-      const juno::Config& cfg
-    );
+    explicit GrpcApi(boost::asio::io_context& io, kstd::AsyncMessenger& messenger);
 
     void spawn() override;
     void shutdown() override;

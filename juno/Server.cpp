@@ -7,9 +7,8 @@
 
 namespace juno {
 
-Server::Server(const Config& config
-) : m_signals(m_io, SIGTERM, SIGINT), m_config(config), m_messenger(m_io) {
-    addService<GrpcApi>(m_io, m_messenger, m_config);
+Server::Server() : m_signals(m_io, SIGTERM, SIGINT), m_messenger(m_io) {
+    addService<GrpcApi>(m_io, m_messenger);
     addService<DeviceProxy>(m_io, m_messenger);
     addService<Scheduler>(m_io, m_messenger);
     addService<MetricService>(m_io, m_messenger);
