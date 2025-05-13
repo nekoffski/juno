@@ -2,6 +2,7 @@
 
 #include <unordered_map>
 
+#include <nlohmann/json.hpp>
 #include <kstd/async/Core.hh>
 
 #include "Core.hh"
@@ -16,6 +17,8 @@ struct HttpRequest {
 struct HttpResponse {
     u32 code;
     std::string body;
+
+    nlohmann::json toJson() const;
 };
 
 kstd::Coro<HttpResponse> httpRequest(const HttpRequest& r);

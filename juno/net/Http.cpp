@@ -75,4 +75,6 @@ kstd::Coro<HttpResponse> httpsRequest(const HttpRequest& r) {
     co_return response;
 }
 
+nlohmann::json HttpResponse::toJson() const { return nlohmann::json::parse(body); }
+
 }  // namespace juno
