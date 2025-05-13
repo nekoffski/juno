@@ -9,7 +9,7 @@
 #include <kstd/Enum.hh>
 
 #include "Core.hh"
-#include "proto/juno.pb.h"
+#include "juno.pb.h"
 
 namespace juno {
 

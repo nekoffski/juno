@@ -4,18 +4,15 @@ project(juno-server)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_BUILD_TYPE Debug)
 
-# set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
-# set (CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
-
 set(GCC_COVERAGE_COMPILE_FLAGS "--coverage -O0 -fprofile-arcs -ftest-coverage -fno-elide-constructors -fno-inline")
 set(GCC_COVERAGE_LINK_FLAGS "-lgcov")
 set(JUNO_COMPILER_FLAGS "")
 
-find_package(kstd CONFIG REQUIRED)
-find_package(Protobuf REQUIRED)
+find_package(kstd REQUIRED)
 find_package(gRPC REQUIRED)
+find_package(Protobuf REQUIRED)   
 
-set(JUNO_LIBS kstd::kstd gRPC::grpc++ protobuf::libprotobuf)
+set(JUNO_LIBS kstd::kstd protobuf::libprotobuf gRPC::grpc++)
 set(PROTO_DIR ${CMAKE_CURRENT_SOURCE_DIR}/proto)
 set(PROTO_FILES ${PROTO_DIR}/juno.proto)
 set(JUNO_INCLUDE ${CMAKE_CURRENT_SOURCE_DIR}/juno)

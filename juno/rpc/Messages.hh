@@ -35,4 +35,13 @@ struct RemoveJobs {
     };
 };
 
+struct AddJob {
+    struct Request {
+        std::string job;
+    };
+    struct Response {
+        std::string uuid;
+    };
+};
+
 }  // namespace juno

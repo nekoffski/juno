@@ -7,6 +7,12 @@ class Recipe(ConanFile):
 
     def requirements(self):
         self.requires("kstd/1.0")
+        self.requires("abseil/20240116.2")
+        self.requires("protobuf/5.27.0")
+        self.requires("grpc/1.67.1")
+
+        self.tool_requires("protobuf/5.27.0")
+        self.tool_requires("grpc/1.67.1")
 
     def layout(self):
         cmake_layout(self)

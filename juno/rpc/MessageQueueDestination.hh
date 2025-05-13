@@ -10,11 +10,11 @@
 
 namespace juno {
 
-template <typename Impl> class RemoteCallee {
+template <typename Impl> class MessageQueueDestination {
     using Callback = std::function<kstd::Coro<void>(kstd::AsyncMessage&)>;
 
 public:
-    explicit RemoteCallee(
+    explicit MessageQueueDestination(
       Impl* impl, kstd::AsyncMessenger& messenger, const std::string& queueName
     ) :
         m_impl(impl), m_queueName(queueName),

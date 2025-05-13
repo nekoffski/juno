@@ -16,7 +16,7 @@ public:
 
     kstd::Coro<bool> process() {
         if (co_await isReady()) co_await m_action->execute();
-        co_return (co_await isDone());
+        co_return co_await isDone();
     }
 
 private:

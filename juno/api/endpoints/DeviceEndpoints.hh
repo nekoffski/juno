@@ -2,8 +2,8 @@
 
 #include <kstd/async/AsyncMessenger.hh>
 
-#include "proto/juno.grpc.pb.h"
-#include "proto/juno.pb.h"
+#include "juno.grpc.pb.h"
+#include "juno.pb.h"
 
 namespace juno {
 

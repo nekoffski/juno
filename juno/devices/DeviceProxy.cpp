@@ -8,7 +8,7 @@ namespace juno {
 
 DeviceProxy::DeviceProxy(
   boost::asio::io_context& io, kstd::AsyncMessenger& messenger
-) : RemoteCallee(this, messenger, DEVICE_PROXY_QUEUE), m_io(io) {
+) : MessageQueueDestination(this, messenger, DEVICE_PROXY_QUEUE), m_io(io) {
     addVendor<YeelightVendor>(m_io);
 
     registerCall<GetDevices::Request>(&juno::DeviceProxy::handleGetDevicesRequest);

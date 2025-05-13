@@ -6,11 +6,11 @@
 
 #include "jobs/Job.hh"
 #include "rpc/Messages.hh"
-#include "rpc/RemoteCallee.hh"
+#include "rpc/MessageQueueDestination.hh"
 
 namespace juno {
 
-class Scheduler : public Service, public RemoteCallee<Scheduler> {
+class Scheduler : public Service, public MessageQueueDestination<Scheduler> {
 public:
     explicit Scheduler(boost::asio::io_context& io, kstd::AsyncMessenger& messenger);
 
@@ -21,6 +21,9 @@ private:
     // -- message handlers
     kstd::Coro<void> handleRemoveJobsRequest(
       kstd::AsyncMessage& handle, const RemoveJobs::Request& r
+    );
+    kstd::Coro<void> handleAddJobRequest(
+      kstd::AsyncMessage& handle, const AddJob::Request& r
     );
 
     // --

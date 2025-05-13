@@ -8,11 +8,11 @@
 #include "Service.hh"
 
 #include "rpc/Messages.hh"
-#include "rpc/RemoteCallee.hh"
+#include "rpc/MessageQueueDestination.hh"
 
 namespace juno {
 
-class DeviceProxy : public Service, public RemoteCallee<DeviceProxy> {
+class DeviceProxy : public Service, public MessageQueueDestination<DeviceProxy> {
 public:
     explicit DeviceProxy(
       boost::asio::io_context& io, kstd::AsyncMessenger& messenger

@@ -1,7 +1,7 @@
 #include "GrpcApi.hh"
 
-#include "proto/juno.pb.h"
-#include "proto/juno.grpc.pb.h"
+#include "juno.pb.h"
+#include "juno.grpc.pb.h"
 
 #include "endpoints/HealthEndpoints.hh"
 #include "endpoints/DeviceEndpoints.hh"
@@ -33,7 +33,7 @@ void GrpcApi::build(Builder&& builder) {
       .addRequest<api::PingRequest, api::PongResponse>(
         &api::HealthService::AsyncService::RequestPing,
         [&](const auto& req) -> kstd::Coro<api::PongResponse> {
-            co_return (co_await pingEndpoint(req));
+            co_return co_await pingEndpoint(req);
         }
       );
 
@@ -41,13 +41,13 @@ void GrpcApi::build(Builder&& builder) {
       .addRequest<api::ListDevicesRequest, api::ListDevicesResponse>(
         &api::DeviceService::AsyncService::RequestList,
         [&]([[maybe_unused]] const auto&) -> kstd::Coro<api::ListDevicesResponse> {
-            co_return (co_await listDevicesEndpoint(*m_mq));
+            co_return co_await listDevicesEndpoint(*m_mq);
         }
       )
       .addRequest<api::ToggleDevicesRequest, api::AckResponse>(
         &api::DeviceService::AsyncService::RequestToggle,
         [&](const auto& req) -> kstd::Coro<api::AckResponse> {
-            co_return (co_await toggleDevicesEndpoint(*m_mq, req));
+            co_return co_await toggleDevicesEndpoint(*m_mq, req);
         }
       );
 
@@ -55,13 +55,13 @@ void GrpcApi::build(Builder&& builder) {
       .addRequest<api::AddJobRequest, api::AddJobResponse>(
         &api::SchedulerService::AsyncService::RequestAddJob,
         [&](const auto& req) -> kstd::Coro<api::AddJobResponse> {
-            co_return (co_await addJobEndpoint(*m_mq, req));
+            co_return co_await addJobEndpoint(*m_mq, req);
         }
       )
       .addRequest<api::RemoveJobsRequest, api::AckResponse>(
         &api::SchedulerService::AsyncService::RequestRemoveJobs,
         [&](const auto& req) -> kstd::Coro<api::AckResponse> {
-            co_return (co_await removeJobsEndpoint(*m_mq, req));
+            co_return co_await removeJobsEndpoint(*m_mq, req);
         }
       );
 }

@@ -9,7 +9,15 @@ namespace juno {
 kstd::Coro<api::AddJobResponse> addJobEndpoint(
   kstd::AsyncMessenger::Queue& mq, const api::AddJobRequest& req
 ) {
-    return kstd::Coro<api::AddJobResponse>();
+    const auto& jobBody = req.job();
+    if (jobBody.empty())
+        throw Error{ Error::Code::invalidArgument, "Empty Job body is not allowed" };
+
+    const auto& jobUuid = co_await rpc::addJob(mq, jobBody);
+
+    api::AddJobResponse res{};
+    res.set_uuid(jobUuid);
+    co_return res;
 }
 
 kstd::Coro<api::AckResponse> removeJobsEndpoint(

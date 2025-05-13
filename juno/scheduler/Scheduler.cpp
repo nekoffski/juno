@@ -6,8 +6,9 @@
 namespace juno {
 
 Scheduler::Scheduler(boost::asio::io_context& io, kstd::AsyncMessenger& messenger) :
-    RemoteCallee(this, messenger, SCHEDULER_QUEUE), m_io(io) {
+    MessageQueueDestination(this, messenger, SCHEDULER_QUEUE), m_io(io) {
     registerCall<RemoveJobs::Request>(&juno::Scheduler::handleRemoveJobsRequest);
+    registerCall<AddJob::Request>(&juno::Scheduler::handleAddJobRequest);
 }
 
 void Scheduler::spawn() {
@@ -29,6 +30,12 @@ kstd::Coro<void> Scheduler::handleRemoveJobsRequest(
   kstd::AsyncMessage& handle, const RemoveJobs::Request& r
 ) {
     co_await handle.respond<Error>(Error::Code::notFound, "Could not find jobs");
+}
+
+kstd::Coro<void> Scheduler::handleAddJobRequest(
+  kstd::AsyncMessage& handle, const AddJob::Request& r
+) {
+    co_await handle.respond<Error>(Error::Code::notFound, "not implemented yet");
 }
 
 void Scheduler::shutdown() {}

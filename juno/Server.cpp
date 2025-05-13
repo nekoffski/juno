@@ -3,6 +3,7 @@
 #include "api/GrpcApi.hh"
 #include "devices/DeviceProxy.hh"
 #include "scheduler/Scheduler.hh"
+#include "metrics/MetricService.hh"
 
 namespace juno {
 
@@ -11,6 +12,7 @@ Server::Server(const Config& config
     addService<GrpcApi>(m_io, m_messenger, m_config);
     addService<DeviceProxy>(m_io, m_messenger);
     addService<Scheduler>(m_io, m_messenger);
+    addService<MetricService>(m_io, m_messenger);
 
     m_signals.async_wait([&](const boost::system::error_code& ec, i32 signal) {
         if (!ec) {

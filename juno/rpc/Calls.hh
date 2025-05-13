@@ -16,4 +16,8 @@ kstd::Coro<void> removeJobs(
   kstd::AsyncMessenger::Queue& mq, const std::vector<std::string>& uuids
 );
 
+kstd::Coro<std::string> addJob(
+  kstd::AsyncMessenger::Queue& mq, const std::string& jobBody
+);
+
 }  // namespace juno::rpc
