@@ -46,7 +46,12 @@ kstd::Coro<Metrics::Weather> MetricService::queryOpenWeather() {
         // TODO: handle error
         co_return Metrics::Weather{};
     }
+
     const auto body = response.toJson();
+    log::debug("open weather response: {}", response.body);
+
+    const auto timezone = body["timezone"].get<i64>();
+
     co_return Metrics::Weather{
         .temp      = body["main"]["temp"].get<f32>(),
         .feelsLike = body["main"]["feels_like"].get<f32>(),
@@ -55,6 +60,9 @@ kstd::Coro<Metrics::Weather> MetricService::queryOpenWeather() {
         .pressure  = body["main"]["pressure"].get<u32>(),
         .humidity  = body["main"]["humidity"].get<u32>(),
         .windSpeed = body["wind"]["speed"].get<f32>(),
+        .sunrise   = body["sys"]["sunrise"].get<i64>() + timezone,
+        .sunset    = body["sys"]["sunset"].get<i64>() + timezone,
+
     };
 }
 
