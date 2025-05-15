@@ -32,7 +32,7 @@ kstd::Coro<void> DeviceProxy::handleGetDevicesRequest(
             co_await handle.respond<GetDevices::Response>(getDevices());
         },
         [&](const GetDevices::Request::Uuids& uuids) -> kstd::Coro<void> {
-            Devices devices;
+            std::vector<Device*> devices;
             devices.reserve(uuids.size());
             for (const auto& uuid : uuids) {
                 if (not m_devices.contains(uuid)) {
@@ -50,7 +50,7 @@ kstd::Coro<void> DeviceProxy::handleGetDevicesRequest(
             co_await handle.respond<GetDevices::Response>(
               m_devices | std::views::values
               | std::views::filter([&](auto& device) { return filter(*device); })
-              | kstd::toVector<kstd::SharedPtr<Device>>()
+              | kstd::toVector<Device*>()
             );
         },
         [&](const Device::Interface& interfaces) -> kstd::Coro<void> {
@@ -58,7 +58,7 @@ kstd::Coro<void> DeviceProxy::handleGetDevicesRequest(
               m_devices | std::views::values | std::views::filter([&](auto& device) {
                   return device->implements(interfaces);
               })
-              | kstd::toVector<kstd::SharedPtr<Device>>()
+              | kstd::toVector<Device*>()
             );
         },
       },
@@ -66,17 +66,19 @@ kstd::Coro<void> DeviceProxy::handleGetDevicesRequest(
     );
 }
 
-Devices DeviceProxy::getDevices() const {
-    return m_devices | std::views::values
-           | kstd::toVector<kstd::SharedPtr<Device>>();
+std::vector<Device*> DeviceProxy::getDevices() const {
+    return m_devices | std::views::values | kstd::toVector<Device*>();
 }
 
 kstd::Coro<void> DeviceProxy::scan() {
+    u64 devicesDiscovered = 0u;
     for (auto& vendor : m_vendors) {
-        co_await vendor->scan();
-        for (auto& device : vendor->getDevices())
+        for (auto& device : co_await vendor->scan()) {
             m_devices[device->getUuid()] = device;
+            ++devicesDiscovered;
+        }
     }
+    log::info("Scan finished, {} new devices discovered", devicesDiscovered);
 }
 
 }  // namespace juno

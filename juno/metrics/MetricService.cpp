@@ -17,7 +17,7 @@ MetricService::MetricService(
 void MetricService::spawn() {
     log::warn("Metric service spawning");
 
-    static const auto updateInterval = 5s;
+    static const auto updateInterval = 1min;
 
     kstd::spawn(m_io.get_executor(), [&]() -> kstd::Coro<void> {
         while (true) {

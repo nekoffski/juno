@@ -10,8 +10,7 @@
 namespace juno {
 
 struct Vendor {
-    virtual Devices getDevices() const = 0;
-    virtual kstd::Coro<void> scan()    = 0;
+    virtual kstd::Coro<std::vector<Device*>> scan() = 0;
 };
 
 }  // namespace juno

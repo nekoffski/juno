@@ -21,7 +21,7 @@ struct GetDevices {
         Criteria criteria;
     };
     struct Response {
-        Devices devices;
+        std::vector<Device*> devices;
     };
 };
 

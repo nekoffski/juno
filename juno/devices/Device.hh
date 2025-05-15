@@ -30,8 +30,6 @@ struct Device : kstd::WithUuid {
     virtual const std::string& getName() const         = 0;
 };
 
-using Devices = std::vector<kstd::SharedPtr<Device>>;
-
 struct Togglable {
     virtual kstd::Coro<void> toggle() = 0;
 };

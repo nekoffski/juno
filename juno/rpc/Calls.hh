@@ -7,7 +7,7 @@
 
 namespace juno::rpc {
 
-kstd::Coro<Devices> getDevices(
+kstd::Coro<std::vector<Device*>> getDevices(
   kstd::AsyncMessenger::Queue& mq,
   GetDevices::Request::Criteria criteria = GetDevices::Request::All{}
 );

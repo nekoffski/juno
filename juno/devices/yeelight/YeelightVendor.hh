@@ -4,6 +4,7 @@
 
 #include <kstd/async/Core.hh>
 #include <kstd/Id.hh>
+#include <kstd/memory/UniquePtr.hh>
 
 #include "devices/Vendor.hh"
 #include "devices/Device.hh"
@@ -14,13 +15,12 @@ class YeelightVendor : public Vendor {
 public:
     explicit YeelightVendor(boost::asio::io_context& io);
 
-    Devices getDevices() const override;
-    kstd::Coro<void> scan() override;
+    kstd::Coro<std::vector<Device*>> scan() override;
 
 private:
-    kstd::Coro<void> processNewDevice(const std::string& payload);
+    kstd::Coro<Device*> processNewDevice(const std::string& payload);
 
-    Devices m_devices;
+    std::vector<kstd::UniquePtr<Device>> m_devices;
 
     boost::asio::io_context& m_io;
     boost::asio::ip::udp::socket m_socket;

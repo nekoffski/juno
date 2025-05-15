@@ -4,7 +4,7 @@
 
 namespace juno {
 
-kstd::Coro<kstd::SharedPtr<YeelightBulb>> YeelightBulb::create(
+kstd::Coro<kstd::UniquePtr<YeelightBulb>> YeelightBulb::create(
   boost::asio::io_context& io,
   const std::unordered_map<std::string, std::string>& headers
 ) {
@@ -18,7 +18,7 @@ kstd::Coro<kstd::SharedPtr<YeelightBulb>> YeelightBulb::create(
 
     log::info("Yeelight Bulb endpoint {}:{}", addr, port);
 
-    co_return kstd::makeShared<YeelightBulb>(
+    co_return kstd::makeUnique<YeelightBulb>(
       Tag{}, co_await StreamSocket::create(io, addr, port), id
     );
 }

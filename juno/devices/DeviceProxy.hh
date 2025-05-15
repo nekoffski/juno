@@ -35,13 +35,13 @@ private:
 
     // --
     kstd::Coro<void> scan();
-    Devices getDevices() const;
+    std::vector<Device*> getDevices() const;
 
     boost::asio::io_context& m_io;
     kstd::AsyncMessenger::Queue* m_messageQueue;
 
     std::vector<kstd::UniquePtr<Vendor>> m_vendors;
-    std::unordered_map<std::string, kstd::SharedPtr<Device>> m_devices;
+    std::unordered_map<std::string, Device*> m_devices;
 };
 
 }  // namespace juno

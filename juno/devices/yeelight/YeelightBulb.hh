@@ -1,7 +1,7 @@
 #pragma once
 
 #include <kstd/async/Core.hh>
-#include <kstd/memory/SharedPtr.hh>
+#include <kstd/memory/UniquePtr.hh>
 #include <kstd/Id.hh>
 
 #include <nlohmann/json.hpp>
@@ -15,7 +15,7 @@ class YeelightBulb : public Bulb {
     struct Tag {};
 
 public:
-    static kstd::Coro<kstd::SharedPtr<YeelightBulb>> create(
+    static kstd::Coro<kstd::UniquePtr<YeelightBulb>> create(
       boost::asio::io_context& io,
       const std::unordered_map<std::string, std::string>& headers
     );

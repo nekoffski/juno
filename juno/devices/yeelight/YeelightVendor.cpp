@@ -34,8 +34,9 @@ YeelightVendor::YeelightVendor(boost::asio::io_context& io) :
     log::debug("Yeelight discover message: \n{}", m_discoverMessage);
 }
 
-kstd::Coro<void> YeelightVendor::scan() {
+kstd::Coro<std::vector<Device*>> YeelightVendor::scan() {
     log::info("Scanning for Yeelight devices, multicasting discover message");
+    std::vector<Device*> newDevices;
 
     co_await m_socket.async_send_to(
       boost::asio::buffer(m_discoverMessage), m_yeelightEndpoint,
@@ -55,17 +56,20 @@ kstd::Coro<void> YeelightVendor::scan() {
             const auto bytes = co_await m_socket.async_receive_from(
               boost::asio::buffer(buffer), sender, boost::asio::use_awaitable
             );
-            co_await processNewDevice(std::string{ buffer.data(), bytes });
+            std::string msg{ buffer.data(), bytes };
+            if (auto device = co_await processNewDevice(msg); device)
+                newDevices.push_back(device);
         } catch (const boost::system::system_error& e) {
             if (e.code() != boost::asio::error::operation_aborted)
                 log::warn("Socket error: {}", e.what());
             break;
         }
     }
-    log::info("Scanning finished, {} devices discovered", m_devices.size());
+    log::info("Scanning finished, {} devices discovered", newDevices.size());
+    co_return newDevices;
 }
 
-kstd::Coro<void> YeelightVendor::processNewDevice(const std::string& payload) {
+kstd::Coro<Device*> YeelightVendor::processNewDevice(const std::string& payload) {
     log::info("Processing new device");
     std::unordered_map<std::string, std::string> headers;
 
@@ -89,7 +93,7 @@ kstd::Coro<void> YeelightVendor::processNewDevice(const std::string& payload) {
     for (const auto requiredHeader : requiredHeaders) {
         if (not headers.contains(requiredHeader)) {
             log::warn("Could not find '{}' header", requiredHeader);
-            co_return;
+            co_return nullptr;
         }
     }
 
@@ -98,17 +102,17 @@ kstd::Coro<void> YeelightVendor::processNewDevice(const std::string& payload) {
     for (auto& device : m_devices) {
         if (static_cast<YeelightBulb*>(device.get())->yeelightId == id) {
             log::info("Device ({}) already stored, skipping", id);
-            co_return;
+            co_return nullptr;
         }
     }
 
     if (const auto model = headers["model"]; model == "strip6") {
         m_devices.push_back(co_await YeelightBulb::create(m_io, headers));
+        co_return m_devices.back().get();
     } else {
         log::warn("Device model not supported: '{}'", model);
+        co_return nullptr;
     }
 }
-
-Devices YeelightVendor::getDevices() const { return m_devices; }
 
 }  // namespace juno

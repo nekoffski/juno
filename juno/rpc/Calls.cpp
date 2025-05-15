@@ -12,7 +12,7 @@ static void handleError(kstd::AsyncResponse* res, const std::string& requestName
     };
 }
 
-kstd::Coro<Devices> getDevices(
+kstd::Coro<std::vector<Device*>> getDevices(
   kstd::AsyncMessenger::Queue& mq, GetDevices::Request::Criteria criteria
 ) {
     auto handle =

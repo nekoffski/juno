@@ -34,13 +34,13 @@ kstd::Coro<api::AckResponse> toggleDevicesEndpoint(
         togglabeDevices.reserve(devices.size());
         std::ranges::transform(
           devices, std::back_inserter(togglabeDevices),
-          [](auto& device) { return dynamic_cast<Togglable*>(device.get()); }
+          [](auto& device) { return dynamic_cast<Togglable*>(device); }
         );
     } else {
         auto devices = co_await rpc::getDevices(mq, toVector(req.uuids()));
         togglabeDevices.reserve(devices.size());
         for (auto& device : devices) {
-            if (auto togglable = dynamic_cast<Togglable*>(device.get()); togglable) {
+            if (auto togglable = dynamic_cast<Togglable*>(device); togglable) {
                 togglabeDevices.push_back(togglable);
             } else {
                 throw Error{
