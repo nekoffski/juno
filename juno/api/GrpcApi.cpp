@@ -26,9 +26,7 @@ GrpcApi::GrpcApi(boost::asio::io_context& io, kstd::AsyncMessenger& messenger) :
 
 void GrpcApi::spawn() { startAsync(); }
 
-void GrpcApi::shutdown() {
-    // FIXME
-}
+void GrpcApi::shutdown() { AsyncGrpcServer::stop(); }
 
 void GrpcApi::build(Builder&& builder) {
     builder.addService<api::HealthService::AsyncService>()

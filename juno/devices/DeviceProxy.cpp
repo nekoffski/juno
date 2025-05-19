@@ -15,9 +15,9 @@ DeviceProxy::DeviceProxy(
 }
 
 void DeviceProxy::spawn() {
-    kstd::spawn(m_io.get_executor(), [&]() -> kstd::Coro<void> { co_await scan(); });
     kstd::spawn(m_io.get_executor(), [&]() -> kstd::Coro<void> {
-        co_await startHandling();
+        co_await scan();
+        co_await startHandling([&]() -> bool { return not isRunning(); });
     });
 }
 

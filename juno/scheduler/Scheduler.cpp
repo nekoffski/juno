@@ -13,7 +13,7 @@ Scheduler::Scheduler(boost::asio::io_context& io, kstd::AsyncMessenger& messenge
 
 void Scheduler::spawn() {
     kstd::spawn(m_io.get_executor(), [&]() -> kstd::Coro<void> {
-        co_await startHandling();
+        co_await startHandling([&]() -> bool { return not isRunning(); });
     });
 
     std::string job =

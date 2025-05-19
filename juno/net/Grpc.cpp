@@ -31,6 +31,11 @@ AsyncGrpcServer::~AsyncGrpcServer() {
     for (auto& service : m_services) service->shutdown();
 }
 
+void AsyncGrpcServer::stop() {
+    m_server->Shutdown();
+    for (auto& service : m_services) service->shutdown();
+}
+
 void AsyncGrpcServer::startAsync() {
     grpc::ServerBuilder serverBuilder;
 

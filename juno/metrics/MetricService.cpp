@@ -20,7 +20,7 @@ void MetricService::spawn() {
     static const auto updateInterval = 1min;
 
     kstd::spawn(m_io.get_executor(), [&]() -> kstd::Coro<void> {
-        while (true) {
+        while (isRunning()) {
             co_await updateMetrics();
             co_await kstd::asyncSleep(updateInterval);
         }

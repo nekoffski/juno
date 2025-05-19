@@ -7,6 +7,7 @@
 #include <kstd/async/AsyncMessenger.hh>
 
 #include "Core.hh"
+#include "Service.hh"
 
 namespace juno {
 
@@ -20,8 +21,10 @@ public:
         m_impl(impl), m_queueName(queueName),
         m_mq(messenger.registerQueue(queueName)) {}
 
-    kstd::Coro<void> startHandling() {
-        while (true) {
+    template <typename StopCondition>
+    requires kstd::Callable<StopCondition, bool>
+    kstd::Coro<void> startHandling(StopCondition&& shouldStop) {
+        while (not shouldStop()) {
             auto message           = co_await m_mq->wait();
             const auto messageType = message->getType();
             auto handler           = m_handlers.find(messageType);

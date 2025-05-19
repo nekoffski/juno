@@ -71,7 +71,6 @@ public:
                 );
                 m_responder.FinishWithError(toGrpcStatus(e), this);
             }
-
             m_status = Status::finishing;
         } else {
             delete this;
@@ -108,7 +107,7 @@ public:
 
     public:
         explicit ServiceBase(std::unique_ptr<grpc::ServerCompletionQueue> cq
-        ) : m_cq(std::move(cq)) {}
+        ) : m_cq(std::move(cq)), m_isRunning(true) {}
 
         kstd::Coro<void> start() override {
             for (auto& initializer : m_initializers) initializer();
@@ -121,7 +120,7 @@ public:
             const auto waitDeadline = std::chrono::nanoseconds(10);
             const auto pollInterval = std::chrono::milliseconds(10);
 
-            while (true) {
+            while (m_isRunning) {
                 const auto deadline = system_clock::now() + waitDeadline;
                 const auto status   = m_cq->AsyncNext(&tag, &ok, deadline);
 
@@ -134,13 +133,19 @@ public:
                     break;
                 }
             }
+
+            m_cq->Shutdown();
+
+            while (m_cq->Next(&tag, &ok)) {
+                delete static_cast<details::CallData*>(tag);
+            }
         }
 
         void addInitializer(Initializer&& initializer) {
             m_initializers.push_back(std::move(initializer));
         }
 
-        void shutdown() override { m_cq->Shutdown(); }
+        void shutdown() override { m_isRunning = false; }
 
         Impl* getImpl() { return &m_impl; }
 
@@ -150,6 +155,7 @@ public:
         std::vector<Initializer> m_initializers;
         Impl m_impl;
         std::unique_ptr<grpc::ServerCompletionQueue> m_cq;
+        std::atomic_bool m_isRunning;
     };
 
     class Builder {
@@ -207,6 +213,7 @@ public:
     virtual ~AsyncGrpcServer();
 
     void startAsync();
+    void stop();
 
 private:
     virtual void build(Builder&&) = 0;
