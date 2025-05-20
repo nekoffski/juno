@@ -26,7 +26,7 @@ kstd::Coro<void> DeviceProxy::handleGetDevicesRequest(
     co_await std::visit(
       kstd::Overloader{
         [&]([[maybe_unused]] const GetDevices::Request::All&) -> kstd::Coro<void> {
-            co_await handle.respond<GetDevices::Response>(getDevices());
+            co_await handle.respond<GetDevices::Response>(m_devices.getValues());
         },
         [&](const GetDevices::Request::Uuids& uuids) -> kstd::Coro<void> {
             std::vector<Device*> devices;
@@ -45,25 +45,18 @@ kstd::Coro<void> DeviceProxy::handleGetDevicesRequest(
         },
         [&](const GetDevices::Request::Filter& filter) -> kstd::Coro<void> {
             co_await handle.respond<GetDevices::Response>(
-              getDevices()
-              | std::views::filter([&](auto& device) { return filter(*device); })
-              | kstd::toVector<Device*>()
+              getDevicesIf([&](auto device) -> bool { return filter(*device); })
             );
         },
         [&](const Device::Interface& interfaces) -> kstd::Coro<void> {
-            co_await handle.respond<GetDevices::Response>(
-              getDevices() | std::views::filter([&](auto& device) {
-                  return device->implements(interfaces);
-              })
-              | kstd::toVector<Device*>()
-            );
+            co_await handle.respond<GetDevices::Response>(getDevicesIf(
+              [&](auto device) -> bool { return device->implements(interfaces); }
+            ));
         },
       },
       r.criteria
     );
 }
-
-std::vector<Device*> DeviceProxy::getDevices() { return m_devices.getValues(); }
 
 kstd::Coro<void> DeviceProxy::scan() {
     u64 devicesDiscovered = 0u;

@@ -22,6 +22,12 @@ public:
     void shutdown() override;
 
 private:
+    template <typename Pred>
+    requires kstd::Callable<Pred, bool, Device*>
+    std::vector<Device*> getDevicesIf(Pred&& predicate) {
+        return kstd::filter(m_devices.getValues(), predicate);
+    }
+
     template <typename T, typename... Args>
     requires(std::derived_from<T, Vendor> && std::constructible_from<T, Args...>)
     void addVendor(Args&&... args) {
@@ -35,7 +41,6 @@ private:
 
     // --
     kstd::Coro<void> scan();
-    std::vector<Device*> getDevices();
 
     boost::asio::io_context& m_io;
     kstd::AsyncMessenger::Queue* m_messageQueue;
