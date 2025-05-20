@@ -9,7 +9,7 @@
 
 #include "Core.hh"
 
-#include "Service.hh"
+#include "rpc/Service.hh"
 
 namespace juno {
 
@@ -26,8 +26,8 @@ private:
         m_services.push_back(kstd::makeUnique<T>(std::forward<Args>(args)...));
     }
 
-    void spawnServices();
-    void shutdownServices();
+    void startServices();
+    void stopServices();
 
     boost::asio::io_context m_io;
     boost::asio::signal_set m_signals;

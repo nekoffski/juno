@@ -11,18 +11,22 @@ namespace juno {
 MetricService::MetricService(
   boost::asio::io_context& io, kstd::AsyncMessenger& messenger
 ) :
-    MessageQueueDestination(this, messenger, METRIC_SERVICE_QUEUE), m_io(io),
+    RpcService(io, this, messenger, METRIC_SERVICE_QUEUE), m_io(io),
     m_conf(readConfig()) {}
 
-void MetricService::spawn() {
+void MetricService::start() {
     log::warn("Metric service spawning");
 
-    static const auto updateInterval = 1min;
+    static const auto updateInterval = 10s;
 
-    kstd::spawn(m_io.get_executor(), [&]() -> kstd::Coro<void> {
+    spawn([&]() -> kstd::Coro<void> {
+        kstd::AsyncTimer timer{ co_await boost::asio::this_coro::executor };
+
+        onServiceCancel([&]() { timer.cancel(); });
+
         while (isRunning()) {
             co_await updateMetrics();
-            co_await kstd::asyncSleep(updateInterval);
+            co_await timer.sleep(updateInterval);
         }
     });
 }

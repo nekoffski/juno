@@ -1,20 +1,19 @@
 #pragma once
 
-#include "Service.hh"
+#include "rpc/Service.hh"
 
 #include <kstd/async/Core.hh>
 
 #include "jobs/Job.hh"
 #include "rpc/Messages.hh"
-#include "rpc/MessageQueueDestination.hh"
 
 namespace juno {
 
-class Scheduler : public Service, public MessageQueueDestination<Scheduler> {
+class Scheduler : public RpcService<Scheduler> {
 public:
     explicit Scheduler(boost::asio::io_context& io, kstd::AsyncMessenger& messenger);
 
-    void spawn() override;
+    void start() override;
     void shutdown() override;
 
 private:

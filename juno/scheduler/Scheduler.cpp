@@ -6,16 +6,12 @@
 namespace juno {
 
 Scheduler::Scheduler(boost::asio::io_context& io, kstd::AsyncMessenger& messenger) :
-    MessageQueueDestination(this, messenger, SCHEDULER_QUEUE), m_io(io) {
+    RpcService(io, this, messenger, SCHEDULER_QUEUE), m_io(io) {
     registerCall<RemoveJobs::Request>(&juno::Scheduler::handleRemoveJobsRequest);
     registerCall<AddJob::Request>(&juno::Scheduler::handleAddJobRequest);
 }
 
-void Scheduler::spawn() {
-    kstd::spawn(m_io.get_executor(), [&]() -> kstd::Coro<void> {
-        co_await startHandling([&]() -> bool { return not isRunning(); });
-    });
-
+void Scheduler::start() {
     std::string job =
       "DECLARE JOB TYPE=oneshot,  NAME=job_0,  COMMAND=toggle_bulb, ARGS=(), DELAY=5s";
 

@@ -1,16 +1,15 @@
 #pragma once
 
-#include "Service.hh"
+#include "rpc/Service.hh"
 
 #include <kstd/async/Core.hh>
 
 #include "rpc/Messages.hh"
-#include "rpc/MessageQueueDestination.hh"
 #include "Metrics.hh"
 
 namespace juno {
 
-class MetricService : public Service, public MessageQueueDestination<MetricService> {
+class MetricService : public RpcService<MetricService> {
     struct Config {
         f32 lattitude;
         f32 longitude;
@@ -22,7 +21,7 @@ public:
       boost::asio::io_context& io, kstd::AsyncMessenger& messenger
     );
 
-    void spawn() override;
+    void start() override;
     void shutdown() override;
 
 private:

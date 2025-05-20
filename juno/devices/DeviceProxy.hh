@@ -2,23 +2,23 @@
 
 #include <kstd/async/Core.hh>
 #include <kstd/async/AsyncMessenger.hh>
+#include <kstd/containers/FlatMap.hh>
 
 #include "Vendor.hh"
 #include "Device.hh"
-#include "Service.hh"
 
 #include "rpc/Messages.hh"
-#include "rpc/MessageQueueDestination.hh"
+#include "rpc/Service.hh"
 
 namespace juno {
 
-class DeviceProxy : public Service, public MessageQueueDestination<DeviceProxy> {
+class DeviceProxy : public RpcService<DeviceProxy> {
 public:
     explicit DeviceProxy(
       boost::asio::io_context& io, kstd::AsyncMessenger& messenger
     );
 
-    void spawn() override;
+    void start() override;
     void shutdown() override;
 
 private:
@@ -35,13 +35,13 @@ private:
 
     // --
     kstd::Coro<void> scan();
-    std::vector<Device*> getDevices() const;
+    std::vector<Device*> getDevices();
 
     boost::asio::io_context& m_io;
     kstd::AsyncMessenger::Queue* m_messageQueue;
 
     std::vector<kstd::UniquePtr<Vendor>> m_vendors;
-    std::unordered_map<std::string, Device*> m_devices;
+    kstd::DynamicFlatMap<std::string, Device*> m_devices;
 };
 
 }  // namespace juno

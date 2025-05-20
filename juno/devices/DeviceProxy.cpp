@@ -8,17 +8,14 @@ namespace juno {
 
 DeviceProxy::DeviceProxy(
   boost::asio::io_context& io, kstd::AsyncMessenger& messenger
-) : MessageQueueDestination(this, messenger, DEVICE_PROXY_QUEUE), m_io(io) {
+) : RpcService(io, this, messenger, DEVICE_PROXY_QUEUE), m_io(io) {
     addVendor<YeelightVendor>(m_io);
 
     registerCall<GetDevices::Request>(&juno::DeviceProxy::handleGetDevicesRequest);
 }
 
-void DeviceProxy::spawn() {
-    kstd::spawn(m_io.get_executor(), [&]() -> kstd::Coro<void> {
-        co_await scan();
-        co_await startHandling([&]() -> bool { return not isRunning(); });
-    });
+void DeviceProxy::start() {
+    spawn([&]() -> kstd::Coro<void> { co_await scan(); });
 }
 
 void DeviceProxy::shutdown() {}
@@ -42,20 +39,20 @@ kstd::Coro<void> DeviceProxy::handleGetDevicesRequest(
                     );
                     co_return;
                 }
-                devices.push_back(m_devices.at(uuid));
+                devices.push_back(*m_devices.get(uuid));
             }
             co_await handle.respond<GetDevices::Response>(std::move(devices));
         },
         [&](const GetDevices::Request::Filter& filter) -> kstd::Coro<void> {
             co_await handle.respond<GetDevices::Response>(
-              m_devices | std::views::values
+              getDevices()
               | std::views::filter([&](auto& device) { return filter(*device); })
               | kstd::toVector<Device*>()
             );
         },
         [&](const Device::Interface& interfaces) -> kstd::Coro<void> {
             co_await handle.respond<GetDevices::Response>(
-              m_devices | std::views::values | std::views::filter([&](auto& device) {
+              getDevices() | std::views::filter([&](auto& device) {
                   return device->implements(interfaces);
               })
               | kstd::toVector<Device*>()
@@ -66,15 +63,13 @@ kstd::Coro<void> DeviceProxy::handleGetDevicesRequest(
     );
 }
 
-std::vector<Device*> DeviceProxy::getDevices() const {
-    return m_devices | std::views::values | kstd::toVector<Device*>();
-}
+std::vector<Device*> DeviceProxy::getDevices() { return m_devices.getValues(); }
 
 kstd::Coro<void> DeviceProxy::scan() {
     u64 devicesDiscovered = 0u;
     for (auto& vendor : m_vendors) {
         for (auto& device : co_await vendor->scan()) {
-            m_devices[device->getUuid()] = device;
+            m_devices.insert(device->getUuid(), device);
             ++devicesDiscovered;
         }
     }
