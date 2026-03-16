@@ -5,7 +5,7 @@ OAPI_CODEGEN := $(shell go env GOPATH)/bin/oapi-codegen
 REST_OPENAPI_SPEC := api/rest-openapi.yaml
 REST_OAPI_CFG     := api/rest-oapi-codegen.yaml
 
-.PHONY: all build run test clean lint fmt vet tidy generate gen-api
+.PHONY: all build run test test-verbose test-cover clean lint fmt vet tidy generate gen-api
 
 all: build
 
@@ -26,8 +26,12 @@ test:
 test-verbose:
 	go test -v ./...
 
+test-cover:
+	go test -coverprofile=coverage.out ./...
+	go tool cover -func=coverage.out
+
 clean:
-	rm -rf $(BIN_DIR)/
+	rm -rf $(BIN_DIR)/ coverage.out
 	find . -name '*.gen.go' -delete
 
 lint:

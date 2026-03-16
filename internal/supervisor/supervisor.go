@@ -12,19 +12,21 @@ import (
 )
 
 type Supervisor struct {
-	services []Service
+	services          []Service
+	messageBusManager *MessageBusManager
 }
 
 func NewSupervisor(services ...Service) *Supervisor {
 	return &Supervisor{
-		services: services,
+		services:          services,
+		messageBusManager: NewMessageBusManager(),
 	}
 }
 
 func (s *Supervisor) initServices() error {
 	for _, svc := range s.services {
 		log.Printf("initializing %s", svc.Name())
-		if err := svc.Init(); err != nil {
+		if err := svc.Init(s.messageBusManager); err != nil {
 			return fmt.Errorf("failed to init %s: %w", svc.Name(), err)
 		}
 	}

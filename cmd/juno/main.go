@@ -9,11 +9,14 @@ import (
 
 type dummyService struct {
 	running bool
+	bus     *supervisor.MessageBus
 }
 
-func (s *dummyService) Init() error {
+func (s *dummyService) Init(mbm *supervisor.MessageBusManager) error {
 	s.running = true
-	return nil
+	var err error
+	s.bus, err = mbm.RegisterBus(s.Name())
+	return err
 }
 
 func (s *dummyService) Run() error {

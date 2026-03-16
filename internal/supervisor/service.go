@@ -1,7 +1,7 @@
 package supervisor
 
 type Service interface {
-	Init() error
+	Init(*MessageBusManager) error
 	Stop()
 	Run() error
 	Name() string
