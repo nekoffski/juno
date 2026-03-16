@@ -1,0 +1,43 @@
+# Binaries
+bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Files generated dynamically
+*.gen.go
+
+# Build output
+/juno
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of `go env GOPATH`/bin (for tools installed via `go install`)
+# Adjust as needed
+/go/bin/
+
+# Go workspace file
+go.work
+go.work.sum
+
+# Dependency directories
+vendor/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# IDE / Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db

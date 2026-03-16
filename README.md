@@ -1,0 +1,3 @@
+# juno
+
+Home automatization server.

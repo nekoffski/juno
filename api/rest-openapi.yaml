@@ -1,0 +1,36 @@
+openapi: "3.0.3"
+
+info:
+  title: Juno Rest API
+  description: Home automation server API
+  version: "1.0.0"
+
+paths:
+  /health:
+    get:
+      summary: Health check
+      operationId: getHealth
+      tags:
+        - health
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      required:
+        - status
+        - version
+      properties:
+        status:
+          type: string
+          example: ok
+        version:
+          type: string
+          example: "1.0.0"
