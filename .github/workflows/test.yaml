@@ -21,6 +21,9 @@ jobs:
       - name: Download dependencies
         run: go mod download
 
+      - name: Install tools
+        run: go install github.com/deepmap/oapi-codegen/cmd/oapi-codegen@v1.16.3
+
       - name: Generate code
         run: make generate
 
