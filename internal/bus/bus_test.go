@@ -1,4 +1,4 @@
-package supervisor
+package bus
 
 import (
 	"context"
@@ -13,7 +13,7 @@ type pingPayload struct{ Text string }
 
 func newSetup(t *testing.T) (*MessageBus, *Sender) {
 	t.Helper()
-	bus := NewMessageBus()
+	bus := New()
 	return bus, bus.NewSender()
 }
 
@@ -125,7 +125,7 @@ func TestRequest_Reply(t *testing.T) {
 
 	resp, err := future.Await(ctx)
 	require.NoError(t, err)
-	assert.Equal(t, "pong", resp.Payload)
+	assert.Equal(t, "pong", resp)
 }
 
 func TestRequest_UnknownBus(t *testing.T) {
@@ -204,7 +204,7 @@ func TestFutureAwaitFor_OK(t *testing.T) {
 
 	resp, err := future.AwaitFor(ctx, time.Second)
 	require.NoError(t, err)
-	assert.Equal(t, "pong", resp.Payload)
+	assert.Equal(t, "pong", resp)
 }
 
 func TestFutureAwaitFor_Timeout(t *testing.T) {

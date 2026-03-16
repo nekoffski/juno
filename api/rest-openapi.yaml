@@ -20,17 +20,27 @@ paths:
               schema:
                 $ref: "#/components/schemas/HealthResponse"
 
+  /health/service/device:
+    get:
+      summary: Health check for device service
+      operationId: getDeviceServiceHealth
+      tags:
+        - health
+      responses:
+        "200":
+          description: Device service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+
 components:
   schemas:
     HealthResponse:
       type: object
       required:
         - status
-        - version
       properties:
         status:
           type: string
           example: ok
-        version:
-          type: string
-          example: "1.0.0"

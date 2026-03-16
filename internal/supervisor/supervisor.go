@@ -9,24 +9,26 @@ import (
 	"os/signal"
 	"sync"
 	"syscall"
+
+	"github.com/nekoffski/juno/internal/bus"
 )
 
 type Supervisor struct {
 	services   []Service
-	messageBus *MessageBus
+	messageBus *bus.MessageBus
 }
 
 func NewSupervisor(services ...Service) *Supervisor {
 	return &Supervisor{
 		services:   services,
-		messageBus: NewMessageBus(),
+		messageBus: bus.New(),
 	}
 }
 
-func (s *Supervisor) initServices() error {
+func (s *Supervisor) initServices(ctx context.Context) error {
 	for _, svc := range s.services {
 		log.Printf("initializing %s", svc.Name())
-		if err := svc.Init(s.messageBus); err != nil {
+		if err := svc.Init(ctx, s.messageBus); err != nil {
 			return fmt.Errorf("failed to init %s: %w", svc.Name(), err)
 		}
 	}
@@ -67,7 +69,7 @@ func (s *Supervisor) Run() error {
 	)
 	defer cancel()
 
-	if e := s.initServices(); e != nil {
+	if e := s.initServices(ctx); e != nil {
 		log.Fatalf("Could not init services: %v", e)
 		return e
 	}

@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/nekoffski/juno/internal/bus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -17,15 +18,15 @@ type mockService struct {
 	name    string
 	initErr error
 	runErr  error
-	initFn  func(*MessageBus)
+	initFn  func(context.Context, *bus.MessageBus)
 	runFn   func(context.Context)
 }
 
 func (m *mockService) Name() string { return m.name }
 
-func (m *mockService) Init(mb *MessageBus) error {
+func (m *mockService) Init(ctx context.Context, mb *bus.MessageBus) error {
 	if m.initFn != nil {
-		m.initFn(mb)
+		m.initFn(ctx, mb)
 	}
 	return m.initErr
 }
@@ -52,12 +53,12 @@ func TestNewSupervisor(t *testing.T) {
 func TestInitServices_OK(t *testing.T) {
 	initialized := make([]string, 0)
 	mkSvc := func(name string) *mockService {
-		return &mockService{name: name, initFn: func(*MessageBus) {
+		return &mockService{name: name, initFn: func(_ context.Context, _ *bus.MessageBus) {
 			initialized = append(initialized, name)
 		}}
 	}
 	s := NewSupervisor(mkSvc("a"), mkSvc("b"), mkSvc("c"))
-	require.NoError(t, s.initServices())
+	require.NoError(t, s.initServices(context.Background()))
 	assert.Equal(t, []string{"a", "b", "c"}, initialized)
 }
 
@@ -65,22 +66,22 @@ func TestInitServices_FailsOnFirstError(t *testing.T) {
 	second := false
 	s := NewSupervisor(
 		&mockService{name: "a", initErr: errInit},
-		&mockService{name: "b", initFn: func(*MessageBus) { second = true }},
+		&mockService{name: "b", initFn: func(_ context.Context, _ *bus.MessageBus) { second = true }},
 	)
-	err := s.initServices()
+	err := s.initServices(context.Background())
 	require.ErrorIs(t, err, errInit)
 	assert.False(t, second, "second service should not be initialized after first fails")
 }
 
 func TestInitServices_MessageBusPassedToServices(t *testing.T) {
-	var receivedBus *MessageBus
+	var receivedBus *bus.MessageBus
 	s := NewSupervisor(&mockService{
 		name: "a",
-		initFn: func(mb *MessageBus) {
+		initFn: func(_ context.Context, mb *bus.MessageBus) {
 			receivedBus = mb
 		},
 	})
-	require.NoError(t, s.initServices())
+	require.NoError(t, s.initServices(context.Background()))
 	assert.Same(t, s.messageBus, receivedBus)
 }
 
