@@ -15,11 +15,7 @@ var (
 	ErrEmptyName   = errors.New("bus name must not be empty")
 )
 
-type MessageType string
-
 type Message struct {
-	ID      string
-	Type    MessageType
 	Payload any
 	replyTo chan Response
 }
@@ -48,8 +44,8 @@ func (f *Future) Await(ctx context.Context) (Response, error) {
 	}
 }
 
-func (f *Future) AwaitFor(d time.Duration) (Response, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), d)
+func (f *Future) AwaitFor(ctx context.Context, d time.Duration) (Response, error) {
+	ctx, cancel := context.WithTimeout(ctx, d)
 	defer cancel()
 	return f.Await(ctx)
 }
@@ -67,46 +63,39 @@ func getQueue(name string, q *queues) *queue {
 	return (*q)[name]
 }
 
-type MessageBus struct {
-	name   string
-	self   *queue
+type Sender struct {
 	queues *queues
 }
 
-func (mb *MessageBus) Send(to string, msg Message) error {
+func (s *Sender) Send(to string, payload any) error {
 	if to == "" {
 		return ErrEmptyName
 	}
-	q := getQueue(to, mb.queues)
+	q := getQueue(to, s.queues)
 	if q == nil {
 		return fmt.Errorf("%w: %q", ErrBusNotFound, to)
 	}
 	select {
-	case q.ch <- msg:
+	case q.ch <- Message{Payload: payload}:
 		return nil
 	default:
 		return fmt.Errorf("%w: %q", ErrQueueFull, to)
 	}
 }
 
-func (mb *MessageBus) Receive() <-chan Message {
-	return mb.self.ch
-}
-
-func (mb *MessageBus) Request(to string, msg Message) (*Future, error) {
+func (s *Sender) Request(to string, payload any) (*Future, error) {
 	if to == "" {
 		return nil, ErrEmptyName
 	}
-	q := getQueue(to, mb.queues)
+	q := getQueue(to, s.queues)
 	if q == nil {
 		return nil, fmt.Errorf("%w: %q", ErrBusNotFound, to)
 	}
 
 	replyCh := make(chan Response, 1)
-	msg.replyTo = replyCh
 
 	select {
-	case q.ch <- msg:
+	case q.ch <- Message{Payload: payload, replyTo: replyCh}:
 	default:
 		return nil, fmt.Errorf("%w: %q", ErrQueueFull, to)
 	}
@@ -114,28 +103,40 @@ func (mb *MessageBus) Request(to string, msg Message) (*Future, error) {
 	return &Future{ch: replyCh}, nil
 }
 
-type MessageBusManager struct {
+type MessageBus struct {
 	queues *queues
 }
 
-func NewMessageBusManager() *MessageBusManager {
-	return &MessageBusManager{
+func NewMessageBus() *MessageBus {
+	return &MessageBus{
 		queues: &queues{},
 	}
 }
 
-func (mbm *MessageBusManager) RegisterBus(name string) (*MessageBus, error) {
+func (mb *MessageBus) NewSender() *Sender {
+	return &Sender{queues: mb.queues}
+}
+
+func (mb *MessageBus) RegisterReceiver(ctx context.Context, name string, handler func(Message)) error {
 	if name == "" {
-		return nil, ErrEmptyName
+		return ErrEmptyName
 	}
-	if _, exists := (*mbm.queues)[name]; exists {
-		return nil, fmt.Errorf("bus %q is already registered", name)
+	if _, exists := (*mb.queues)[name]; exists {
+		return fmt.Errorf("receiver %q is already registered", name)
 	}
 	q := &queue{ch: make(chan Message, queueCapacity)}
-	(*mbm.queues)[name] = q
-	return &MessageBus{
-		name:   name,
-		self:   q,
-		queues: mbm.queues,
-	}, nil
+	(*mb.queues)[name] = q
+
+	go func() {
+		for {
+			select {
+			case msg := <-q.ch:
+				handler(msg)
+			case <-ctx.Done():
+				return
+			}
+		}
+	}()
+
+	return nil
 }

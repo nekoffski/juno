@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"time"
 
@@ -8,29 +9,25 @@ import (
 )
 
 type dummyService struct {
-	running bool
-	bus     *supervisor.MessageBus
+	sender *supervisor.Sender
 }
 
-func (s *dummyService) Init(mbm *supervisor.MessageBusManager) error {
-	s.running = true
-	var err error
-	s.bus, err = mbm.RegisterBus(s.Name())
-	return err
-}
-
-func (s *dummyService) Run() error {
-	for {
-		if !s.running {
-			break
-		}
-		log.Printf("Running!")
-		time.Sleep(time.Second)
-	}
+func (s *dummyService) Init(messageBus *supervisor.MessageBus) error {
+	s.sender = messageBus.NewSender()
 	return nil
 }
 
-func (s *dummyService) Stop()        { s.running = false }
+func (s *dummyService) Run(ctx context.Context) error {
+	for {
+		select {
+		case <-ctx.Done():
+			return nil
+		case <-time.After(time.Second):
+			log.Printf("Running! %v", s.Name())
+		}
+	}
+}
+
 func (s *dummyService) Name() string { return "dummyService" }
 
 func main() {

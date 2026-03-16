@@ -12,21 +12,21 @@ import (
 )
 
 type Supervisor struct {
-	services          []Service
-	messageBusManager *MessageBusManager
+	services   []Service
+	messageBus *MessageBus
 }
 
 func NewSupervisor(services ...Service) *Supervisor {
 	return &Supervisor{
-		services:          services,
-		messageBusManager: NewMessageBusManager(),
+		services:   services,
+		messageBus: NewMessageBus(),
 	}
 }
 
 func (s *Supervisor) initServices() error {
 	for _, svc := range s.services {
 		log.Printf("initializing %s", svc.Name())
-		if err := svc.Init(s.messageBusManager); err != nil {
+		if err := svc.Init(s.messageBus); err != nil {
 			return fmt.Errorf("failed to init %s: %w", svc.Name(), err)
 		}
 	}
@@ -41,15 +41,8 @@ func (s *Supervisor) startServices(ctx context.Context) error {
 		wg.Add(1)
 		go func(svc Service) {
 			defer wg.Done()
-
-			go func() {
-				<-ctx.Done()
-				log.Printf("Context is done, stopping service")
-				svc.Stop()
-			}()
-
 			log.Printf("starting %s", svc.Name())
-			if err := svc.Run(); err != nil {
+			if err := svc.Run(ctx); err != nil {
 				errCh <- fmt.Errorf("%s: %w", svc.Name(), err)
 			}
 		}(svc)
