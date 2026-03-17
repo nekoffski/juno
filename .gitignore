@@ -27,9 +27,8 @@ go.work.sum
 vendor/
 
 # Environment variables
-.env
-.env.*
-!.env.example
+.env.deploy
+.env.local
 
 # IDE / Editor
 .idea/

@@ -3,22 +3,25 @@ package rest
 import (
 	"context"
 	"errors"
+	"fmt"
+	"log"
 	"net/http"
 	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/nekoffski/juno/internal/bus"
+	"github.com/nekoffski/juno/internal/core"
 )
 
 const version = "1.0.0"
 
 type RestService struct {
 	*HealthHandlers
-	addr string
+	port int
 }
 
-func NewRestService(addr string) *RestService {
-	return &RestService{addr: addr}
+func NewRestService(cfg *core.Config) *RestService {
+	return &RestService{port: cfg.RestPort}
 }
 
 func (s *RestService) Name() string {
@@ -42,7 +45,10 @@ func (s *RestService) Run(ctx context.Context) error {
 		_ = e.Shutdown(shutdownCtx)
 	}()
 
-	if err := e.Start(s.addr); !errors.Is(err, http.ErrServerClosed) {
+	addr := fmt.Sprintf(":%d", s.port)
+	log.Printf("Starting REST api on %s", addr)
+
+	if err := e.Start(addr); !errors.Is(err, http.ErrServerClosed) {
 		return err
 	}
 	return nil

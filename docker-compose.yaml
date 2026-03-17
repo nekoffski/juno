@@ -1,0 +1,10 @@
+services:
+  juno:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - ${ENV_FILE}
+    ports:
+      - "${JUNO_REST_PORT}:${JUNO_REST_PORT}"
+    restart: unless-stopped
