@@ -1,4 +1,4 @@
-name: Test
+name: Juno Pipeline
 
 on:
   push:
@@ -27,5 +27,17 @@ jobs:
       - name: Generate code
         run: make generate
 
-      - name: Run tests
-        run: make test
+      - name: Run unit tests
+        run: make unit-test
+
+      - name: Build container image
+        run: make docker-build
+
+      - name: Start container
+        run: make docker-up
+
+      - name: Run integration tests
+        run: make integration-test
+
+      - name: Stop container
+        run: make docker-down

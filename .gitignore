@@ -26,6 +26,15 @@ go.work.sum
 # Dependency directories
 vendor/
 
+# Python
+tests/.venv/
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.coverage
+htmlcov/
+
 # Environment variables
 .env.deploy
 .env.local

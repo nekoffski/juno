@@ -4,10 +4,12 @@ BIN_DIR      := bin
 OAPI_CODEGEN := $(shell go env GOPATH)/bin/oapi-codegen
 REST_OPENAPI_SPEC := api/rest-openapi.yaml
 REST_OAPI_CFG     := api/rest-oapi-codegen.yaml
-ENV_FILE     ?= .env.example
+VENV_DIR     := tests/.venv
+ENV_FILE     := $(or $(ENV_FILE),.env.example)
 
-.PHONY: all build run test test-verbose test-cover clean lint fmt vet tidy generate gen-api \
-        docker-build docker-up docker-down docker-logs docker-restart
+.PHONY: all build run unit-test unit-test-verbose unit-test-cover clean lint fmt vet tidy generate gen-api \
+        docker-build docker-up docker-down docker-logs docker-restart \
+        integration-test venv
 
 all: build
 
@@ -22,13 +24,13 @@ build: generate
 run:
 	go run $(CMD)
 
-test:
+unit-test:
 	go test ./...
 
-test-verbose:
+unit-test-verbose:
 	go test -v ./...
 
-test-cover:
+unit-test-cover:
 	go test -coverprofile=coverage.out ./...
 	go tool cover -func=coverage.out
 
@@ -46,8 +48,15 @@ docker-logs:
 
 docker-restart: docker-down docker-up
 
+integration-test:
+	env $(shell grep -v '^#' $(ENV_FILE) | xargs) $(VENV_DIR)/bin/pytest tests/ -v
+
+test-venv:
+	python3 -m venv $(VENV_DIR)
+	$(VENV_DIR)/bin/pip install -r tests/requirements.txt
+
 clean:
-	rm -rf $(BIN_DIR)/ coverage.out
+	rm -rf $(BIN_DIR)/ coverage.out $(VENV_DIR)
 	find . -name '*.gen.go' -delete
 
 lint:
