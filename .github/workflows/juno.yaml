@@ -36,6 +36,9 @@ jobs:
       - name: Start container
         run: make docker-up
 
+      - name: Generate test venv
+        run: make test-venv
+
       - name: Run integration tests
         run: make integration-test
 
