@@ -6,6 +6,10 @@ import (
 	"time"
 )
 
+const (
+	DefaultRequestTimeout = 200 * time.Millisecond
+)
+
 type Future struct {
 	ch <-chan Response
 }

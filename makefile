@@ -6,9 +6,8 @@ REST_OPENAPI_SPEC := api/rest-openapi.yaml
 REST_OAPI_CFG     := api/rest-oapi-codegen.yaml
 VENV_DIR     := tests/.venv
 ENV_FILE     := $(or $(ENV_FILE),.env.example)
-
 .PHONY: all build run unit-test unit-test-verbose unit-test-cover clean lint fmt vet tidy generate gen-api \
-        docker-build docker-up docker-down docker-logs docker-restart \
+        docker-build docker-up docker-up-interactive docker-down docker-logs docker-restart \
         integration-test venv
 
 all: build
@@ -22,7 +21,7 @@ build: generate
 	go build -o $(BIN_DIR)/$(APP) $(CMD)
 
 run:
-	go run $(CMD)
+	env $(shell grep -v '^#' $(ENV_FILE) | grep '=' | xargs) go run $(CMD)
 
 unit-test:
 	go test ./...
@@ -40,6 +39,9 @@ docker-build:
 docker-up:
 	ENV_FILE=$(ENV_FILE) docker compose --env-file $(ENV_FILE) up -d
 
+docker-up-interactive:
+	ENV_FILE=$(ENV_FILE) docker compose --env-file $(ENV_FILE) up
+
 docker-down:
 	ENV_FILE=$(ENV_FILE) docker compose --env-file $(ENV_FILE) down
 
@@ -47,6 +49,15 @@ docker-logs:
 	ENV_FILE=$(ENV_FILE) docker compose --env-file $(ENV_FILE) logs -f
 
 docker-restart: docker-down docker-up
+
+docker-up-%:
+	ENV_FILE=$(ENV_FILE) docker compose --env-file $(ENV_FILE) up -d $*
+
+docker-down-%:
+	ENV_FILE=$(ENV_FILE) docker compose --env-file $(ENV_FILE) stop $*
+
+docker-logs-%:
+	ENV_FILE=$(ENV_FILE) docker compose --env-file $(ENV_FILE) logs -f $*
 
 integration-test:
 	env $(shell grep -v '^#' $(ENV_FILE) | xargs) $(VENV_DIR)/bin/pytest tests/ -v

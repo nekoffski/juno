@@ -3,6 +3,8 @@ package bus
 import (
 	"context"
 	"fmt"
+
+	"github.com/nekoffski/juno/internal/core"
 )
 
 const queueCapacity = 64
@@ -36,7 +38,7 @@ func (mb *MessageBus) NewSender() *Sender {
 
 func (mb *MessageBus) RegisterReceiver(ctx context.Context, name string, handler func(Message)) error {
 	if name == "" {
-		return ErrEmptyName
+		return core.ErrEmptyName
 	}
 	if _, exists := (*mb.queues)[name]; exists {
 		return fmt.Errorf("receiver %q is already registered", name)

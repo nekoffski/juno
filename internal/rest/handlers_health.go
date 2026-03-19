@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/nekoffski/juno/internal/bus"
-	"github.com/nekoffski/juno/internal/models"
+	"github.com/nekoffski/juno/internal/core"
 )
 
 type HealthHandlers struct {
@@ -25,8 +25,8 @@ func (h *HealthHandlers) GetDeviceServiceHealth(
 	ctx context.Context,
 	_ GetDeviceServiceHealthRequestObject,
 ) (GetDeviceServiceHealthResponseObject, error) {
-	f, err := h.sender.Request("device-service", models.HeartbeatRequest{Magic: "ping"})
-	r, err := bus.AwaitFor[models.HeartbeatResponse](ctx, f, time.Second)
+	f, err := h.sender.Request("device-service", core.HeartbeatRequest{Magic: "ping"})
+	r, err := bus.AwaitFor[core.HeartbeatResponse](ctx, f, time.Second)
 
 	if err != nil {
 		return GetDeviceServiceHealth200JSONResponse{

@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/nekoffski/juno/internal/core"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -38,7 +39,7 @@ func TestRegisterReceiver_EmptyName(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	err := bus.RegisterReceiver(ctx, "", func(Message) {})
-	assert.ErrorIs(t, err, ErrEmptyName)
+	assert.ErrorIs(t, err, core.ErrEmptyName)
 }
 
 func TestRegisterReceiver_Duplicate(t *testing.T) {
@@ -74,12 +75,12 @@ func TestSend_OK(t *testing.T) {
 
 func TestSend_UnknownBus(t *testing.T) {
 	_, sender := newSetup(t)
-	assert.ErrorIs(t, sender.Send("nonexistent", nil), ErrBusNotFound)
+	assert.ErrorIs(t, sender.Send("nonexistent", nil), core.ErrBusNotFound)
 }
 
 func TestSend_EmptyName(t *testing.T) {
 	_, sender := newSetup(t)
-	assert.ErrorIs(t, sender.Send("", nil), ErrEmptyName)
+	assert.ErrorIs(t, sender.Send("", nil), core.ErrEmptyName)
 }
 
 func TestSend_QueueFull(t *testing.T) {
@@ -106,7 +107,7 @@ func TestSend_QueueFull(t *testing.T) {
 	for i := 0; i < queueCapacity; i++ {
 		require.NoError(t, sender.Send("b", pingPayload{}), "send %d", i)
 	}
-	assert.ErrorIs(t, sender.Send("b", pingPayload{}), ErrQueueFull)
+	assert.ErrorIs(t, sender.Send("b", pingPayload{}), core.ErrQueueFull)
 }
 
 func TestRequest_Reply(t *testing.T) {
@@ -131,13 +132,13 @@ func TestRequest_Reply(t *testing.T) {
 func TestRequest_UnknownBus(t *testing.T) {
 	_, sender := newSetup(t)
 	_, err := sender.Request("nonexistent", nil)
-	assert.ErrorIs(t, err, ErrBusNotFound)
+	assert.ErrorIs(t, err, core.ErrBusNotFound)
 }
 
 func TestRequest_EmptyName(t *testing.T) {
 	_, sender := newSetup(t)
 	_, err := sender.Request("", nil)
-	assert.ErrorIs(t, err, ErrEmptyName)
+	assert.ErrorIs(t, err, core.ErrEmptyName)
 }
 
 func TestRequest_QueueFull(t *testing.T) {
@@ -165,7 +166,7 @@ func TestRequest_QueueFull(t *testing.T) {
 		require.NoError(t, sender.Send("b", pingPayload{}), "send %d", i)
 	}
 	_, err := sender.Request("b", pingPayload{})
-	assert.ErrorIs(t, err, ErrQueueFull)
+	assert.ErrorIs(t, err, core.ErrQueueFull)
 }
 
 func TestFutureAwait_ContextCancelled(t *testing.T) {

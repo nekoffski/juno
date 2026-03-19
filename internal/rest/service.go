@@ -13,10 +13,9 @@ import (
 	"github.com/nekoffski/juno/internal/core"
 )
 
-const version = "1.0.0"
-
 type RestService struct {
 	*HealthHandlers
+	*DeviceHandlers
 	port int
 }
 
@@ -30,6 +29,7 @@ func (s *RestService) Name() string {
 
 func (s *RestService) Init(ctx context.Context, mb *bus.MessageBus) error {
 	s.HealthHandlers = &HealthHandlers{sender: mb.NewSender()}
+	s.DeviceHandlers = &DeviceHandlers{sender: mb.NewSender()}
 	return nil
 }
 

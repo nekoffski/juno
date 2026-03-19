@@ -34,8 +34,84 @@ paths:
               schema:
                 $ref: "#/components/schemas/HealthResponse"
 
+  /device:
+    get:
+      summary: Get all devices
+      operationId: getDevices
+      tags:
+        - devices
+      responses:
+        "200":
+          description: List of devices
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Device"
+
+  /device/id/{id}:
+    get:
+      summary: Get device by ID
+      operationId: getDeviceById
+      tags:
+        - devices
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Device details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Device"
+        "404":
+          description: Device not found
+
+  /device/discover:
+    post:
+      summary: Discover devices
+      operationId: discoverDevices
+      tags:
+        - devices
+      responses:
+        "202":
+          description: Discovery started
+
 components:
   schemas:
+    DeviceVendor:
+      enum: [yeelight, xiaomi]
+
+    DeviceStatus:
+      enum: [online, offline, idle]
+
+    Device:
+      type: object
+      required:
+        - id
+        - name
+        - status
+        - vendor
+        - capabilities
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        vendor:
+          $ref: "#/components/schemas/DeviceVendor"
+        capabilities:
+          type: array
+          items:
+            type: string
+        status:
+          $ref: "#/components/schemas/DeviceStatus"
+      
     HealthResponse:
       type: object
       required:
