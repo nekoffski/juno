@@ -3,6 +3,7 @@ package device
 import (
 	"context"
 	"log"
+	"sync"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -11,10 +12,11 @@ import (
 )
 
 type DeviceService struct {
-	sender   *bus.Sender
-	adapters map[DeviceVendor]VendorAdapter
-	pool     *pgxpool.Pool
-	devices  map[DeviceAddr]Device
+	sender     *bus.Sender
+	adapters   map[DeviceVendor]VendorAdapter
+	pool       *pgxpool.Pool
+	devices    map[DeviceAddr]Device
+	devicesMtx sync.RWMutex
 }
 
 func NewDeviceService(pool *pgxpool.Pool, adapters map[DeviceVendor]VendorAdapter) *DeviceService {
@@ -30,19 +32,62 @@ func (s *DeviceService) Name() string {
 }
 
 // TODO: this needs context
-
 func (s *DeviceService) onMessage(msg bus.Message) {
 	switch req := msg.Payload.(type) {
 	case core.HeartbeatRequest:
 		log.Printf("Got heartbeat request")
-		msg.Reply(bus.Response{Payload: core.HeartbeatResponse{Healthy: true, Magic: req.Magic}})
+		s.onHeartbeatRequest(&msg, req)
 
 	case DiscoverDevicesRequest:
 		log.Printf("Got discover devices request")
+		s.onDiscoverDevicesRequest()
+
+	case GetDevicesRequest:
+		log.Printf("Got get devices request")
+		s.onGetDevicesRequest(&msg)
+
+	case GetDeviceByIdRequest:
+		log.Printf("Got get device by id request for id %d", req.Id)
+		s.onGetDeviceByIdRequest(&msg, req)
+	}
+}
+
+func (s *DeviceService) onHeartbeatRequest(msg *bus.Message, req core.HeartbeatRequest) {
+	msg.Reply(bus.Response{Payload: core.HeartbeatResponse{Healthy: true, Magic: req.Magic}})
+}
+
+func (s *DeviceService) onDiscoverDevicesRequest() {
+	go func() {
 		if err := s.discover(context.Background()); err != nil {
 			log.Printf("Failed to discover devices: %v", err)
 		}
+	}()
+}
+
+func (s *DeviceService) onGetDeviceByIdRequest(msg *bus.Message, req GetDeviceByIdRequest) {
+	s.devicesMtx.RLock()
+	defer s.devicesMtx.RUnlock()
+
+	for _, dev := range s.devices {
+		if dev.Model().Id == req.Id {
+			msg.Reply(bus.Response{Payload: GetDeviceByIdResponse{Device: dev.Model()}})
+			return
+		}
 	}
+	msg.Reply(bus.Response{Err: core.ErrDeviceNotFound})
+}
+
+func (s *DeviceService) onGetDevicesRequest(msg *bus.Message) {
+	s.devicesMtx.RLock()
+	defer s.devicesMtx.RUnlock()
+
+	res := GetDevicesResponse{
+		Devices: make([]*DeviceModel, 0, len(s.devices)),
+	}
+	for _, dev := range s.devices {
+		res.Devices = append(res.Devices, dev.Model())
+	}
+	msg.Reply(bus.Response{Payload: res})
 }
 
 func (s *DeviceService) Init(ctx context.Context, mb *bus.MessageBus) error {
@@ -51,7 +96,7 @@ func (s *DeviceService) Init(ctx context.Context, mb *bus.MessageBus) error {
 		s.onMessage(msg)
 	})
 
-	s.loadDevices(ctx)
+	go s.loadDevices(ctx)
 	return nil
 }
 
@@ -60,20 +105,34 @@ func (s *DeviceService) Run(ctx context.Context) error {
 	return nil
 }
 
-func (s *DeviceService) loadDevices(ctx context.Context) error {
-	return fetchDevices(ctx, s.pool, func(id int, addr DeviceAddr, vendor DeviceVendor, name string) {
-		if _, exists := s.devices[addr]; exists {
-			return
-		}
+func (s *DeviceService) exists(addr DeviceAddr) bool {
+	s.devicesMtx.RLock()
+	defer s.devicesMtx.RUnlock()
+	_, exists := s.devices[addr]
+	return exists
+}
 
-		dev, err := s.adapters[vendor].CreateDevice(id, addr, name)
-		if err != nil {
-			log.Printf("Failed to create device with adapter: %v", err)
-			return
-		}
+func (s *DeviceService) loadDevices(ctx context.Context) {
+	err := fetchDevices(ctx, s.pool, func(id int, addr DeviceAddr, vendor DeviceVendor, name string) {
+		go func() {
+			if s.exists(addr) {
+				return
+			}
 
-		s.devices[addr] = dev
+			dev, err := s.adapters[vendor].CreateDevice(ctx, id, addr, name)
+			if err != nil {
+				log.Printf("Failed to create device with adapter: %v", err)
+				return
+			}
+
+			s.devicesMtx.Lock()
+			s.devices[addr] = dev
+			s.devicesMtx.Unlock()
+		}()
 	})
+	if err != nil {
+		log.Printf("Failed to load devices from database: %v", err)
+	}
 }
 
 func (s *DeviceService) addDevice(ctx context.Context, addr DeviceAddr, vendor DeviceVendor) {
@@ -92,7 +151,7 @@ func (s *DeviceService) addDevice(ctx context.Context, addr DeviceAddr, vendor D
 		return
 	}
 
-	dev, err := s.adapters[vendor].CreateDevice(id, addr, name)
+	dev, err := s.adapters[vendor].CreateDevice(ctx, id, addr, name)
 	if err != nil {
 		log.Printf("Failed to create device with adapter: %v", err)
 		return
@@ -103,27 +162,35 @@ func (s *DeviceService) addDevice(ctx context.Context, addr DeviceAddr, vendor D
 		return
 	}
 
+	s.devicesMtx.Lock()
 	s.devices[addr] = dev
+	s.devicesMtx.Unlock()
 }
 
 func (s *DeviceService) discover(ctx context.Context) error {
 	for vendor, adapter := range s.adapters {
 		log.Printf("Discovering devices for vendor %s", vendor)
 
-		ctx, cancel := context.WithTimeout(ctx, time.Second*5)
+		discoverCtx, cancel := context.WithTimeout(ctx, time.Second*5)
 		defer cancel()
 
-		devices, err := adapter.Discover(ctx)
+		devices, err := adapter.Discover(discoverCtx)
 		if err != nil {
 			log.Printf("Failed to discover devices for vendor %s: %v", vendor, err)
 			continue
 		}
 
 		for _, device := range devices {
-			if _, exists := s.devices[device]; exists {
+			if s.exists(device) {
 				continue
 			}
-			s.addDevice(ctx, device, vendor)
+			s.devicesMtx.Lock()
+			s.devices[device] = nil
+			s.devicesMtx.Unlock()
+
+			go func(device DeviceAddr, vendor DeviceVendor) {
+				s.addDevice(ctx, device, vendor)
+			}(device, vendor)
 		}
 
 	}

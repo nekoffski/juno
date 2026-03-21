@@ -87,8 +87,8 @@ func (a *Adapter) Discover(ctx context.Context) ([]device.DeviceAddr, error) {
 	return readResponses(conn)
 }
 
-func (a *Adapter) CreateDevice(id int, addr device.DeviceAddr, name string) (device.Device, error) {
-	return connectDevice(id, addr, name)
+func (a *Adapter) CreateDevice(ctx context.Context, id int, addr device.DeviceAddr, name string) (device.Device, error) {
+	return createDevice(ctx, id, addr, name)
 }
 
 func (a *Adapter) Name() device.DeviceVendor {
