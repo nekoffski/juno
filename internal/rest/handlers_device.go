@@ -3,6 +3,7 @@ package rest
 import (
 	"context"
 	"fmt"
+	"maps"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/log"
@@ -89,4 +90,63 @@ func (h *DeviceHandlers) DiscoverDevices(
 		return nil, echo.NewHTTPError(500, fmt.Sprintf("Failed to send discover request: %v", err))
 	}
 	return DiscoverDevices202Response{}, nil
+}
+
+func (h *DeviceHandlers) GetDeviceProperties(
+	ctx context.Context,
+	request GetDevicePropertiesRequestObject,
+) (GetDevicePropertiesResponseObject, error) {
+	f, err := h.sender.Request("device-service", device.GetDevicePropertiesRequest{
+		Id:         request.Id,
+		Properties: *request.Params.Fields,
+	})
+	if err != nil {
+		log.Errorf("Could not send get device properties request: %v", err)
+		return nil, echo.NewHTTPError(500, fmt.Sprintf("Failed to send get device properties request: %v", err))
+	}
+
+	r, err := bus.AwaitFor[device.GetDevicePropertiesResponse](ctx, f, bus.DefaultRequestTimeout)
+	if err != nil {
+		if err == core.ErrDeviceNotFound {
+			return GetDeviceProperties404Response{}, nil
+		}
+		log.Errorf("Failed to await get device properties response: %v", err)
+		return nil, echo.NewHTTPError(500, fmt.Sprintf("Failed to await get device properties response: %v", err))
+	}
+
+	res := GetDeviceProperties200JSONResponse{}
+	maps.Copy(res, r.Properties)
+	return res, nil
+}
+
+func (h *DeviceHandlers) PerformDeviceAction(
+	ctx context.Context,
+	request PerformDeviceActionRequestObject,
+) (PerformDeviceActionResponseObject, error) {
+	var params map[string]any
+	if request.Body != nil && request.Body.Params != nil {
+		params = *request.Body.Params
+	}
+
+	f, err := h.sender.Request("device-service", device.PerformDeviceActionRequest{
+		Id:     request.Id,
+		Action: request.Action,
+		Params: params,
+	})
+	if err != nil {
+		log.Errorf("Could not send perform device action request: %v", err)
+		return nil, echo.NewHTTPError(500, fmt.Sprintf("Failed to send perform device action request: %v", err))
+	}
+
+	_, err = bus.AwaitFor[device.AckResponse](ctx, f, bus.DefaultRequestTimeout)
+	if err != nil {
+		switch err {
+		case core.ErrDeviceNotFound:
+			return PerformDeviceAction404Response{}, nil
+		}
+		log.Errorf("Failed to await perform device action response: %v", err)
+		return nil, echo.NewHTTPError(500, fmt.Sprintf("Failed to await perform device action response: %v", err))
+	}
+	return PerformDeviceAction200Response{}, nil
+
 }

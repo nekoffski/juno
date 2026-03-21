@@ -82,6 +82,74 @@ paths:
         "202":
           description: Discovery started
 
+  /device/id/{id}/properties:
+    get:
+      summary: Get device properties
+      operationId: getDeviceProperties
+      tags:
+        - devices
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: fields
+          in: query
+          required: false
+          description: Comma-separated list of property names to return. Returns all if omitted.
+          schema:
+            type: array
+            items:
+              type: string
+          style: form
+          explode: false
+      responses:
+        "200":
+          description: Device properties
+          content:
+            application/json:
+              schema:
+                type: object
+        "404":
+          description: Device not found
+
+  /device/id/{id}/action/{action}:
+    post:
+      summary: Perform action on device
+      operationId: performDeviceAction
+      tags:
+        - devices
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: action
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                params:
+                  type: object
+      responses:
+        "200":
+          description: Action performed successfully
+        "400":
+          description: Invalid action or parameters
+        "404":
+          description: Device not found
+      
+
+
 components:
   schemas:
     DeviceVendor:

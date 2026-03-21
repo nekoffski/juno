@@ -42,29 +42,34 @@ type notification struct {
 type notificationCallback = func(n notification)
 
 type client struct {
-	addr           device.DeviceAddr
-	conn           net.Conn
-	done           chan struct{}
-	mu             sync.Mutex
-	pending        map[int]*pendingRequest
-	nextID         atomic.Int32
-	onNotification notificationCallback
+	addr                    device.DeviceAddr
+	conn                    net.Conn
+	done                    chan struct{}
+	mu                      sync.Mutex
+	pending                 map[int]*pendingRequest
+	nextID                  atomic.Int32
+	notificationCallbackSet atomic.Bool
+	onNotification          notificationCallback
 }
 
-func newClient(ctx context.Context, addr device.DeviceAddr, onNotification notificationCallback) (*client, error) {
+func newClient(ctx context.Context, addr device.DeviceAddr) (*client, error) {
 	conn, err := net.Dial("tcp", net.JoinHostPort(addr.Ip, strconv.Itoa(addr.Port)))
 	if err != nil {
 		return nil, err
 	}
 	c := &client{
-		addr:           addr,
-		conn:           conn,
-		done:           make(chan struct{}),
-		pending:        make(map[int]*pendingRequest),
-		onNotification: onNotification,
+		addr:    addr,
+		conn:    conn,
+		done:    make(chan struct{}),
+		pending: make(map[int]*pendingRequest),
 	}
 	go c.readLoop(ctx)
 	return c, nil
+}
+
+func (c *client) setNotificationCallback(onNotification notificationCallback) {
+	c.onNotification = onNotification
+	c.notificationCallbackSet.Store(true)
 }
 
 func (c *client) readLoop(ctx context.Context) {
@@ -91,7 +96,7 @@ func (c *client) readLoop(ctx context.Context) {
 		log.Printf("Received message: %s", scanner.Bytes())
 
 		if msg.Method == "props" {
-			if c.onNotification != nil {
+			if c.notificationCallbackSet.Load() && c.onNotification != nil {
 				c.onNotification(notification{Params: msg.Params})
 			}
 			continue

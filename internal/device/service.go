@@ -49,7 +49,63 @@ func (s *DeviceService) onMessage(msg bus.Message) {
 	case GetDeviceByIdRequest:
 		log.Printf("Got get device by id request for id %d", req.Id)
 		s.onGetDeviceByIdRequest(&msg, req)
+
+	case GetDevicePropertiesRequest:
+		log.Printf("Got get device properties request for id %d and properties %v", req.Id, req.Properties)
+		s.onGetDevicePropertiesRequest(&msg, req)
+
+	case PerformDeviceActionRequest:
+		log.Printf("Got perform device action request for id %d and action %s with params %v", req.Id, req.Action, req.Params)
+		s.onPerformDeviceActionRequest(&msg, req)
 	}
+}
+
+func (s *DeviceService) onPerformDeviceActionRequest(msg *bus.Message, req PerformDeviceActionRequest) {
+	dev := s.findDevice(req.Id)
+	if dev == nil {
+		msg.Reply(bus.Response{Err: core.ErrDeviceNotFound})
+		return
+	}
+
+	if !dev.IsCapable(req.Action) {
+		msg.Reply(bus.Response{Err: core.ErrDeviceNotCapable})
+		return
+	}
+
+	params, err := parseActionParams(req.Action, req.Params)
+	if err != nil {
+		msg.Reply(bus.Response{Err: core.ErrInvalidArguments})
+		return
+	}
+
+	err = dev.EnqueueAction(Action{Method: req.Action, Params: params})
+	if err != nil {
+		msg.Reply(bus.Response{Err: err})
+		return
+	}
+	msg.Reply(bus.Response{Payload: AckResponse{}})
+}
+
+func (s *DeviceService) onGetDevicePropertiesRequest(msg *bus.Message, req GetDevicePropertiesRequest) {
+	d := s.findDevice(req.Id)
+	if d == nil {
+		msg.Reply(bus.Response{Err: core.ErrDeviceNotFound})
+		return
+	}
+
+	props := d.Properties()
+	res := GetDevicePropertiesResponse{
+		Properties: make(map[string]any),
+	}
+
+	for _, prop := range req.Properties {
+		res.Properties[prop] = nil
+		if val, exists := props[prop]; exists {
+			res.Properties[prop] = val
+		}
+	}
+
+	msg.Reply(bus.Response{Payload: res})
 }
 
 func (s *DeviceService) onHeartbeatRequest(msg *bus.Message, req core.HeartbeatRequest) {
@@ -102,6 +158,18 @@ func (s *DeviceService) Init(ctx context.Context, mb *bus.MessageBus) error {
 
 func (s *DeviceService) Run(ctx context.Context) error {
 	<-ctx.Done()
+	return nil
+}
+
+func (s *DeviceService) findDevice(id int) Device {
+	s.devicesMtx.RLock()
+	defer s.devicesMtx.RUnlock()
+
+	for _, dev := range s.devices {
+		if dev.Model().Id == id {
+			return dev
+		}
+	}
 	return nil
 }
 

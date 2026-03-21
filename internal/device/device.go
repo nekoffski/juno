@@ -6,10 +6,19 @@ type DeviceStatus string
 const (
 	DeviceVendorYeelight DeviceVendor = "Yeelight"
 	DeviceVendorXiaomi   DeviceVendor = "Xiaomi"
-	DeviceStatusOnline   DeviceStatus = "online"
-	DeviceStatusOffline  DeviceStatus = "offline"
-	DeviceStatusIdle     DeviceStatus = "idle"
 )
+
+const (
+	DeviceStatusOnline  DeviceStatus = "online"
+	DeviceStatusOffline DeviceStatus = "offline"
+	DeviceStatusIdle    DeviceStatus = "idle"
+)
+
+type ColorRGB struct {
+	R int `json:"r"`
+	G int `json:"g"`
+	B int `json:"b"`
+}
 
 type DeviceAddr struct {
 	Ip   string `json:"ip"`
@@ -25,6 +34,14 @@ type DeviceModel struct {
 	Capabilities []string     `json:"capabilities"`
 }
 
+type Action struct {
+	Method string `json:"method"`
+	Params any    `json:"params"`
+}
+
 type Device interface {
 	Model() *DeviceModel
+	Properties() map[string]any
+	IsCapable(action string) bool
+	EnqueueAction(action Action) error
 }
