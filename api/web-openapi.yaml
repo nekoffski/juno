@@ -1,0 +1,106 @@
+openapi: "3.0.3"
+
+info:
+  title: Juno Web UI API
+  description: HTMX-driven web dashboard API — responses are HTML fragments
+  version: "1.0.0"
+
+paths:
+  /:
+    get:
+      summary: Full dashboard page
+      operationId: getDashboard
+      tags:
+        - ui
+      responses:
+        "200":
+          description: Dashboard HTML page
+          content:
+            text/html:
+              schema:
+                type: string
+
+  /tabs/devices:
+    get:
+      summary: Devices tab fragment
+      operationId: getDevicesTab
+      tags:
+        - ui
+      responses:
+        "200":
+          description: HTML fragment listing all device widgets
+          content:
+            text/html:
+              schema:
+                type: string
+
+  /tabs/metrics:
+    get:
+      summary: Metrics tab fragment
+      operationId: getMetricsTab
+      tags:
+        - ui
+      responses:
+        "200":
+          description: HTML fragment for metrics (stub)
+          content:
+            text/html:
+              schema:
+                type: string
+
+  /tabs/events:
+    get:
+      summary: Events tab fragment
+      operationId: getEventsTab
+      tags:
+        - ui
+      responses:
+        "200":
+          description: HTML fragment for events (stub)
+          content:
+            text/html:
+              schema:
+                type: string
+
+  /device/{id}/action/{action}:
+    post:
+      summary: Perform a device action, returns updated device widget fragment
+      operationId: performDeviceAction
+      tags:
+        - ui
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: action
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                brightness:
+                  type: integer
+                color:
+                  type: string
+                  description: Hex color value e.g. #ff8000
+      responses:
+        "200":
+          description: Updated device widget HTML fragment
+          content:
+            text/html:
+              schema:
+                type: string
+        "404":
+          description: Device not found
+          content:
+            text/html:
+              schema:
+                type: string

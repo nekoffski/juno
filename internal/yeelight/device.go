@@ -84,6 +84,21 @@ func (d *Device) writerLoop(ctx context.Context) {
 
 func (d *Device) onNotification(n notification) {
 	log.Printf("Device %d received notification: %v", d.model.Id, n.Params)
+
+	for k, v := range n.Params {
+		nk, nv := mapProperty(k, v)
+
+		d.propsMtx.Lock()
+		d.props[nk] = nv
+		d.propsMtx.Unlock()
+
+		if nk == "power" {
+			d.model.Status = device.DeviceStatusOnline
+			if v == "off" {
+				d.model.Status = device.DeviceStatusOffline
+			}
+		}
+	}
 }
 
 func (d *Device) Properties() map[string]any {

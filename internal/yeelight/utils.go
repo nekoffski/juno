@@ -55,7 +55,7 @@ func toYeelightAction(action device.Action) (string, []any, error) {
 		if !ok {
 			return "", nil, core.ErrInvalidArguments
 		}
-		return "rgb", []any{packRgb(color)}, nil
+		return "set_rgb", []any{packRgb(color)}, nil
 
 	case "brightness":
 		brightness, ok := action.Params.(int)

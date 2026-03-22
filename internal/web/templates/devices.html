@@ -1,0 +1,17 @@
+{{define "devices.html"}}
+<div
+  hx-get="/tabs/devices"
+  hx-trigger="every 15s"
+  hx-swap="outerHTML">
+
+  {{if not .}}
+    <p style="color:#64748b">No devices found.</p>
+  {{else}}
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.25rem;">
+    {{range .}}
+      {{template "device_widget.html" .}}
+    {{end}}
+  </div>
+  {{end}}
+</div>
+{{end}}

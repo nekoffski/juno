@@ -9,6 +9,7 @@ import (
 	"github.com/nekoffski/juno/internal/device"
 	"github.com/nekoffski/juno/internal/rest"
 	"github.com/nekoffski/juno/internal/supervisor"
+	"github.com/nekoffski/juno/internal/web"
 	"github.com/nekoffski/juno/internal/yeelight"
 )
 
@@ -33,6 +34,7 @@ func main() {
 
 	s := supervisor.NewSupervisor(
 		rest.NewRestService(cfg),
+		web.NewWebService(cfg),
 		device.NewDeviceService(
 			pool,
 			map[device.DeviceVendor]device.VendorAdapter{
