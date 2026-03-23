@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/nekoffski/juno/internal/bus"
 	"github.com/nekoffski/juno/internal/device"
 )
 
@@ -87,8 +88,8 @@ func (a *Adapter) Discover(ctx context.Context) ([]device.DeviceAddr, error) {
 	return readResponses(conn)
 }
 
-func (a *Adapter) CreateDevice(ctx context.Context, id int, addr device.DeviceAddr, name string) (device.Device, error) {
-	return createDevice(ctx, id, addr, name)
+func (a *Adapter) CreateDevice(ctx context.Context, id int, addr device.DeviceAddr, name string, publisher *bus.Publisher) (device.Device, error) {
+	return createDevice(ctx, id, addr, name, publisher)
 }
 
 func (a *Adapter) Name() device.DeviceVendor {

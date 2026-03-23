@@ -26,12 +26,13 @@ type DeviceAddr struct {
 }
 
 type DeviceModel struct {
-	Id           int          `json:"id"`
-	Name         string       `json:"name"`
-	Vendor       DeviceVendor `json:"vendor"`
-	Status       DeviceStatus `json:"status"`
-	Addr         DeviceAddr   `json:"addr"`
-	Capabilities []string     `json:"capabilities"`
+	Id           int            `json:"id"`
+	Name         string         `json:"name"`
+	Vendor       DeviceVendor   `json:"vendor"`
+	Status       DeviceStatus   `json:"status"`
+	Addr         DeviceAddr     `json:"addr"`
+	Capabilities []string       `json:"capabilities"`
+	Properties   map[string]any `json:"properties"`
 }
 
 type Action struct {
@@ -40,8 +41,7 @@ type Action struct {
 }
 
 type Device interface {
-	Model() *DeviceModel
-	Properties() map[string]any
+	Model() DeviceModel
 	IsCapable(action string) bool
 	EnqueueAction(action Action) error
 }

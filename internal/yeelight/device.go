@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/nekoffski/juno/internal/bus"
 	"github.com/nekoffski/juno/internal/core"
 	"github.com/nekoffski/juno/internal/device"
 )
@@ -17,14 +18,16 @@ func getYeelightCapabilities() []string {
 type Device struct {
 	model        *device.DeviceModel
 	client       *client
-	props        map[string]any
-	propsMtx     sync.RWMutex
+	publisher    *bus.Publisher
+	modelMtx     sync.RWMutex
 	actionsQueue chan device.Action
 	done         chan struct{}
 }
 
-func (d *Device) Model() *device.DeviceModel {
-	return d.model
+func (d *Device) Model() device.DeviceModel {
+	d.modelMtx.RLock()
+	defer d.modelMtx.RUnlock()
+	return *d.model
 }
 
 func (d *Device) EnqueueAction(action device.Action) error {
@@ -72,6 +75,7 @@ func (d *Device) writerLoop(ctx context.Context) {
 				log.Printf("Device %d failed to get response for action: %v", d.model.Id, err)
 				continue
 			}
+			d.publisher.Publish("device.events", device.DeviceUpdatedEvent{Device: d.Model()})
 		case <-ctx.Done():
 			log.Printf("Device %d writer loop exiting", d.model.Id)
 			return
@@ -88,9 +92,8 @@ func (d *Device) onNotification(n notification) {
 	for k, v := range n.Params {
 		nk, nv := mapProperty(k, v)
 
-		d.propsMtx.Lock()
-		d.props[nk] = nv
-		d.propsMtx.Unlock()
+		d.modelMtx.Lock()
+		d.model.Properties[nk] = nv
 
 		if nk == "power" {
 			d.model.Status = device.DeviceStatusOnline
@@ -98,16 +101,13 @@ func (d *Device) onNotification(n notification) {
 				d.model.Status = device.DeviceStatusOffline
 			}
 		}
+		d.modelMtx.Unlock()
 	}
+
+	d.publisher.Publish("device.events", device.DeviceUpdatedEvent{Device: d.Model()})
 }
 
-func (d *Device) Properties() map[string]any {
-	d.propsMtx.RLock()
-	defer d.propsMtx.RUnlock()
-	return d.props
-}
-
-func createDevice(ctx context.Context, id int, addr device.DeviceAddr, name string) (device.Device, error) {
+func createDevice(ctx context.Context, id int, addr device.DeviceAddr, name string, publisher *bus.Publisher) (device.Device, error) {
 	c, err := newClient(ctx, addr)
 	if err != nil {
 		return nil, err
@@ -142,8 +142,9 @@ func createDevice(ctx context.Context, id int, addr device.DeviceAddr, name stri
 		Status:       status,
 		Addr:         addr,
 		Capabilities: getYeelightCapabilities(),
+		Properties:   props,
 	}
-	d := &Device{model: model, client: c, props: props, actionsQueue: make(chan device.Action, 10), done: make(chan struct{})}
+	d := &Device{model: model, client: c, publisher: publisher, actionsQueue: make(chan device.Action, 10), done: make(chan struct{})}
 
 	c.setNotificationCallback(d.onNotification)
 	go d.writerLoop(ctx)

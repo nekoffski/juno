@@ -37,7 +37,7 @@ func (s *WebService) Name() string {
 }
 
 func (s *WebService) Init(_ context.Context, mb *bus.MessageBus) error {
-	s.handlers = &Handlers{sender: mb.NewSender()}
+	s.handlers = &Handlers{sender: mb.NewSender(), mb: mb}
 	return nil
 }
 
@@ -52,6 +52,7 @@ func (s *WebService) Run(ctx context.Context) error {
 	e.GET("/tabs/devices", s.handlers.DevicesTab)
 	e.GET("/tabs/metrics", s.handlers.MetricsTab)
 	e.GET("/tabs/events", s.handlers.EventsTab)
+	e.GET("/sse", s.handlers.SSE(tmpl))
 	e.POST("/device/:id/action/:action", s.handlers.PerformAction)
 
 	go func() {

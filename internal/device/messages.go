@@ -37,6 +37,10 @@ type PerformDeviceActionRequest struct {
 	Params map[string]any `json:"params"`
 }
 
+type DeviceUpdatedEvent struct {
+	Device DeviceModel
+}
+
 func parseActionParams(name string, payload any) (any, error) {
 	m, _ := payload.(map[string]any)
 

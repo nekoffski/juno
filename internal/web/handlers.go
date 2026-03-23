@@ -1,9 +1,12 @@
 package web
 
 import (
+	"bytes"
 	"fmt"
+	"html/template"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 	"github.com/nekoffski/juno/internal/bus"
@@ -13,6 +16,7 @@ import (
 
 type Handlers struct {
 	sender *bus.Sender
+	mb     *bus.MessageBus
 }
 
 func (h *Handlers) Dashboard(c echo.Context) error {
@@ -116,4 +120,51 @@ func hexToRGB(hex string) (r, g, b int) {
 		return 0, 0, 0
 	}
 	return int(val >> 16 & 0xff), int(val >> 8 & 0xff), int(val & 0xff)
+}
+
+func (h *Handlers) SSE(tmpl *template.Template) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		sub := h.mb.NewSubscriber()
+		if err := sub.Subscribe("device.events"); err != nil {
+			return err
+		}
+		defer sub.Close()
+
+		w := c.Response()
+		w.Header().Set("Content-Type", "text/event-stream")
+		w.Header().Set("Cache-Control", "no-cache")
+		w.Header().Set("Connection", "keep-alive")
+		w.WriteHeader(http.StatusOK)
+
+		flusher, ok := w.Writer.(http.Flusher)
+		if !ok {
+			return echo.NewHTTPError(http.StatusInternalServerError, "streaming not supported")
+		}
+
+		ctx := c.Request().Context()
+		for {
+			select {
+			case ev, ok := <-sub.Events():
+				if !ok {
+					return nil
+				}
+				e, ok := ev.(device.DeviceUpdatedEvent)
+				if !ok {
+					continue
+				}
+				var buf bytes.Buffer
+				if err := tmpl.ExecuteTemplate(&buf, "device_widget.html", e.Device); err != nil {
+					continue
+				}
+				fmt.Fprintf(w, "event: device-%d\n", e.Device.Id)
+				for _, line := range strings.Split(buf.String(), "\n") {
+					fmt.Fprintf(w, "data: %s\n", line)
+				}
+				fmt.Fprint(w, "\n")
+				flusher.Flush()
+			case <-ctx.Done():
+				return nil
+			}
+		}
+	}
 }

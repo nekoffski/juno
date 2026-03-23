@@ -1,9 +1,5 @@
 {{define "devices.html"}}
-<div
-  hx-get="/tabs/devices"
-  hx-trigger="every 15s"
-  hx-swap="outerHTML">
-
+<div hx-ext="sse" sse-connect="/sse">
   {{if not .}}
     <p style="color:#64748b">No devices found.</p>
   {{else}}

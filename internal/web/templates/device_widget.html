@@ -1,5 +1,7 @@
 {{define "device_widget.html"}}
 <div id="device-{{.Id}}"
+  sse-swap="device-{{.Id}}"
+  hx-swap="outerHTML"
   style="background:#1e2535;border:1px solid #2d3748;border-radius:0.75rem;padding:1.25rem;display:flex;flex-direction:column;gap:0.75rem;">
 
   {{/* Header */}}

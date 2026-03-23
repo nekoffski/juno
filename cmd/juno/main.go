@@ -33,14 +33,14 @@ func main() {
 	defer pool.Close()
 
 	s := supervisor.NewSupervisor(
-		rest.NewRestService(cfg),
-		web.NewWebService(cfg),
 		device.NewDeviceService(
 			pool,
 			map[device.DeviceVendor]device.VendorAdapter{
 				device.DeviceVendorYeelight: yeelight.NewAdapter(),
 			},
 		),
+		rest.NewRestService(cfg),
+		web.NewWebService(cfg),
 	)
 
 	if err := s.Run(); err != nil {

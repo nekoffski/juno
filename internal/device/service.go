@@ -13,6 +13,7 @@ import (
 
 type DeviceService struct {
 	sender     *bus.Sender
+	publisher  *bus.Publisher
 	adapters   map[DeviceVendor]VendorAdapter
 	pool       *pgxpool.Pool
 	devices    map[DeviceAddr]Device
@@ -93,7 +94,7 @@ func (s *DeviceService) onGetDevicePropertiesRequest(msg *bus.Message, req GetDe
 		return
 	}
 
-	props := d.Properties()
+	props := d.Model().Properties
 	res := GetDevicePropertiesResponse{
 		Properties: make(map[string]any),
 	}
@@ -126,7 +127,8 @@ func (s *DeviceService) onGetDeviceByIdRequest(msg *bus.Message, req GetDeviceBy
 
 	for _, dev := range s.devices {
 		if dev.Model().Id == req.Id {
-			msg.Reply(bus.Response{Payload: GetDeviceByIdResponse{Device: dev.Model()}})
+			model := dev.Model()
+			msg.Reply(bus.Response{Payload: GetDeviceByIdResponse{Device: &model}})
 			return
 		}
 	}
@@ -141,13 +143,20 @@ func (s *DeviceService) onGetDevicesRequest(msg *bus.Message) {
 		Devices: make([]*DeviceModel, 0, len(s.devices)),
 	}
 	for _, dev := range s.devices {
-		res.Devices = append(res.Devices, dev.Model())
+		model := dev.Model()
+		res.Devices = append(res.Devices, &model)
 	}
 	msg.Reply(bus.Response{Payload: res})
 }
 
 func (s *DeviceService) Init(ctx context.Context, mb *bus.MessageBus) error {
 	s.sender = mb.NewSender()
+	s.publisher = mb.NewPublisher()
+
+	if err := bus.RegisterTopic(mb, "device.events"); err != nil {
+		return err
+	}
+
 	mb.RegisterReceiver(ctx, s.Name(), func(msg bus.Message) {
 		s.onMessage(msg)
 	})
@@ -187,7 +196,7 @@ func (s *DeviceService) loadDevices(ctx context.Context) {
 				return
 			}
 
-			dev, err := s.adapters[vendor].CreateDevice(ctx, id, addr, name)
+			dev, err := s.adapters[vendor].CreateDevice(ctx, id, addr, name, s.publisher)
 			if err != nil {
 				log.Printf("Failed to create device with adapter: %v", err)
 				return
@@ -219,7 +228,7 @@ func (s *DeviceService) addDevice(ctx context.Context, addr DeviceAddr, vendor D
 		return
 	}
 
-	dev, err := s.adapters[vendor].CreateDevice(ctx, id, addr, name)
+	dev, err := s.adapters[vendor].CreateDevice(ctx, id, addr, name, s.publisher)
 	if err != nil {
 		log.Printf("Failed to create device with adapter: %v", err)
 		return
