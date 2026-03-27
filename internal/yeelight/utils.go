@@ -27,22 +27,32 @@ func mapPropertyName(yeelightProp string) string {
 	}
 }
 
-func mapPropertyValue(prop string, value string) any {
+func mapPropertyValue(prop string, value any) any {
 	switch prop {
 	case "rgb":
-		if v, err := strconv.Atoi(value); err == nil {
-			return unpackRgb(v)
+		switch v := value.(type) {
+		case float64:
+			return unpackRgb(int(v))
+		case string:
+			if n, err := strconv.Atoi(v); err == nil {
+				return unpackRgb(n)
+			}
 		}
 	case "bright":
-		if v, err := strconv.Atoi(value); err == nil {
-			return v
+		switch v := value.(type) {
+		case float64:
+			return int(v)
+		case string:
+			if n, err := strconv.Atoi(v); err == nil {
+				return n
+			}
 		}
 	}
 	return value
 }
 
 func mapProperty(prop string, value any) (string, any) {
-	return mapPropertyName(prop), mapPropertyValue(prop, value.(string))
+	return mapPropertyName(prop), mapPropertyValue(prop, value)
 }
 
 func toYeelightAction(action device.Action) (string, []any, error) {

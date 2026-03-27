@@ -21,10 +21,10 @@ type request struct {
 }
 
 type response struct {
-	ID     int               `json:"id"`
-	Result []any             `json:"result"`
-	Method string            `json:"method"`
-	Params map[string]string `json:"params"`
+	ID     int            `json:"id"`
+	Result []any          `json:"result"`
+	Method string         `json:"method"`
+	Params map[string]any `json:"params"`
 	Error  *struct {
 		Code    int    `json:"code"`
 		Message string `json:"message"`
@@ -36,7 +36,7 @@ type pendingRequest struct {
 }
 
 type notification struct {
-	Params map[string]string
+	Params map[string]any
 }
 
 type notificationCallback = func(n notification)
