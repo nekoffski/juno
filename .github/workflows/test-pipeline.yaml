@@ -41,8 +41,15 @@ jobs:
       - name: Generate test venv
         run: make test-venv
 
-      - name: Run integration tests with coverage
-        run: make integration-test-coverage
+      - name: Set up integration test environment
+        run: make integration-test-setup
+
+      - name: Run integration tests
+        run: make integration-test-run
+
+      - name: Tear down integration test environment
+        if: always()
+        run: make integration-test-teardown
 
       - name: Upload integration test coverage
         uses: actions/upload-artifact@v4

@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Runs integration tests against instrumented juno + juno-web binaries and
-# generates merged Go coverage reports (HTML + Cobertura XML).
+# Starts postgres, builds instrumented binaries, launches them, and waits for
+# juno to be ready. Saves background PIDs to coverage/test-pids so that the
+# teardown script can stop the processes later.
 #
 # Requires:
 #   - docker compose (for postgres)
-#   - go, gocover-cobertura
-#   - tests/.venv already created (make test-venv)
+#   - go
 #   - .env.example present in the repo root
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -20,26 +20,8 @@ JUNO_WEB_COVER_BIN="${REPO_ROOT}/bin/juno-web-cover"
 RAW_JUNO="${REPO_ROOT}/coverage/integration-raw/juno"
 RAW_WEB="${REPO_ROOT}/coverage/integration-raw/juno-web"
 RAW_MERGED="${REPO_ROOT}/coverage/integration-raw/merged"
-INTEGRATION_PROFILE="${REPO_ROOT}/integration-coverage.out"
-REPORT_DIR="${REPO_ROOT}/coverage/integration"
 
-JUNO_PID=""
-JUNO_WEB_PID=""
-
-cleanup() {
-  echo "--- Cleanup ---"
-  if [[ -n "${JUNO_PID}" ]] && kill -0 "${JUNO_PID}" 2>/dev/null; then
-    echo "Stopping juno (pid ${JUNO_PID})"
-    kill -TERM "${JUNO_PID}" && wait "${JUNO_PID}" || true
-  fi
-  if [[ -n "${JUNO_WEB_PID}" ]] && kill -0 "${JUNO_WEB_PID}" 2>/dev/null; then
-    echo "Stopping juno-web (pid ${JUNO_WEB_PID})"
-    kill -TERM "${JUNO_WEB_PID}" && wait "${JUNO_WEB_PID}" || true
-  fi
-  echo "Stopping test environment"
-  make -C "${REPO_ROOT}" test-env-down ENV_FILE="${ENV_FILE}" || true
-}
-trap cleanup EXIT
+PID_FILE="${REPO_ROOT}/coverage/test-pids"
 
 # ------------------------------------------------------------------
 # 1. Start postgres
@@ -98,6 +80,10 @@ echo "--- Starting juno-web (instrumented) ---"
 GOCOVERDIR="${RAW_WEB}" "${JUNO_WEB_COVER_BIN}" &
 JUNO_WEB_PID=$!
 
+# Persist PIDs for the teardown script
+mkdir -p "$(dirname "${PID_FILE}")"
+printf 'JUNO_PID=%s\nJUNO_WEB_PID=%s\n' "${JUNO_PID}" "${JUNO_WEB_PID}" > "${PID_FILE}"
+
 # ------------------------------------------------------------------
 # 6. Wait for juno REST to be ready
 # ------------------------------------------------------------------
@@ -116,36 +102,4 @@ for i in $(seq 1 30); do
   sleep 1
 done
 
-# ------------------------------------------------------------------
-# 7. Run integration tests
-# ------------------------------------------------------------------
-echo "--- Running integration tests ---"
-"${REPO_ROOT}/tests/.venv/bin/pytest" "${REPO_ROOT}/tests/" -v
-
-# ------------------------------------------------------------------
-# 8. Gracefully stop instrumented binaries (flushes coverage)
-# ------------------------------------------------------------------
-echo "--- Stopping instrumented binaries ---"
-kill -TERM "${JUNO_PID}" && wait "${JUNO_PID}" || true; JUNO_PID=""
-kill -TERM "${JUNO_WEB_PID}" && wait "${JUNO_WEB_PID}" || true; JUNO_WEB_PID=""
-
-# ------------------------------------------------------------------
-# 9. Merge raw coverage from both binaries
-# ------------------------------------------------------------------
-echo "--- Merging coverage data ---"
-go tool covdata merge -i="${RAW_JUNO},${RAW_WEB}" -o="${RAW_MERGED}"
-
-# ------------------------------------------------------------------
-# 10. Convert merged raw data to text profile format
-# ------------------------------------------------------------------
-echo "--- Converting merged coverage to profile format ---"
-go tool covdata textfmt -i="${RAW_MERGED}" -o="${INTEGRATION_PROFILE}"
-
-# ------------------------------------------------------------------
-# 11. Generate HTML + XML reports
-# ------------------------------------------------------------------
-echo "--- Generating coverage reports ---"
-bash "${SCRIPT_DIR}/generate-coverage-reports.sh" "${INTEGRATION_PROFILE}" "${REPORT_DIR}"
-
-echo "--- Integration test coverage complete ---"
-echo "Reports available in: ${REPORT_DIR}"
+echo "--- Setup complete ---"
