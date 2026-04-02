@@ -6,9 +6,11 @@ REST_OPENAPI_SPEC := api/rest-openapi.yaml
 REST_OAPI_CFG     := api/rest-oapi-codegen.yaml
 VENV_DIR     := tests/.venv
 ENV_FILE     := $(or $(ENV_FILE),.env.example)
-.PHONY: all build run unit-test unit-test-verbose unit-test-cover clean lint fmt vet tidy generate gen-api \
+.PHONY: all build run unit-test unit-test-verbose unit-test-cover unit-test-cover-ci unit-coverage \
+        integration-test-setup integration-test-run integration-test-teardown \
+        clean lint fmt vet tidy generate gen-api \
         docker-build docker-up docker-up-interactive docker-down docker-logs docker-restart \
-        integration-test venv
+        integration-test venv test-env-up test-env-down
 
 all: build
 
@@ -32,6 +34,27 @@ unit-test-verbose:
 unit-test-cover:
 	go test -coverprofile=coverage.out ./...
 	go tool cover -func=coverage.out
+
+unit-test-cover-ci:
+	go test -coverprofile=coverage.txt ./...
+
+unit-coverage: unit-test-cover-ci
+	bash cicd/generate-coverage-reports.sh coverage.txt coverage/unit
+
+integration-test-setup:
+	bash cicd/integration-test-setup.sh
+
+integration-test-run:
+	bash cicd/integration-test-run.sh
+
+integration-test-teardown:
+	bash cicd/integration-test-teardown.sh
+
+test-env-up:
+	ENV_FILE=$(ENV_FILE) docker compose --env-file $(ENV_FILE) up -d postgres
+
+test-env-down:
+	ENV_FILE=$(ENV_FILE) docker compose --env-file $(ENV_FILE) down
 
 docker-build:
 	ENV_FILE=$(ENV_FILE) docker compose --env-file $(ENV_FILE) build
