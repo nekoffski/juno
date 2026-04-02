@@ -47,6 +47,19 @@ trap cleanup EXIT
 echo "--- Starting test environment (postgres) ---"
 make -C "${REPO_ROOT}" test-env-up ENV_FILE="${ENV_FILE}"
 
+echo "--- Waiting for postgres to be ready ---"
+for i in $(seq 1 30); do
+  if ENV_FILE="${ENV_FILE}" docker compose --env-file "${ENV_FILE}" exec -T postgres pg_isready -q 2>/dev/null; then
+    echo "postgres is ready (attempt ${i})"
+    break
+  fi
+  if [[ "${i}" -eq 30 ]]; then
+    echo "ERROR: postgres did not become ready within 30 seconds" >&2
+    exit 1
+  fi
+  sleep 1
+done
+
 # ------------------------------------------------------------------
 # 2. Build instrumented binaries
 # ------------------------------------------------------------------
