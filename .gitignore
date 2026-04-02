@@ -6,6 +6,11 @@ bin/
 *.so
 *.dylib
 
+coverage
+*coverage*
+logs
+.test-pids
+
 # Files generated dynamically
 *.gen.go
 

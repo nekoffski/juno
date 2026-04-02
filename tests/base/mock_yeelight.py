@@ -40,10 +40,6 @@ class MockYeelightDevice:
         self._stop_event = threading.Event()
         self._threads: list[threading.Thread] = []
 
-    # ------------------------------------------------------------------
-    # Lifecycle
-    # ------------------------------------------------------------------
-
     def start(self) -> None:
         udp_thread = threading.Thread(target=self._udp_loop, daemon=True)
         tcp_thread = threading.Thread(target=self._tcp_loop, daemon=True)
@@ -67,10 +63,6 @@ class MockYeelightDevice:
         for t in self._threads:
             t.join(timeout=2.0)
 
-    # ------------------------------------------------------------------
-    # Accessors for test assertions
-    # ------------------------------------------------------------------
-
     def get_state(self) -> dict:
         with self._state_lock:
             return dict(self._state)
@@ -86,10 +78,6 @@ class MockYeelightDevice:
     @property
     def tcp_port(self) -> int:
         return self._tcp_port
-
-    # ------------------------------------------------------------------
-    # UDP – SSDP responder
-    # ------------------------------------------------------------------
 
     def _build_ssdp_response(self) -> bytes:
         # Juno checks: UDP source IP, Location header for port, "yeelight" in body
@@ -146,10 +134,6 @@ class MockYeelightDevice:
                 pass
 
         sock.close()
-
-    # ------------------------------------------------------------------
-    # TCP – Yeelight JSON-RPC server
-    # ------------------------------------------------------------------
 
     def _tcp_loop(self) -> None:
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

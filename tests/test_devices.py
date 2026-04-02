@@ -36,4 +36,4 @@ def test_get_devices_response_schema(base_url):
     r = requests.get(f"{base_url}/device")
     assert r.status_code == 200
     devices = r.json()
-    assert len(devices) == 0 
+    assert len(devices) == 0

@@ -19,4 +19,9 @@ source <(grep -v '^#' "${ENV_FILE}" | grep '=')
 set +o allexport
 
 echo "--- Running integration tests ---"
-"${REPO_ROOT}/tests/.venv/bin/pytest" "${REPO_ROOT}/tests/" -v
+LOG_DIR="${REPO_ROOT}/logs"
+mkdir -p "${LOG_DIR}"
+"${REPO_ROOT}/tests/.venv/bin/pytest" "${REPO_ROOT}/tests/" -v \
+  --log-file="${LOG_DIR}/pytest.log" \
+  --log-file-level=DEBUG \
+  --junit-xml="${LOG_DIR}/pytest-results.xml"

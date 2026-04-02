@@ -159,6 +159,9 @@ func (s *DeviceService) onGetDeviceByIdRequest(msg *bus.Message, req GetDeviceBy
 	defer s.devicesMtx.RUnlock()
 
 	for _, dev := range s.devices {
+		if dev == nil {
+			continue
+		}
 		if dev.Model().Id == req.Id {
 			model := dev.Model()
 			msg.Reply(bus.Response{Payload: GetDeviceByIdResponse{Device: &model}})
@@ -176,6 +179,9 @@ func (s *DeviceService) onGetDevicesRequest(msg *bus.Message) {
 		Devices: make([]*DeviceModel, 0, len(s.devices)),
 	}
 	for _, dev := range s.devices {
+		if dev == nil {
+			continue
+		}
 		model := dev.Model()
 		res.Devices = append(res.Devices, &model)
 	}
@@ -208,6 +214,9 @@ func (s *DeviceService) findDevice(id int) Device {
 	defer s.devicesMtx.RUnlock()
 
 	for _, dev := range s.devices {
+		if dev == nil {
+			continue
+		}
 		if dev.Model().Id == id {
 			return dev
 		}

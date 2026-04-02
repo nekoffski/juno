@@ -13,6 +13,15 @@ def base_url():
     return f"http://localhost:{port}"
 
 
+@pytest.fixture(scope="session", autouse=True)
+def clean_devices(base_url):
+    """Delete all devices at session start to clear any state left by a previous crashed run."""
+    resp = requests.get(f"{base_url}/device")
+    if resp.status_code == 200:
+        for device in resp.json():
+            requests.delete(f"{base_url}/device/id/{device['id']}")
+
+
 @pytest.fixture()
 def mock_yeelight():
     """Start a mock Yeelight device and tear it down after each test."""
@@ -36,3 +45,14 @@ def discover_and_wait(base_url: str, timeout: float = 10.0) -> list[dict]:
                 return devices
         time.sleep(0.3)
     return []
+
+
+def wait_for_command(mock, method: str, timeout: float = 3.0) -> list[dict]:
+    """Poll mock received commands until the given method appears or timeout expires."""
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        cmds = mock.get_received_commands()
+        if any(c["method"] == method for c in cmds):
+            return cmds
+        time.sleep(0.05)
+    return mock.get_received_commands()

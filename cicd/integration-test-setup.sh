@@ -21,7 +21,8 @@ RAW_JUNO="${REPO_ROOT}/coverage/integration-raw/juno"
 RAW_WEB="${REPO_ROOT}/coverage/integration-raw/juno-web"
 RAW_MERGED="${REPO_ROOT}/coverage/integration-raw/merged"
 
-PID_FILE="${REPO_ROOT}/coverage/test-pids"
+PID_FILE="${REPO_ROOT}/.test-pids"
+NO_COVER="${NO_COVER:-}"
 
 # ------------------------------------------------------------------
 # 1. Start postgres
@@ -43,17 +44,25 @@ for i in $(seq 1 30); do
 done
 
 # ------------------------------------------------------------------
-# 2. Build instrumented binaries
+# 2. Build binaries
 # ------------------------------------------------------------------
-echo "--- Building instrumented binaries ---"
 cd "${REPO_ROOT}"
-go build -cover -o "${JUNO_COVER_BIN}" ./cmd/juno
-go build -cover -o "${JUNO_WEB_COVER_BIN}" ./cmd/juno-web
+if [[ -n "${NO_COVER}" ]]; then
+  echo "--- Building binaries (no coverage) ---"
+  go build -o "${JUNO_COVER_BIN}" ./cmd/juno
+  go build -o "${JUNO_WEB_COVER_BIN}" ./cmd/juno-web
+else
+  echo "--- Building instrumented binaries ---"
+  go build -cover -o "${JUNO_COVER_BIN}" ./cmd/juno
+  go build -cover -o "${JUNO_WEB_COVER_BIN}" ./cmd/juno-web
+fi
 
 # ------------------------------------------------------------------
 # 3. Prepare raw coverage directories
 # ------------------------------------------------------------------
-mkdir -p "${RAW_JUNO}" "${RAW_WEB}" "${RAW_MERGED}"
+if [[ -z "${NO_COVER}" ]]; then
+  mkdir -p "${RAW_JUNO}" "${RAW_WEB}" "${RAW_MERGED}"
+fi
 
 # ------------------------------------------------------------------
 # 4. Load env vars from ENV_FILE (skip comments and blank lines)
@@ -72,17 +81,27 @@ JUNO_REST_BASE_URL="http://localhost:${JUNO_REST_PORT:-6001}"
 # ------------------------------------------------------------------
 # 5. Start instrumented binaries in background
 # ------------------------------------------------------------------
+LOG_DIR="${REPO_ROOT}/logs"
+mkdir -p "${LOG_DIR}"
+
 echo "--- Starting juno (instrumented) ---"
-GOCOVERDIR="${RAW_JUNO}" "${JUNO_COVER_BIN}" &
+if [[ -n "${NO_COVER}" ]]; then
+  "${JUNO_COVER_BIN}" > "${LOG_DIR}/juno.log" 2>&1 &
+else
+  GOCOVERDIR="${RAW_JUNO}" "${JUNO_COVER_BIN}" > "${LOG_DIR}/juno.log" 2>&1 &
+fi
 JUNO_PID=$!
 
 echo "--- Starting juno-web (instrumented) ---"
-GOCOVERDIR="${RAW_WEB}" "${JUNO_WEB_COVER_BIN}" &
+if [[ -n "${NO_COVER}" ]]; then
+  "${JUNO_WEB_COVER_BIN}" > "${LOG_DIR}/juno-web.log" 2>&1 &
+else
+  GOCOVERDIR="${RAW_WEB}" "${JUNO_WEB_COVER_BIN}" > "${LOG_DIR}/juno-web.log" 2>&1 &
+fi
 JUNO_WEB_PID=$!
 
-# Persist PIDs for the teardown script
-mkdir -p "$(dirname "${PID_FILE}")"
-printf 'JUNO_PID=%s\nJUNO_WEB_PID=%s\n' "${JUNO_PID}" "${JUNO_WEB_PID}" > "${PID_FILE}"
+# Persist PIDs and log dir for the teardown script
+printf 'JUNO_PID=%s\nJUNO_WEB_PID=%s\nLOG_DIR=%s\nNO_COVER=%s\n' "${JUNO_PID}" "${JUNO_WEB_PID}" "${LOG_DIR}" "${NO_COVER}" > "${PID_FILE}"
 
 # ------------------------------------------------------------------
 # 6. Wait for juno REST to be ready

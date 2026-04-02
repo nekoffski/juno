@@ -1,7 +1,7 @@
 import pytest
 import requests
 
-from base.fixtures import discover_and_wait
+from base.fixtures import discover_and_wait, wait_for_command
 
 
 def _find_yeelight(devices: list[dict]) -> dict | None:
@@ -73,8 +73,8 @@ def test_yeelight_action_on(base_url, discovered_device, mock_yeelight):
     resp = requests.post(f"{base_url}/device/id/{device_id}/action/on", json={})
     assert resp.status_code == 200
 
-    methods = [c["method"] for c in mock_yeelight.get_received_commands()]
-    assert "on" in methods
+    cmds = wait_for_command(mock_yeelight, "on")
+    assert "on" in [c["method"] for c in cmds]
 
 
 # Sending the "off" action should return 200 and the mock must receive the command.
@@ -85,8 +85,8 @@ def test_yeelight_action_off(base_url, discovered_device, mock_yeelight):
     resp = requests.post(f"{base_url}/device/id/{device_id}/action/off", json={})
     assert resp.status_code == 200
 
-    methods = [c["method"] for c in mock_yeelight.get_received_commands()]
-    assert "off" in methods
+    cmds = wait_for_command(mock_yeelight, "off")
+    assert "off" in [c["method"] for c in cmds]
 
 
 # Sending the "toggle" action should return 200 and the mock must receive the command.
@@ -97,8 +97,8 @@ def test_yeelight_action_toggle(base_url, discovered_device, mock_yeelight):
     resp = requests.post(f"{base_url}/device/id/{device_id}/action/toggle", json={})
     assert resp.status_code == 200
 
-    methods = [c["method"] for c in mock_yeelight.get_received_commands()]
-    assert "toggle" in methods
+    cmds = wait_for_command(mock_yeelight, "toggle")
+    assert "toggle" in [c["method"] for c in cmds]
 
 
 # Sending an RGB action should return 200 and the mock must receive set_rgb with the
@@ -109,16 +109,16 @@ def test_yeelight_action_rgb(base_url, discovered_device, mock_yeelight):
 
     resp = requests.post(
         f"{base_url}/device/id/{device_id}/action/rgb",
-        json={"params": {"r": 0, "g": 128, "b": 255}},
+        json={"params": {"color": {"r": 0, "g": 128, "b": 255}}},
     )
     assert resp.status_code == 200
 
-    cmds = mock_yeelight.get_received_commands()
+    cmds = wait_for_command(mock_yeelight, "set_rgb")
     assert "set_rgb" in [c["method"] for c in cmds]
 
     set_rgb = next(c for c in cmds if c["method"] == "set_rgb")
-    # (0 << 16) | (128 << 8) | 255 = 32895
-    assert set_rgb["params"][0] == 32895
+    # (0 << 16) | (128 << 8) | 255 = 33023
+    assert set_rgb["params"][0] == 33023
 
 
 # Deleting a device should return 200 and subsequent GET by ID should return 404.
