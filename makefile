@@ -36,10 +36,10 @@ unit-test-cover:
 	go tool cover -func=coverage.out
 
 unit-test-cover-ci:
-	go test -coverprofile=unit-coverage.out ./...
+	go test -coverprofile=coverage.txt ./...
 
 unit-coverage: unit-test-cover-ci
-	bash cicd/generate-coverage-reports.sh unit-coverage.out coverage/unit
+	bash cicd/generate-coverage-reports.sh coverage.txt coverage/unit
 
 integration-test-setup:
 	bash cicd/integration-test-setup.sh

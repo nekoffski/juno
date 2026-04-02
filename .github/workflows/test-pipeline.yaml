@@ -38,6 +38,13 @@ jobs:
           name: unit-test-coverage
           path: coverage/unit/
 
+      - name: Upload unit coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: coverage.txt,coverage/unit/coverage.xml
+          flags: unit
+          token: ${{ secrets.CODECOV_TOKEN }}
+
       - name: Generate test venv
         run: make test-venv
 
@@ -56,3 +63,10 @@ jobs:
         with:
           name: integration-test-coverage
           path: coverage/integration/
+
+      - name: Upload integration coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: integration-coverage.txt,coverage/integration/coverage.xml
+          flags: integration
+          token: ${{ secrets.CODECOV_TOKEN }}

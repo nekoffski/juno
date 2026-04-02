@@ -15,7 +15,7 @@ ENV_FILE="${ENV_FILE:-${REPO_ROOT}/.env.example}"
 RAW_JUNO="${REPO_ROOT}/coverage/integration-raw/juno"
 RAW_WEB="${REPO_ROOT}/coverage/integration-raw/juno-web"
 RAW_MERGED="${REPO_ROOT}/coverage/integration-raw/merged"
-INTEGRATION_PROFILE="${REPO_ROOT}/integration-coverage.out"
+INTEGRATION_PROFILE="${REPO_ROOT}/integration-coverage.txt"
 REPORT_DIR="${REPO_ROOT}/coverage/integration"
 
 PID_FILE="${REPO_ROOT}/coverage/test-pids"
