@@ -68,6 +68,12 @@ set -o allexport
 source <(grep -v '^#' "${ENV_FILE}" | grep '=')
 set +o allexport
 
+# Postgres is exposed on localhost when binaries run directly on the host
+# (POSTGRES_HOST=postgres is the Docker service name, only valid inside Docker)
+POSTGRES_HOST=localhost
+# juno-web proxies to the REST API, also on localhost when running on the host
+JUNO_REST_BASE_URL="http://localhost:${JUNO_REST_PORT:-6001}"
+
 # ------------------------------------------------------------------
 # 5. Start instrumented binaries in background
 # ------------------------------------------------------------------

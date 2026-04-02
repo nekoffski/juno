@@ -38,9 +38,6 @@ jobs:
           name: unit-test-coverage
           path: coverage/unit/
 
-      - name: Build container image
-        run: make docker-build
-
       - name: Generate test venv
         run: make test-venv
 
