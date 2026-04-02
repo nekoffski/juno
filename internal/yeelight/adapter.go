@@ -12,16 +12,16 @@ import (
 )
 
 const (
-	ssdpAddr      = "239.255.255.250:1982"
-	ssdpSearchMsg = "M-SEARCH * HTTP/1.1\r\nHOST: 239.255.255.250:1982\r\nMAN: \"ssdp:discover\"\r\nST: wifi_bulb\r\n\r\n"
-	defaultPort   = 55443
+	defaultSsdpAddr = "239.255.255.250:1982"
+	ssdpSearchMsg   = "M-SEARCH * HTTP/1.1\r\nHOST: 239.255.255.250:1982\r\nMAN: \"ssdp:discover\"\r\nST: wifi_bulb\r\n\r\n"
+	defaultPort     = 55443
 )
 
-type Adapter struct{}
-
-func NewAdapter() *Adapter {
-	return &Adapter{}
+type Adapter struct {
+	ssdpAddr string
 }
+
+func NewAdapter(ssdpAddr string) *Adapter { return &Adapter{ssdpAddr: ssdpAddr} }
 
 func readResponses(conn net.PacketConn) ([]device.DeviceAddr, error) {
 	var devices []device.DeviceAddr
@@ -71,7 +71,7 @@ func (a *Adapter) Discover(ctx context.Context) ([]device.DeviceAddr, error) {
 	}
 	defer conn.Close()
 
-	dest, err := net.ResolveUDPAddr("udp4", ssdpAddr)
+	dest, err := net.ResolveUDPAddr("udp4", a.ssdpAddr)
 	if err != nil {
 		return nil, fmt.Errorf("failed to resolve SSDP address: %w", err)
 	}

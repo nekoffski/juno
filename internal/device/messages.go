@@ -20,6 +20,10 @@ type GetDeviceByIdResponse struct {
 
 type DiscoverDevicesRequest struct{}
 
+type DeleteDeviceRequest struct {
+	Id int `json:"id"`
+}
+
 type AckResponse struct{}
 
 type GetDevicePropertiesRequest struct {

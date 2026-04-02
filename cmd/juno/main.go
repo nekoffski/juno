@@ -35,7 +35,7 @@ func main() {
 		device.NewDeviceService(
 			pool,
 			map[device.DeviceVendor]device.VendorAdapter{
-				device.DeviceVendorYeelight: yeelight.NewAdapter(),
+				device.DeviceVendorYeelight: yeelight.NewAdapter(cfg.YeelightSsdpAddr),
 			},
 		),
 		rest.NewRestService(cfg),

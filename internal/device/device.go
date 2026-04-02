@@ -44,4 +44,5 @@ type Device interface {
 	Model() DeviceModel
 	IsCapable(action string) bool
 	EnqueueAction(action Action) error
+	Close() error
 }

@@ -29,6 +29,11 @@ func insertDevice(ctx context.Context, tx pgx.Tx, addr DeviceAddr, vendor Device
 	return id, name, nil
 }
 
+func deleteDevice(ctx context.Context, pool *pgxpool.Pool, id int) error {
+	_, err := pool.Exec(ctx, `DELETE FROM devices WHERE id = $1`, id)
+	return err
+}
+
 func fetchDevices(ctx context.Context, pool *pgxpool.Pool, callback func(int, DeviceAddr, DeviceVendor, string)) error {
 	rows, err := pool.Query(ctx, `SELECT id, ip, port, vendor, name FROM devices`)
 	if err != nil {

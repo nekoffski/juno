@@ -72,6 +72,23 @@ paths:
         "404":
           description: Device not found
 
+    delete:
+      summary: Remove a device
+      operationId: deleteDevice
+      tags:
+        - devices
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Device removed successfully
+        "404":
+          description: Device not found
+
   /device/discover:
     post:
       summary: Discover devices

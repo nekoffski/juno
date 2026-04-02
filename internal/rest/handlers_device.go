@@ -121,6 +121,27 @@ func (h *DeviceHandlers) GetDeviceProperties(
 	return res, nil
 }
 
+func (h *DeviceHandlers) DeleteDevice(
+	ctx context.Context,
+	req DeleteDeviceRequestObject,
+) (DeleteDeviceResponseObject, error) {
+	f, err := h.sender.Request("device-service", device.DeleteDeviceRequest{Id: req.Id})
+	if err != nil {
+		log.Errorf("Could not send delete device request: %v", err)
+		return nil, echo.NewHTTPError(500, fmt.Sprintf("Failed to send delete device request: %v", err))
+	}
+
+	_, err = bus.AwaitFor[device.AckResponse](ctx, f, bus.DefaultRequestTimeout)
+	if err != nil {
+		if err == core.ErrDeviceNotFound {
+			return DeleteDevice404Response{}, nil
+		}
+		log.Errorf("Failed to await delete device response: %v", err)
+		return nil, echo.NewHTTPError(500, fmt.Sprintf("Failed to await delete device response: %v", err))
+	}
+	return DeleteDevice200Response{}, nil
+}
+
 func (h *DeviceHandlers) PerformDeviceAction(
 	ctx context.Context,
 	request PerformDeviceActionRequestObject,

@@ -58,7 +58,40 @@ func (s *DeviceService) onMessage(msg bus.Message) {
 	case PerformDeviceActionRequest:
 		log.Printf("Got perform device action request for id %d and action %s with params %v", req.Id, req.Action, req.Params)
 		s.onPerformDeviceActionRequest(&msg, req)
+
+	case DeleteDeviceRequest:
+		log.Printf("Got delete device request for id %d", req.Id)
+		s.onDeleteDeviceRequest(&msg, req)
 	}
+}
+
+func (s *DeviceService) onDeleteDeviceRequest(msg *bus.Message, req DeleteDeviceRequest) {
+	s.devicesMtx.Lock()
+	var addrToDelete *DeviceAddr
+	var devToClose Device
+	for addr, dev := range s.devices {
+		if dev != nil && dev.Model().Id == req.Id {
+			addr := addr
+			addrToDelete = &addr
+			devToClose = dev
+			break
+		}
+	}
+	if addrToDelete == nil {
+		s.devicesMtx.Unlock()
+		msg.Reply(bus.Response{Err: core.ErrDeviceNotFound})
+		return
+	}
+	delete(s.devices, *addrToDelete)
+	s.devicesMtx.Unlock()
+
+	if err := devToClose.Close(); err != nil {
+		log.Printf("Error closing device %d: %v", req.Id, err)
+	}
+	if err := deleteDevice(context.Background(), s.pool, req.Id); err != nil {
+		log.Printf("Error deleting device %d from database: %v", req.Id, err)
+	}
+	msg.Reply(bus.Response{Payload: AckResponse{}})
 }
 
 func (s *DeviceService) onPerformDeviceActionRequest(msg *bus.Message, req PerformDeviceActionRequest) {
