@@ -1,0 +1,72 @@
+name: Juno Test Pipeline
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Install tools
+        run: |
+          go install github.com/deepmap/oapi-codegen/cmd/oapi-codegen@v1.16.3
+          go install github.com/boumenot/gocover-cobertura@latest
+
+      - name: Generate code
+        run: make generate
+
+      - name: Run unit tests with coverage
+        run: make unit-coverage
+
+      - name: Upload unit test coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-coverage
+          path: coverage/unit/
+
+      - name: Upload unit coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: coverage.txt,coverage/unit/coverage.xml
+          flags: unit
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Generate test venv
+        run: make test-venv
+
+      - name: Set up integration test environment
+        run: make integration-test-setup
+
+      - name: Run integration tests
+        run: make integration-test-run
+
+      - name: Tear down integration test environment
+        if: always()
+        run: make integration-test-teardown
+
+      - name: Upload integration test coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-test-coverage
+          path: coverage/integration/
+
+      - name: Upload integration coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: integration-coverage.txt,coverage/integration/coverage.xml
+          flags: integration
+          token: ${{ secrets.CODECOV_TOKEN }}

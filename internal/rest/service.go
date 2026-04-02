@@ -16,6 +16,7 @@ import (
 type RestService struct {
 	*HealthHandlers
 	*DeviceHandlers
+	mb   *bus.MessageBus
 	port int
 }
 
@@ -28,6 +29,7 @@ func (s *RestService) Name() string {
 }
 
 func (s *RestService) Init(ctx context.Context, mb *bus.MessageBus) error {
+	s.mb = mb
 	s.HealthHandlers = &HealthHandlers{sender: mb.NewSender()}
 	s.DeviceHandlers = &DeviceHandlers{sender: mb.NewSender()}
 	return nil
@@ -37,6 +39,7 @@ func (s *RestService) Run(ctx context.Context) error {
 	e := echo.New()
 	e.HideBanner = true
 	RegisterHandlers(e, NewStrictHandler(s, nil))
+	e.GET("/events", newSSEHandler(s.mb))
 
 	go func() {
 		<-ctx.Done()

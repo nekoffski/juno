@@ -1,111 +1,135 @@
 package web
 
 import (
-	"bytes"
-	"fmt"
-	"html/template"
-	"net/http"
-	"strconv"
-	"strings"
+"bufio"
+"bytes"
+"encoding/json"
+"fmt"
+"html/template"
+"net/http"
+"strconv"
+"strings"
 
-	"github.com/labstack/echo/v4"
-	"github.com/nekoffski/juno/internal/bus"
-	"github.com/nekoffski/juno/internal/core"
-	"github.com/nekoffski/juno/internal/device"
+"github.com/labstack/echo/v4"
 )
 
+// Device mirrors the REST API Device model.
+type Device struct {
+	Id           int                    `json:"id"`
+	Name         string                 `json:"name"`
+	Vendor       interface{}            `json:"vendor"`
+	Status       interface{}            `json:"status"`
+	Capabilities []string               `json:"capabilities"`
+	Properties   map[string]interface{} `json:"properties"`
+}
+
 type Handlers struct {
-	sender *bus.Sender
-	mb     *bus.MessageBus
+	restBase string
+	client   *http.Client
+	tmpl     *template.Template
+}
+
+func NewHandlers(restBase string, tmpl *template.Template) *Handlers {
+	return &Handlers{
+		restBase: restBase,
+		client:   &http.Client{},
+		tmpl:     tmpl,
+	}
 }
 
 func (h *Handlers) Dashboard(c echo.Context) error {
-	return c.Render(http.StatusOK, "layout.html", nil)
+	c.Response().Header().Set("Content-Type", "text/html; charset=utf-8")
+	return h.tmpl.ExecuteTemplate(c.Response().Writer, "layout.html", nil)
 }
 
 func (h *Handlers) DevicesTab(c echo.Context) error {
-	f, err := h.sender.Request("device-service", device.GetDevicesRequest{})
+	resp, err := h.client.Get(h.restBase + "/device")
 	if err != nil {
-		return fmt.Errorf("could not send get devices request: %w", err)
+		return fmt.Errorf("could not get devices: %w", err)
+	}
+	defer resp.Body.Close()
+
+	var devices []Device
+	if err := json.NewDecoder(resp.Body).Decode(&devices); err != nil {
+		return fmt.Errorf("could not decode devices: %w", err)
 	}
 
-	r, err := bus.AwaitFor[device.GetDevicesResponse](c.Request().Context(), f, bus.DefaultRequestTimeout)
-	if err != nil {
-		return fmt.Errorf("could not await get devices response: %w", err)
-	}
-
-	return c.Render(http.StatusOK, "devices.html", r.Devices)
+	c.Response().Header().Set("Content-Type", "text/html; charset=utf-8")
+	return h.tmpl.ExecuteTemplate(c.Response().Writer, "devices.html", devices)
 }
 
 func (h *Handlers) MetricsTab(c echo.Context) error {
-	return c.Render(http.StatusOK, "metrics.html", nil)
+	c.Response().Header().Set("Content-Type", "text/html; charset=utf-8")
+	return h.tmpl.ExecuteTemplate(c.Response().Writer, "metrics.html", nil)
 }
 
 func (h *Handlers) EventsTab(c echo.Context) error {
-	return c.Render(http.StatusOK, "events.html", nil)
+	c.Response().Header().Set("Content-Type", "text/html; charset=utf-8")
+	return h.tmpl.ExecuteTemplate(c.Response().Writer, "events.html", nil)
 }
 
 func (h *Handlers) PerformAction(c echo.Context) error {
-	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "invalid device id")
-	}
+	id := c.Param("id")
 	action := c.Param("action")
 
-	params := buildActionParams(action, c)
-
-	f, err := h.sender.Request("device-service", device.PerformDeviceActionRequest{
-		Id:     id,
-		Action: action,
-		Params: params,
-	})
+	body, err := buildActionBody(action, c)
 	if err != nil {
-		return fmt.Errorf("could not send perform device action request: %w", err)
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	_, err = bus.AwaitFor[device.AckResponse](c.Request().Context(), f, bus.DefaultRequestTimeout)
+	url := fmt.Sprintf("%s/device/id/%s/action/%s", h.restBase, id, action)
+	resp, err := h.client.Post(url, "application/json", bytes.NewReader(body))
 	if err != nil {
-		if err == core.ErrDeviceNotFound {
-			return c.Render(http.StatusNotFound, "error.html", "Device not found")
-		}
-		return fmt.Errorf("could not await perform device action response: %w", err)
+		return fmt.Errorf("could not perform action: %w", err)
+	}
+	defer resp.Body.Close()
+
+	// Re-fetch device and render updated widget.
+	deviceResp, err := h.client.Get(fmt.Sprintf("%s/device/id/%s", h.restBase, id))
+	if err != nil {
+		return fmt.Errorf("could not get device: %w", err)
+	}
+	defer deviceResp.Body.Close()
+
+	var d Device
+	if err := json.NewDecoder(deviceResp.Body).Decode(&d); err != nil {
+		return fmt.Errorf("could not decode device: %w", err)
 	}
 
-	// Re-fetch the device and render the updated widget
-	f2, err := h.sender.Request("device-service", device.GetDeviceByIdRequest{Id: id})
-	if err != nil {
-		return fmt.Errorf("could not send get device by id request: %w", err)
-	}
-
-	r, err := bus.AwaitFor[device.GetDeviceByIdResponse](c.Request().Context(), f2, bus.DefaultRequestTimeout)
-	if err != nil {
-		return fmt.Errorf("could not await get device by id response: %w", err)
-	}
-
-	return c.Render(http.StatusOK, "device_widget.html", r.Device)
+	c.Response().Header().Set("Content-Type", "text/html; charset=utf-8")
+	return h.tmpl.ExecuteTemplate(c.Response().Writer, "device_widget.html", d)
 }
 
-func buildActionParams(action string, c echo.Context) map[string]any {
+func buildActionBody(action string, c echo.Context) ([]byte, error) {
+	var params map[string]interface{}
 	switch action {
+	case "toggle":
+		params = nil
 	case "brightness":
 		v, err := strconv.Atoi(c.FormValue("brightness"))
 		if err != nil {
-			return nil
+			return nil, fmt.Errorf("invalid brightness value")
 		}
-		return map[string]any{"brightness": float64(v)}
+		params = map[string]interface{}{"brightness": float64(v)}
 	case "rgb":
 		hex := c.FormValue("color")
 		r, g, b := hexToRGB(hex)
-		return map[string]any{
-			"color": map[string]any{
+		params = map[string]interface{}{
+			"color": map[string]interface{}{
 				"r": float64(r),
 				"g": float64(g),
 				"b": float64(b),
 			},
 		}
 	default:
-		return nil
+		params = nil
 	}
+
+	body := map[string]interface{}{}
+	if params != nil {
+		body["params"] = params
+	}
+	return json.Marshal(body)
 }
 
 func hexToRGB(hex string) (r, g, b int) {
@@ -122,49 +146,64 @@ func hexToRGB(hex string) (r, g, b int) {
 	return int(val >> 16 & 0xff), int(val >> 8 & 0xff), int(val & 0xff)
 }
 
-func (h *Handlers) SSE(tmpl *template.Template) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		sub := h.mb.NewSubscriber()
-		if err := sub.Subscribe("device.events"); err != nil {
-			return err
+// SSE connects to the REST API SSE stream, receives JSON Device updates,
+// renders them as HTML fragments, and re-streams them to the browser.
+func (h *Handlers) SSE(c echo.Context) error {
+	restResp, err := h.client.Get(h.restBase + "/events")
+	if err != nil {
+		return fmt.Errorf("could not connect to REST SSE: %w", err)
+	}
+	defer restResp.Body.Close()
+
+	w := c.Response().Writer
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+	w.WriteHeader(http.StatusOK)
+
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		return echo.NewHTTPError(http.StatusInternalServerError, "streaming not supported")
+	}
+	flusher.Flush()
+
+	ctx := c.Request().Context()
+	scanner := bufio.NewScanner(restResp.Body)
+	var eventType, dataLine string
+
+	for scanner.Scan() {
+		select {
+		case <-ctx.Done():
+			return nil
+		default:
 		}
-		defer sub.Close()
 
-		w := c.Response()
-		w.Header().Set("Content-Type", "text/event-stream")
-		w.Header().Set("Cache-Control", "no-cache")
-		w.Header().Set("Connection", "keep-alive")
-		w.WriteHeader(http.StatusOK)
-
-		flusher, ok := w.Writer.(http.Flusher)
-		if !ok {
-			return echo.NewHTTPError(http.StatusInternalServerError, "streaming not supported")
-		}
-
-		ctx := c.Request().Context()
-		for {
-			select {
-			case ev, ok := <-sub.Events():
-				if !ok {
-					return nil
+		line := scanner.Text()
+		switch {
+		case strings.HasPrefix(line, "event:"):
+			eventType = strings.TrimSpace(strings.TrimPrefix(line, "event:"))
+		case strings.HasPrefix(line, "data:"):
+			dataLine = strings.TrimSpace(strings.TrimPrefix(line, "data:"))
+		case line == "" && eventType != "" && dataLine != "":
+			if eventType == "device.updated" {
+				var d Device
+				if err := json.Unmarshal([]byte(dataLine), &d); err == nil {
+					var buf bytes.Buffer
+					if err := h.tmpl.ExecuteTemplate(&buf, "device_widget.html", d); err == nil {
+						html := buf.String()
+						fmt.Fprintf(w, "event: device-%d\n", d.Id)
+						for _, l := range strings.Split(html, "\n") {
+							fmt.Fprintf(w, "data: %s\n", l)
+						}
+						fmt.Fprint(w, "\n")
+						flusher.Flush()
+					}
 				}
-				e, ok := ev.(device.DeviceUpdatedEvent)
-				if !ok {
-					continue
-				}
-				var buf bytes.Buffer
-				if err := tmpl.ExecuteTemplate(&buf, "device_widget.html", e.Device); err != nil {
-					continue
-				}
-				fmt.Fprintf(w, "event: device-%d\n", e.Device.Id)
-				for _, line := range strings.Split(buf.String(), "\n") {
-					fmt.Fprintf(w, "data: %s\n", line)
-				}
-				fmt.Fprint(w, "\n")
-				flusher.Flush()
-			case <-ctx.Done():
-				return nil
 			}
+			eventType = ""
+			dataLine = ""
 		}
 	}
+
+	return nil
 }

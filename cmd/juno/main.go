@@ -9,7 +9,6 @@ import (
 	"github.com/nekoffski/juno/internal/device"
 	"github.com/nekoffski/juno/internal/rest"
 	"github.com/nekoffski/juno/internal/supervisor"
-	"github.com/nekoffski/juno/internal/web"
 	"github.com/nekoffski/juno/internal/yeelight"
 )
 
@@ -40,7 +39,6 @@ func main() {
 			},
 		),
 		rest.NewRestService(cfg),
-		web.NewWebService(cfg),
 	)
 
 	if err := s.Run(); err != nil {

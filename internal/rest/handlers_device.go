@@ -23,6 +23,7 @@ func convertDeviceModel(d *device.DeviceModel) Device {
 		Status:       d.Status,
 		Capabilities: d.Capabilities,
 		Vendor:       d.Vendor,
+		Properties:   d.Properties,
 	}
 }
 
@@ -77,6 +78,7 @@ func (h *DeviceHandlers) GetDeviceById(
 		Status:       r.Device.Status,
 		Capabilities: r.Device.Capabilities,
 		Vendor:       r.Device.Vendor,
+		Properties:   r.Device.Properties,
 	}
 	return res, nil
 }

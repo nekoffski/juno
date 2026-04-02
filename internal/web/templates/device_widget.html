@@ -35,7 +35,7 @@
 
       {{if eq . "brightness"}}
         <label style="font-size:0.8rem;color:#94a3b8;">Brightness</label>
-        <input type="range" min="0" max="100" value="50" name="brightness"
+        <input type="range" min="0" max="100" value="{{propInt (index $.Properties "brightness")}}" name="brightness"
           hx-post="/device/{{$.Id}}/action/brightness"
           hx-target="#device-{{$.Id}}"
           hx-swap="outerHTML"
@@ -46,7 +46,7 @@
 
       {{if eq . "rgb"}}
         <label style="font-size:0.8rem;color:#94a3b8;">Color</label>
-        <input type="color" name="color" value="#ffffff"
+        <input type="color" name="color" value="{{rgbHex (index $.Properties "rgb")}}"
           hx-post="/device/{{$.Id}}/action/rgb"
           hx-target="#device-{{$.Id}}"
           hx-swap="outerHTML"
