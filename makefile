@@ -33,10 +33,12 @@ unit-test-verbose:
 
 unit-test-cover:
 	go test -coverprofile=coverage.out ./...
+	grep -v 'gen\.go:' coverage.out > coverage.out.tmp && mv coverage.out.tmp coverage.out
 	go tool cover -func=coverage.out
 
 unit-test-cover-ci:
 	go test -coverprofile=coverage.txt ./...
+	grep -v 'gen\.go:' coverage.txt > coverage.txt.tmp && mv coverage.txt.tmp coverage.txt
 
 unit-coverage: unit-test-cover-ci
 	bash cicd/generate-coverage-reports.sh coverage.txt coverage/unit
@@ -90,7 +92,7 @@ test-venv:
 	$(VENV_DIR)/bin/pip install -r tests/requirements.txt
 
 clean:
-	rm -rf $(BIN_DIR)/ coverage.out $(VENV_DIR)
+	rm -rf $(BIN_DIR)/ coverage.out coverage *coverage.txt $(VENV_DIR)
 	find . -name '*.gen.go' -delete
 
 lint:

@@ -6,7 +6,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/nekoffski/juno/internal/bus"
 	"github.com/nekoffski/juno/internal/core"
 )
@@ -15,14 +14,14 @@ type DeviceService struct {
 	sender     *bus.Sender
 	publisher  *bus.Publisher
 	adapters   map[DeviceVendor]VendorAdapter
-	pool       *pgxpool.Pool
+	repo       DeviceRepository
 	devices    map[DeviceAddr]Device
 	devicesMtx sync.RWMutex
 }
 
-func NewDeviceService(pool *pgxpool.Pool, adapters map[DeviceVendor]VendorAdapter) *DeviceService {
+func NewDeviceService(repo DeviceRepository, adapters map[DeviceVendor]VendorAdapter) *DeviceService {
 	return &DeviceService{
-		pool:     pool,
+		repo:     repo,
 		adapters: adapters,
 		devices:  make(map[DeviceAddr]Device),
 	}
@@ -32,7 +31,6 @@ func (s *DeviceService) Name() string {
 	return "device-service"
 }
 
-// TODO: this needs context
 func (s *DeviceService) onMessage(msg bus.Message) {
 	switch req := msg.Payload.(type) {
 	case core.HeartbeatRequest:
@@ -88,7 +86,7 @@ func (s *DeviceService) onDeleteDeviceRequest(msg *bus.Message, req DeleteDevice
 	if err := devToClose.Close(); err != nil {
 		log.Printf("Error closing device %d: %v", req.Id, err)
 	}
-	if err := deleteDevice(context.Background(), s.pool, req.Id); err != nil {
+	if err := s.repo.DeleteDevice(context.Background(), req.Id); err != nil {
 		log.Printf("Error deleting device %d from database: %v", req.Id, err)
 	}
 	msg.Reply(bus.Response{Payload: AckResponse{}})
@@ -232,7 +230,7 @@ func (s *DeviceService) exists(addr DeviceAddr) bool {
 }
 
 func (s *DeviceService) loadDevices(ctx context.Context) {
-	err := fetchDevices(ctx, s.pool, func(id int, addr DeviceAddr, vendor DeviceVendor, name string) {
+	err := s.repo.FetchDevices(ctx, func(id int, addr DeviceAddr, vendor DeviceVendor, name string) {
 		go func() {
 			if s.exists(addr) {
 				return
@@ -257,14 +255,7 @@ func (s *DeviceService) loadDevices(ctx context.Context) {
 func (s *DeviceService) addDevice(ctx context.Context, addr DeviceAddr, vendor DeviceVendor) {
 	log.Printf("Adding device at %s:%d", addr.Ip, addr.Port)
 
-	tx, err := s.pool.Begin(ctx)
-	if err != nil {
-		log.Printf("Failed to begin transaction: %v", err)
-		return
-	}
-	defer tx.Rollback(ctx)
-
-	id, name, err := insertDevice(ctx, tx, addr, vendor)
+	id, name, err := s.repo.InsertDevice(ctx, addr, vendor)
 	if err != nil {
 		log.Printf("Failed to insert device: %v", err)
 		return
@@ -273,11 +264,6 @@ func (s *DeviceService) addDevice(ctx context.Context, addr DeviceAddr, vendor D
 	dev, err := s.adapters[vendor].CreateDevice(ctx, id, addr, name, s.publisher)
 	if err != nil {
 		log.Printf("Failed to create device with adapter: %v", err)
-		return
-	}
-
-	if err := tx.Commit(ctx); err != nil {
-		log.Printf("Failed to commit transaction: %v", err)
 		return
 	}
 

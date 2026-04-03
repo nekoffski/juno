@@ -15,7 +15,7 @@ ENV_FILE="${ENV_FILE:-${REPO_ROOT}/.env.example}"
 RAW_JUNO="${REPO_ROOT}/coverage/integration-raw/juno"
 RAW_WEB="${REPO_ROOT}/coverage/integration-raw/juno-web"
 RAW_MERGED="${REPO_ROOT}/coverage/integration-raw/merged"
-INTEGRATION_PROFILE="${REPO_ROOT}/integration-coverage.txt"
+INTEGRATION_PROFILE="${REPO_ROOT}/8"
 REPORT_DIR="${REPO_ROOT}/coverage/integration"
 
 PID_FILE="${REPO_ROOT}/.test-pids"
@@ -52,7 +52,7 @@ fi
 # ------------------------------------------------------------------
 # 2. Merge raw coverage from both binaries
 # ------------------------------------------------------------------
-if [[ -n "${NO_COVER:-}" ]]; then
+if [[ "${NO_COVER:-}" == "1" ]]; then
   echo "--- Skipping coverage (NO_COVER is set) ---"
 else
   echo "--- Merging coverage data ---"
@@ -78,6 +78,6 @@ echo "--- Stopping test environment ---"
 make -C "${REPO_ROOT}" test-env-down ENV_FILE="${ENV_FILE}"
 
 echo "--- Teardown complete ---"
-if [[ -z "${NO_COVER:-}" ]]; then
+if [[ "${NO_COVER:-}" != "1" ]]; then
   echo "Reports available in: ${REPORT_DIR}"
 fi

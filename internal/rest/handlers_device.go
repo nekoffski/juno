@@ -98,9 +98,13 @@ func (h *DeviceHandlers) GetDeviceProperties(
 	ctx context.Context,
 	request GetDevicePropertiesRequestObject,
 ) (GetDevicePropertiesResponseObject, error) {
+	var fields []string
+	if request.Params.Fields != nil {
+		fields = *request.Params.Fields
+	}
 	f, err := h.sender.Request("device-service", device.GetDevicePropertiesRequest{
 		Id:         request.Id,
-		Properties: *request.Params.Fields,
+		Properties: fields,
 	})
 	if err != nil {
 		log.Errorf("Could not send get device properties request: %v", err)

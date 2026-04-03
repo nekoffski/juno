@@ -33,7 +33,7 @@ func main() {
 
 	s := supervisor.NewSupervisor(
 		device.NewDeviceService(
-			pool,
+			device.NewPgxRepository(pool),
 			map[device.DeviceVendor]device.VendorAdapter{
 				device.DeviceVendorYeelight: yeelight.NewAdapter(cfg.YeelightSsdpAddr),
 			},

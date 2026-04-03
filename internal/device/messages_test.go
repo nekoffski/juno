@@ -1,11 +1,11 @@
 package device
 
 import (
-"testing"
+	"testing"
 
-"github.com/nekoffski/juno/internal/core"
-"github.com/stretchr/testify/assert"
-"github.com/stretchr/testify/require"
+	"github.com/nekoffski/juno/internal/core"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestParseActionParams_On(t *testing.T) {

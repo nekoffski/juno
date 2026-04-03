@@ -1,16 +1,16 @@
 package web
 
 import (
-"bufio"
-"bytes"
-"encoding/json"
-"fmt"
-"html/template"
-"net/http"
-"strconv"
-"strings"
+	"bufio"
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"html/template"
+	"net/http"
+	"strconv"
+	"strings"
 
-"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4"
 )
 
 // Device mirrors the REST API Device model.

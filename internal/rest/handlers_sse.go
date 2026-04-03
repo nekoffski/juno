@@ -29,6 +29,7 @@ func newSSEHandler(mb *bus.MessageBus) echo.HandlerFunc {
 		if !ok {
 			return echo.NewHTTPError(http.StatusInternalServerError, "streaming not supported")
 		}
+		flusher.Flush()
 
 		ctx := c.Request().Context()
 		for {

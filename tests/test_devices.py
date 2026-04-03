@@ -37,3 +37,20 @@ def test_get_devices_response_schema(base_url):
     assert r.status_code == 200
     devices = r.json()
     assert len(devices) == 0
+
+
+def test_delete_device_not_found(base_url):
+    r = requests.delete(f"{base_url}/device/id/999999")
+    assert r.status_code == 404
+
+
+def test_perform_device_action_not_found_delete(base_url):
+    r = requests.post(f"{base_url}/device/id/999999/action/toggle", json={})
+    assert r.status_code == 404
+
+
+def test_events_stream_headers(base_url):
+    r = requests.get(f"{base_url}/events", stream=True, timeout=(5, None))
+    assert r.status_code == 200
+    assert "text/event-stream" in r.headers.get("Content-Type", "")
+    r.close()

@@ -47,7 +47,7 @@ done
 # 2. Build binaries
 # ------------------------------------------------------------------
 cd "${REPO_ROOT}"
-if [[ -n "${NO_COVER}" ]]; then
+if [[ "${NO_COVER}" == "1" ]]; then
   echo "--- Building binaries (no coverage) ---"
   go build -o "${JUNO_COVER_BIN}" ./cmd/juno
   go build -o "${JUNO_WEB_COVER_BIN}" ./cmd/juno-web
@@ -60,7 +60,7 @@ fi
 # ------------------------------------------------------------------
 # 3. Prepare raw coverage directories
 # ------------------------------------------------------------------
-if [[ -z "${NO_COVER}" ]]; then
+if [[ "${NO_COVER}" != "1" ]]; then
   mkdir -p "${RAW_JUNO}" "${RAW_WEB}" "${RAW_MERGED}"
 fi
 
@@ -85,7 +85,7 @@ LOG_DIR="${REPO_ROOT}/logs"
 mkdir -p "${LOG_DIR}"
 
 echo "--- Starting juno (instrumented) ---"
-if [[ -n "${NO_COVER}" ]]; then
+if [[ "${NO_COVER}" == "1" ]]; then
   "${JUNO_COVER_BIN}" > "${LOG_DIR}/juno.log" 2>&1 &
 else
   GOCOVERDIR="${RAW_JUNO}" "${JUNO_COVER_BIN}" > "${LOG_DIR}/juno.log" 2>&1 &
@@ -93,7 +93,7 @@ fi
 JUNO_PID=$!
 
 echo "--- Starting juno-web (instrumented) ---"
-if [[ -n "${NO_COVER}" ]]; then
+if [[ "${NO_COVER}" == "1" ]]; then
   "${JUNO_WEB_COVER_BIN}" > "${LOG_DIR}/juno-web.log" 2>&1 &
 else
   GOCOVERDIR="${RAW_WEB}" "${JUNO_WEB_COVER_BIN}" > "${LOG_DIR}/juno-web.log" 2>&1 &
