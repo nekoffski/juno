@@ -7,9 +7,22 @@ import requests
 from base.mock_yeelight import MockYeelightDevice
 
 
+def _find_yeelight(devices: list[dict]) -> dict | None:
+    for d in devices:
+        if str(d.get("vendor", "")).lower() == "yeelight":
+            return d
+    return None
+
+
 @pytest.fixture(scope="session")
 def base_url():
     port = os.environ.get("JUNO_REST_PORT", "6000")
+    return f"http://localhost:{port}"
+
+
+@pytest.fixture(scope="session")
+def web_url():
+    port = os.environ.get("JUNO_WEB_PORT", "6001")
     return f"http://localhost:{port}"
 
 
@@ -31,6 +44,15 @@ def mock_yeelight():
     device.start()
     yield device
     device.stop()
+
+
+@pytest.fixture()
+def discovered_device(base_url, mock_yeelight):
+    devices = discover_and_wait(base_url)
+    device = _find_yeelight(devices)
+    assert device is not None, "Yeelight mock device was not discovered"
+    yield device
+    requests.delete(f"{base_url}/device/id/{device['id']}")
 
 
 def discover_and_wait(base_url: str, timeout: float = 10.0) -> list[dict]:

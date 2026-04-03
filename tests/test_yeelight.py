@@ -1,14 +1,7 @@
 import pytest
 import requests
 
-from base.fixtures import discover_and_wait, wait_for_command
-
-
-def _find_yeelight(devices: list[dict]) -> dict | None:
-    for d in devices:
-        if str(d.get("vendor", "")).lower() == "yeelight":
-            return d
-    return None
+from base.fixtures import discover_and_wait, wait_for_command, _find_yeelight
 
 
 @pytest.fixture()
