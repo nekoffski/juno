@@ -111,6 +111,12 @@ func buildActionBody(action string, c echo.Context) ([]byte, error) {
 			return nil, fmt.Errorf("invalid brightness value")
 		}
 		params = map[string]interface{}{"brightness": float64(v)}
+	case "ct":
+		v, err := strconv.Atoi(c.FormValue("ct"))
+		if err != nil {
+			return nil, fmt.Errorf("invalid ct value")
+		}
+		params = map[string]interface{}{"ct": float64(v)}
 	case "rgb":
 		hex := c.FormValue("color")
 		r, g, b := hexToRGB(hex)

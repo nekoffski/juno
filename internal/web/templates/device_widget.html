@@ -2,57 +2,84 @@
 <div id="device-{{.Id}}"
   sse-swap="device-{{.Id}}"
   hx-swap="outerHTML"
-  style="background:#1e2535;border:1px solid #2d3748;border-radius:0.75rem;padding:1.25rem;display:flex;flex-direction:column;gap:0.75rem;">
+  class="device-card">
 
-  {{/* Header */}}
-  <div style="display:flex;justify-content:space-between;align-items:center;">
-    <span style="font-weight:600;font-size:1rem;">{{.Name}}</span>
+  <div class="device-card__header">
+    <span class="device-card__name">{{.Name}}</span>
     {{if eq (print .Status) "online"}}
-    <span style="font-size:0.75rem;padding:0.2rem 0.6rem;border-radius:9999px;background:#14532d;color:#4ade80;">{{.Status}}</span>
+    <span class="badge badge-online"><span class="status-dot online"></span>{{.Status}}</span>
     {{else if eq (print .Status) "offline"}}
-    <span style="font-size:0.75rem;padding:0.2rem 0.6rem;border-radius:9999px;background:#450a0a;color:#f87171;">{{.Status}}</span>
+    <span class="badge badge-offline"><span class="status-dot offline"></span>{{.Status}}</span>
     {{else}}
-    <span style="font-size:0.75rem;padding:0.2rem 0.6rem;border-radius:9999px;background:#1e3a5f;color:#93c5fd;">{{.Status}}</span>
+    <span class="badge badge-unknown"><span class="status-dot unknown"></span>{{.Status}}</span>
     {{end}}
   </div>
 
-  <div style="font-size:0.8rem;color:#64748b;">{{.Vendor}}</div>
+  <div class="device-card__vendor">{{.Vendor}}</div>
 
-  {{/* Actions */}}
-  <div style="display:flex;flex-direction:column;gap:0.5rem;margin-top:0.25rem;">
-
+  <div class="device-controls">
     {{range .Capabilities}}
 
-      {{if or (eq . "toggle") (eq . "on") (eq . "off")}}
-        <button
+      {{if eq . "toggle"}}
+        <button class="btn-toggle"
           hx-post="/device/{{$.Id}}/action/toggle"
           hx-target="#device-{{$.Id}}"
-          hx-swap="outerHTML"
-          style="padding:0.4rem 0.9rem;background:#1d4ed8;border:none;border-radius:0.4rem;color:#fff;cursor:pointer;font-size:0.85rem;">
+          hx-swap="outerHTML">
           Toggle
         </button>
       {{end}}
 
       {{if eq . "brightness"}}
-        <label style="font-size:0.8rem;color:#94a3b8;">Brightness</label>
-        <input type="range" min="0" max="100" value="{{propInt (index $.Properties "brightness")}}" name="brightness"
-          hx-post="/device/{{$.Id}}/action/brightness"
-          hx-target="#device-{{$.Id}}"
-          hx-swap="outerHTML"
-          hx-trigger="change"
-          hx-include="this"
-          style="width:100%;accent-color:#7dd3fc;" />
+        <div class="slider-row">
+          <div class="control-label-row">
+            <span class="control-label">Brightness</span>
+            <span class="control-value">{{propInt (index $.Properties "brightness")}}%</span>
+          </div>
+          <input type="range" min="1" max="100" value="{{propInt (index $.Properties "brightness")}}" name="brightness"
+            hx-post="/device/{{$.Id}}/action/brightness"
+            hx-target="#device-{{$.Id}}"
+            hx-swap="outerHTML"
+            hx-trigger="change"
+            hx-include="this" />
+        </div>
+      {{end}}
+
+      {{if eq . "ct"}}
+        <div class="slider-row">
+          <div class="control-label-row">
+            <span class="control-label">Temperature</span>
+            <span class="control-value">{{propInt (index $.Properties "ct")}}K</span>
+          </div>
+          <input type="range" min="1700" max="6500" value="{{propInt (index $.Properties "ct")}}" name="ct"
+            class="ct-slider"
+            hx-post="/device/{{$.Id}}/action/ct"
+            hx-target="#device-{{$.Id}}"
+            hx-swap="outerHTML"
+            hx-trigger="change"
+            hx-include="this" />
+          <div class="ct-labels">
+            <span>Warm</span>
+            <span>Cool</span>
+          </div>
+        </div>
       {{end}}
 
       {{if eq . "rgb"}}
-        <label style="font-size:0.8rem;color:#94a3b8;">Color</label>
-        <input type="color" name="color" value="{{rgbHex (index $.Properties "rgb")}}"
-          hx-post="/device/{{$.Id}}/action/rgb"
-          hx-target="#device-{{$.Id}}"
-          hx-swap="outerHTML"
-          hx-trigger="change"
-          hx-include="this"
-          style="width:2.5rem;height:2rem;border:none;background:none;cursor:pointer;" />
+        <div class="color-row">
+          <span class="control-label">Color</span>
+          <div class="color-swatches">
+            <button class="color-swatch" style="background:#ffffff" title="White"        hx-post="/device/{{$.Id}}/action/rgb" hx-target="#device-{{$.Id}}" hx-swap="outerHTML" hx-vals='{"color":"#ffffff"}'></button>
+            <button class="color-swatch" style="background:#ffeecc" title="Soft white"   hx-post="/device/{{$.Id}}/action/rgb" hx-target="#device-{{$.Id}}" hx-swap="outerHTML" hx-vals='{"color":"#ffeecc"}'></button>
+            <button class="color-swatch" style="background:#ff6600" title="Orange"       hx-post="/device/{{$.Id}}/action/rgb" hx-target="#device-{{$.Id}}" hx-swap="outerHTML" hx-vals='{"color":"#ff6600"}'></button>
+            <button class="color-swatch" style="background:#ff2233" title="Red"          hx-post="/device/{{$.Id}}/action/rgb" hx-target="#device-{{$.Id}}" hx-swap="outerHTML" hx-vals='{"color":"#ff2233"}'></button>
+            <button class="color-swatch" style="background:#ffcc00" title="Yellow"       hx-post="/device/{{$.Id}}/action/rgb" hx-target="#device-{{$.Id}}" hx-swap="outerHTML" hx-vals='{"color":"#ffcc00"}'></button>
+            <button class="color-swatch" style="background:#22cc55" title="Green"        hx-post="/device/{{$.Id}}/action/rgb" hx-target="#device-{{$.Id}}" hx-swap="outerHTML" hx-vals='{"color":"#22cc55"}'></button>
+            <button class="color-swatch" style="background:#00ccff" title="Cyan"         hx-post="/device/{{$.Id}}/action/rgb" hx-target="#device-{{$.Id}}" hx-swap="outerHTML" hx-vals='{"color":"#00ccff"}'></button>
+            <button class="color-swatch" style="background:#3344ff" title="Blue"         hx-post="/device/{{$.Id}}/action/rgb" hx-target="#device-{{$.Id}}" hx-swap="outerHTML" hx-vals='{"color":"#3344ff"}'></button>
+            <button class="color-swatch" style="background:#9922ff" title="Purple"       hx-post="/device/{{$.Id}}/action/rgb" hx-target="#device-{{$.Id}}" hx-swap="outerHTML" hx-vals='{"color":"#9922ff"}'></button>
+            <button class="color-swatch" style="background:#ff22aa" title="Pink"         hx-post="/device/{{$.Id}}/action/rgb" hx-target="#device-{{$.Id}}" hx-swap="outerHTML" hx-vals='{"color":"#ff22aa"}'></button>
+          </div>
+        </div>
       {{end}}
 
     {{end}}

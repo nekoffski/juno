@@ -1,9 +1,12 @@
 {{define "devices.html"}}
 <div hx-ext="sse" sse-connect="/sse">
   {{if not .}}
-    <p style="color:#64748b">No devices found.</p>
+    <div class="empty-state">
+      <span class="empty-state__icon">⊙</span>
+      <span class="empty-state__text">No devices found</span>
+    </div>
   {{else}}
-  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.25rem;">
+  <div class="devices-grid">
     {{range .}}
       {{template "device_widget.html" .}}
     {{end}}

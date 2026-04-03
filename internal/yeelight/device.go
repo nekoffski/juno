@@ -12,7 +12,7 @@ import (
 )
 
 func getYeelightCapabilities() []string {
-	return []string{"on", "off", "toggle", "rgb"}
+	return []string{"on", "off", "toggle", "brightness", "ct", "rgb"}
 }
 
 type Device struct {
@@ -113,7 +113,7 @@ func createDevice(ctx context.Context, id int, addr device.DeviceAddr, name stri
 		return nil, err
 	}
 
-	propsQuery := []string{"power", "bright", "rgb"}
+	propsQuery := []string{"power", "bright", "rgb", "ct"}
 	readCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 

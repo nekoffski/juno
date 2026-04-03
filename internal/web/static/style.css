@@ -1,0 +1,444 @@
+/* ── Reset ─────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ── Palette ────────────────────────────────────────────────── */
+:root {
+  --bg: #0d0f13;
+  --surface: #141720;
+  --surface-2: #1c2030;
+  --surface-3: #232838;
+  --border: #252a38;
+  --border-hover: #353d54;
+
+  --text: #e8eaf0;
+  --text-muted: #5a6275;
+  --text-dim: #3a3f52;
+
+  --online-text: #22c55e;
+  --online-bg: #0d2818;
+  --offline-text: #f87171;
+  --offline-bg: #2a0e0e;
+  --unknown-text: #94a3b8;
+  --unknown-bg: #161c2b;
+
+  --radius-sm: 0.35rem;
+  --radius: 0.65rem;
+  --radius-lg: 1rem;
+  --radius-full: 9999px;
+
+  --transition: 0.18s ease;
+}
+
+/* ── Base ───────────────────────────────────────────────────── */
+body {
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
+/* ── Header ─────────────────────────────────────────────────── */
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 1.1rem 2rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.app-header__icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  opacity: 0.65;
+}
+
+.app-header__title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--text);
+  opacity: 0.9;
+}
+
+/* ── Navigation ─────────────────────────────────────────────── */
+.app-nav {
+  display: flex;
+  gap: 0.125rem;
+  padding: 0 2rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.nav-btn {
+  padding: 0.65rem 1.1rem;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  transition:
+    color var(--transition),
+    border-color var(--transition);
+  margin-bottom: -1px;
+}
+
+.nav-btn:hover {
+  color: var(--text);
+}
+.nav-btn.active {
+  color: var(--text);
+  border-bottom-color: var(--text);
+}
+
+/* ── Tab Content ─────────────────────────────────────────────── */
+#tab-content {
+  padding: 2rem;
+}
+
+/* ── HTMX Indicator ─────────────────────────────────────────── */
+.htmx-indicator {
+  display: none;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid var(--border-hover);
+  border-top-color: var(--text-muted);
+  border-radius: var(--radius-full);
+  animation: spin 0.7s linear infinite;
+  margin-left: auto;
+}
+.htmx-request .htmx-indicator {
+  display: block;
+}
+.htmx-request.htmx-indicator {
+  display: block;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ── Devices Grid ────────────────────────────────────────────── */
+.devices-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+/* ── Empty State ─────────────────────────────────────────────── */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 4rem 2rem;
+  color: var(--text-dim);
+  text-align: center;
+  select: none;
+}
+
+.empty-state__icon {
+  font-size: 2rem;
+  opacity: 0.4;
+}
+
+.empty-state__text {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+/* ── Placeholder (metrics/events) ────────────────────────────── */
+.placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 5rem 2rem;
+  color: var(--text-dim);
+  text-align: center;
+}
+
+.placeholder__icon {
+  font-size: 2.5rem;
+  opacity: 0.35;
+}
+
+.placeholder__title {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.placeholder__sub {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+
+/* ── Device Card ─────────────────────────────────────────────── */
+.device-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  transition:
+    border-color var(--transition),
+    transform var(--transition),
+    box-shadow var(--transition);
+}
+
+.device-card:hover {
+  border-color: var(--border-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+/* ── Card Header ─────────────────────────────────────────────── */
+.device-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.device-card__name {
+  font-weight: 600;
+  font-size: 0.95rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.device-card__vendor {
+  font-size: 0.775rem;
+  color: var(--text-muted);
+  letter-spacing: 0.01em;
+}
+
+/* ── Status Badge ────────────────────────────────────────────── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--radius-full);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.badge-online {
+  background: var(--online-bg);
+  color: var(--online-text);
+}
+.badge-offline {
+  background: var(--offline-bg);
+  color: var(--offline-text);
+}
+.badge-unknown {
+  background: var(--unknown-bg);
+  color: var(--unknown-text);
+}
+
+/* ── Status Dot ──────────────────────────────────────────────── */
+.status-dot {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+}
+
+.status-dot.online {
+  background: var(--online-text);
+  animation: pulse-green 2s ease-in-out infinite;
+}
+
+.status-dot.offline {
+  background: var(--offline-text);
+}
+
+.status-dot.unknown {
+  background: var(--unknown-text);
+  opacity: 0.5;
+}
+
+@keyframes pulse-green {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(34, 197, 94, 0);
+  }
+}
+
+/* ── Card Controls ───────────────────────────────────────────── */
+.device-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+/* ── Toggle Button ───────────────────────────────────────────── */
+.btn-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.9rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 0.825rem;
+  font-weight: 500;
+  transition:
+    background var(--transition),
+    border-color var(--transition);
+  width: 100%;
+}
+
+.btn-toggle:hover {
+  background: var(--surface-3);
+  border-color: var(--border-hover);
+}
+
+.btn-toggle:active {
+  transform: scale(0.97);
+}
+
+/* ── Control Label ───────────────────────────────────────────── */
+.control-label {
+  font-size: 0.775rem;
+  color: var(--text-muted);
+  letter-spacing: 0.01em;
+}
+
+.control-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.control-value {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Range Slider ────────────────────────────────────────────── */
+.slider-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+input[type="range"] {
+  width: 100%;
+  height: 0.3rem;
+  appearance: none;
+  background: var(--surface-3);
+  border-radius: var(--radius-full);
+  outline: none;
+  cursor: pointer;
+  accent-color: var(--text-muted);
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  width: 0.9rem;
+  height: 0.9rem;
+  border-radius: var(--radius-full);
+  background: var(--text);
+  cursor: pointer;
+  border: 2px solid var(--surface-2);
+  transition: transform var(--transition);
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 0.9rem;
+  height: 0.9rem;
+  border-radius: var(--radius-full);
+  background: var(--text);
+  cursor: pointer;
+  border: 2px solid var(--surface-2);
+}
+
+/* ── Color Temperature Slider ────────────────────────────────── */
+input[type="range"].ct-slider {
+  background: linear-gradient(to right, #ff9a3c, #fff4e0, #cce8ff);
+}
+
+.ct-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.675rem;
+  color: var(--text-dim);
+  margin-top: 0.1rem;
+}
+
+/* ── Color Picker ────────────────────────────────────────────── */
+.color-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.color-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.color-swatch {
+  width: 1.4rem;
+  height: 1.4rem;
+  border-radius: var(--radius-full);
+  border: 2px solid transparent;
+  cursor: pointer;
+  padding: 0;
+  transition:
+    transform var(--transition),
+    border-color var(--transition);
+}
+
+.color-swatch:hover {
+  transform: scale(1.2);
+  border-color: var(--text-muted);
+}
+
+/* ── Error Box ───────────────────────────────────────────────── */
+.error-box {
+  padding: 0.75rem 1rem;
+  background: var(--offline-bg);
+  border: 1px solid #3f1515;
+  border-radius: var(--radius);
+  color: var(--offline-text);
+  font-size: 0.875rem;
+}

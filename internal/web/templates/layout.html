@@ -5,70 +5,37 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Juno</title>
+  <link rel="stylesheet" href="/static/style.css" />
   <script src="https://unpkg.com/htmx.org@2.0.4" integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/htmx-ext-sse@2.2.2/sse.js"></script>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: system-ui, sans-serif;
-      background: #0f1117;
-      color: #e2e8f0;
-      min-height: 100vh;
-    }
-
-    header {
-      padding: 1.25rem 2rem;
-      border-bottom: 1px solid #1e2535;
-      font-size: 1.25rem;
-      font-weight: 700;
-      letter-spacing: 0.05em;
-      color: #7dd3fc;
-    }
-
-    nav {
-      display: flex;
-      gap: 0.25rem;
-      padding: 1rem 2rem 0;
-      border-bottom: 1px solid #1e2535;
-    }
-
-    nav button {
-      padding: 0.5rem 1.25rem;
-      background: transparent;
-      border: none;
-      border-bottom: 2px solid transparent;
-      color: #94a3b8;
-      cursor: pointer;
-      font-size: 0.95rem;
-      transition: color 0.15s, border-color 0.15s;
-    }
-
-    nav button:hover { color: #e2e8f0; }
-    nav button.active { color: #7dd3fc; border-bottom-color: #7dd3fc; }
-
-    #tab-content { padding: 2rem; }
-  </style>
 </head>
 <body>
-  <header>Juno</header>
+  <header class="app-header">
+    <svg class="app-header__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="3"/>
+      <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
+      <path d="M15.54 8.46a5 5 0 0 1 0 7.07M8.46 8.46a5 5 0 0 0 0 7.07"/>
+    </svg>
+    <span class="app-header__title">Juno</span>
+    <span class="htmx-indicator"></span>
+  </header>
 
-  <nav>
-    <button class="active"
+  <nav class="app-nav">
+    <button class="nav-btn active"
       hx-get="/tabs/devices"
       hx-target="#tab-content"
       hx-swap="innerHTML"
       onclick="setActive(this)">
       Devices
     </button>
-    <button
+    <button class="nav-btn"
       hx-get="/tabs/metrics"
       hx-target="#tab-content"
       hx-swap="innerHTML"
       onclick="setActive(this)">
       Metrics
     </button>
-    <button
+    <button class="nav-btn"
       hx-get="/tabs/events"
       hx-target="#tab-content"
       hx-swap="innerHTML"
@@ -85,7 +52,7 @@
 
   <script>
     function setActive(el) {
-      document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
       el.classList.add('active');
     }
   </script>

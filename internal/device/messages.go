@@ -76,6 +76,13 @@ func parseActionParams(name string, payload any) (any, error) {
 		}
 		return int(v), nil
 
+	case "ct":
+		v, ok := m["ct"].(float64)
+		if !ok {
+			return nil, core.ErrInvalidArguments
+		}
+		return int(v), nil
+
 	default:
 		return nil, core.ErrInvalidArguments
 	}

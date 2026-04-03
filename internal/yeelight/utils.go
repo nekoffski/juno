@@ -27,6 +27,11 @@ func mapPropertyName(yeelightProp string) string {
 	}
 }
 
+const (
+	ctMin = 1700
+	ctMax = 6500
+)
+
 func mapPropertyValue(prop string, value any) any {
 	switch prop {
 	case "rgb":
@@ -39,6 +44,15 @@ func mapPropertyValue(prop string, value any) any {
 			}
 		}
 	case "bright":
+		switch v := value.(type) {
+		case float64:
+			return int(v)
+		case string:
+			if n, err := strconv.Atoi(v); err == nil {
+				return n
+			}
+		}
+	case "ct":
 		switch v := value.(type) {
 		case float64:
 			return int(v)
@@ -65,14 +79,26 @@ func toYeelightAction(action device.Action) (string, []any, error) {
 		if !ok {
 			return "", nil, core.ErrInvalidArguments
 		}
-		return "set_rgb", []any{packRgb(color)}, nil
+		return "set_rgb", []any{packRgb(color), "smooth", 500}, nil
 
 	case "brightness":
 		brightness, ok := action.Params.(int)
 		if !ok {
 			return "", nil, core.ErrInvalidArguments
 		}
-		return "bright", []any{brightness}, nil
+		return "set_bright", []any{brightness, "smooth", 500}, nil
+
+	case "ct":
+		ct, ok := action.Params.(int)
+		if !ok {
+			return "", nil, core.ErrInvalidArguments
+		}
+		if ct < ctMin {
+			ct = ctMin
+		} else if ct > ctMax {
+			ct = ctMax
+		}
+		return "set_ct_abx", []any{ct, "smooth", 500}, nil
 
 	default:
 		return "", nil, core.ErrDeviceNotCapable

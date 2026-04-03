@@ -3,7 +3,9 @@ package main
 import (
 	"fmt"
 	"html/template"
+	"io/fs"
 	"log"
+	"net/http"
 	"os"
 	"strconv"
 
@@ -37,9 +39,18 @@ func main() {
 
 	h := web.NewHandlers(restBase, tmpl)
 
+	staticSub, err := fs.Sub(web.TemplateFS, "static")
+	if err != nil {
+		log.Fatalf("failed to get static sub-fs: %v", err)
+	}
+
 	e := echo.New()
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
+
+	e.GET("/static/*", echo.WrapHandler(
+		http.StripPrefix("/static/", http.FileServer(http.FS(staticSub))),
+	))
 
 	e.GET("/", h.Dashboard)
 	e.GET("/tabs/devices", h.DevicesTab)

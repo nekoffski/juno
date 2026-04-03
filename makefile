@@ -1,12 +1,14 @@
 APP          := juno
+APP_WEB      := juno-web
 CMD          := ./cmd/juno
+CMD_WEB      := ./cmd/juno-web
 BIN_DIR      := bin
 OAPI_CODEGEN := $(shell go env GOPATH)/bin/oapi-codegen
 REST_OPENAPI_SPEC := api/rest-openapi.yaml
 REST_OAPI_CFG     := api/rest-oapi-codegen.yaml
 VENV_DIR     := tests/.venv
 ENV_FILE     := $(or $(ENV_FILE),.env.example)
-.PHONY: all build run unit-test unit-test-verbose unit-test-cover unit-test-cover-ci unit-coverage \
+.PHONY: all build run run-web unit-test unit-test-verbose unit-test-cover unit-test-cover-ci unit-coverage \
         integration-test-setup integration-test-run integration-test-teardown \
         clean lint fmt vet tidy generate gen-api \
         docker-build docker-up docker-up-interactive docker-down docker-logs docker-restart \
@@ -21,9 +23,13 @@ gen-rest-api:
 
 build: generate
 	go build -o $(BIN_DIR)/$(APP) $(CMD)
+	go build -o $(BIN_DIR)/$(APP_WEB) $(CMD_WEB)
 
 run:
 	env $(shell grep -v '^#' $(ENV_FILE) | grep '=' | xargs) go run $(CMD)
+
+run-web:
+	env $(shell grep -v '^#' $(ENV_FILE) | grep '=' | xargs) go run $(CMD_WEB)
 
 unit-test:
 	go test ./...

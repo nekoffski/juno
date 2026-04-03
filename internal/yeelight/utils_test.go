@@ -126,8 +126,10 @@ func TestToYeelightAction_Rgb(t *testing.T) {
 	method, params, err := toYeelightAction(device.Action{Method: "rgb", Params: color})
 	require.NoError(t, err)
 	assert.Equal(t, "set_rgb", method)
-	require.Len(t, params, 1)
+	require.Len(t, params, 3)
 	assert.Equal(t, packRgb(color), params[0])
+	assert.Equal(t, "smooth", params[1])
+	assert.Equal(t, 500, params[2])
 }
 
 func TestToYeelightAction_RgbInvalidParams(t *testing.T) {
@@ -138,9 +140,11 @@ func TestToYeelightAction_RgbInvalidParams(t *testing.T) {
 func TestToYeelightAction_Brightness(t *testing.T) {
 	method, params, err := toYeelightAction(device.Action{Method: "brightness", Params: 80})
 	require.NoError(t, err)
-	assert.Equal(t, "bright", method)
-	require.Len(t, params, 1)
+	assert.Equal(t, "set_bright", method)
+	require.Len(t, params, 3)
 	assert.Equal(t, 80, params[0])
+	assert.Equal(t, "smooth", params[1])
+	assert.Equal(t, 500, params[2])
 }
 
 func TestToYeelightAction_BrightnessInvalidParams(t *testing.T) {
