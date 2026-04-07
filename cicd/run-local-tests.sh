@@ -9,9 +9,9 @@ EXIT_CODE=0
 
 NO_COVER="${NO_COVER:-1}"
 
-NO_COVER="${NO_COVER}" ENV_FILE="${REPO_ROOT}/.env.example" bash "${SCRIPT_DIR}/integration-test-setup.sh"
-NO_COVER="${NO_COVER}" ENV_FILE="${REPO_ROOT}/.env.example" bash "${SCRIPT_DIR}/integration-test-run.sh" || EXIT_CODE=$?
-NO_COVER="${NO_COVER}" ENV_FILE="${REPO_ROOT}/.env.example" bash "${SCRIPT_DIR}/integration-test-teardown.sh"
+NO_COVER="${NO_COVER}" ENV_FILE="${REPO_ROOT}/conf/.env.example" bash "${SCRIPT_DIR}/integration-test-setup.sh"
+NO_COVER="${NO_COVER}" ENV_FILE="${REPO_ROOT}/conf/.env.example" bash "${SCRIPT_DIR}/integration-test-run.sh" || EXIT_CODE=$?
+NO_COVER="${NO_COVER}" ENV_FILE="${REPO_ROOT}/conf/.env.example" bash "${SCRIPT_DIR}/integration-test-teardown.sh"
 
 if [[ "${EXIT_CODE}" -ne 0 ]]; then
   echo ""

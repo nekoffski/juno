@@ -14,7 +14,7 @@ services:
       timeout: 5s
       retries: 10
 
-  juno:
+  juno-conductor:
     build:
       context: .
       dockerfile: Dockerfile
@@ -22,22 +22,12 @@ services:
       - ${ENV_FILE}
     ports:
       - "${JUNO_REST_PORT}:${JUNO_REST_PORT}"
+      - "${JUNO_WEB_PORT}:${JUNO_WEB_PORT}"
+      - "${JUNO_MCP_PORT}:${JUNO_MCP_PORT}"
     restart: unless-stopped
     depends_on:
       postgres:
         condition: service_healthy
-
-  juno-web:
-    build:
-      context: .
-      dockerfile: Dockerfile.web
-    env_file:
-      - ${ENV_FILE}
-    ports:
-      - "${JUNO_WEB_PORT}:${JUNO_WEB_PORT}"
-    restart: unless-stopped
-    depends_on:
-      - juno
 
 volumes:
   postgres_data:

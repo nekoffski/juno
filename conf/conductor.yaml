@@ -1,0 +1,9 @@
+processes:
+  - name: juno-server
+    binary: ./juno-server
+
+  - name: juno-web
+    binary: ./juno-web
+
+  - name: juno-mcp
+    binary: ./juno-mcp

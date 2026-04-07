@@ -1,25 +1,25 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Starts postgres, builds instrumented binaries, launches them, and waits for
-# juno to be ready. Saves background PIDs to coverage/test-pids so that the
-# teardown script can stop the processes later.
+# Starts postgres, builds instrumented binaries, launches them via juno-conductor,
+# and waits for juno-server to be ready. Saves the conductor PID to .test-pids
+# so that the teardown script can stop all processes later.
 #
 # Requires:
 #   - docker compose (for postgres)
 #   - go
-#   - .env.example present in the repo root
+#   - conf/.env.example present in the repo root
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
-ENV_FILE="${ENV_FILE:-${REPO_ROOT}/.env.example}"
+ENV_FILE="${ENV_FILE:-${REPO_ROOT}/conf/.env.example}"
 
-JUNO_COVER_BIN="${REPO_ROOT}/bin/juno-cover"
+JUNO_COVER_BIN="${REPO_ROOT}/bin/juno-server-cover"
 JUNO_WEB_COVER_BIN="${REPO_ROOT}/bin/juno-web-cover"
+JUNO_CONDUCTOR_BIN="${REPO_ROOT}/bin/juno-conductor"
 
-RAW_JUNO="${REPO_ROOT}/coverage/integration-raw/juno"
-RAW_WEB="${REPO_ROOT}/coverage/integration-raw/juno-web"
-RAW_MERGED="${REPO_ROOT}/coverage/integration-raw/merged"
+RAW_ALL="${REPO_ROOT}/coverage/integration-raw/all"
+CONDUCTOR_TEST_CFG="${REPO_ROOT}/.conductor-test.yaml"
 
 PID_FILE="${REPO_ROOT}/.test-pids"
 NO_COVER="${NO_COVER:-}"
@@ -49,19 +49,20 @@ done
 cd "${REPO_ROOT}"
 if [[ "${NO_COVER}" == "1" ]]; then
   echo "--- Building binaries (no coverage) ---"
-  go build -o "${JUNO_COVER_BIN}" ./cmd/juno
+  go build -o "${JUNO_COVER_BIN}" ./cmd/juno-server
   go build -o "${JUNO_WEB_COVER_BIN}" ./cmd/juno-web
 else
   echo "--- Building instrumented binaries ---"
-  go build -cover -o "${JUNO_COVER_BIN}" ./cmd/juno
+  go build -cover -o "${JUNO_COVER_BIN}" ./cmd/juno-server
   go build -cover -o "${JUNO_WEB_COVER_BIN}" ./cmd/juno-web
 fi
+go build -o "${JUNO_CONDUCTOR_BIN}" ./cmd/juno-conductor
 
 # ------------------------------------------------------------------
 # 3. Prepare raw coverage directories
 # ------------------------------------------------------------------
 if [[ "${NO_COVER}" != "1" ]]; then
-  mkdir -p "${RAW_JUNO}" "${RAW_WEB}" "${RAW_MERGED}"
+  mkdir -p "${RAW_ALL}"
 fi
 
 # ------------------------------------------------------------------
@@ -79,29 +80,32 @@ POSTGRES_HOST=localhost
 JUNO_REST_BASE_URL="http://localhost:${JUNO_REST_PORT:-6001}"
 
 # ------------------------------------------------------------------
-# 5. Start instrumented binaries in background
+# 4a. Generate conductor test config pointing at instrumented binaries
+# ------------------------------------------------------------------
+cat > "${CONDUCTOR_TEST_CFG}" <<EOF
+processes:
+  - name: juno-server
+    binary: ${JUNO_COVER_BIN}
+  - name: juno-web
+    binary: ${JUNO_WEB_COVER_BIN}
+EOF
+
+# ------------------------------------------------------------------
+# 5. Start conductor (manages all instrumented binaries)
 # ------------------------------------------------------------------
 LOG_DIR="${REPO_ROOT}/logs"
 mkdir -p "${LOG_DIR}"
 
-echo "--- Starting juno (instrumented) ---"
+echo "--- Starting conductor ---"
 if [[ "${NO_COVER}" == "1" ]]; then
-  "${JUNO_COVER_BIN}" > "${LOG_DIR}/juno.log" 2>&1 &
+  "${JUNO_CONDUCTOR_BIN}" -config "${CONDUCTOR_TEST_CFG}" > "${LOG_DIR}/conductor.log" 2>&1 &
 else
-  GOCOVERDIR="${RAW_JUNO}" "${JUNO_COVER_BIN}" > "${LOG_DIR}/juno.log" 2>&1 &
+  GOCOVERDIR="${RAW_ALL}" "${JUNO_CONDUCTOR_BIN}" -config "${CONDUCTOR_TEST_CFG}" > "${LOG_DIR}/conductor.log" 2>&1 &
 fi
-JUNO_PID=$!
+CONDUCTOR_PID=$!
 
-echo "--- Starting juno-web (instrumented) ---"
-if [[ "${NO_COVER}" == "1" ]]; then
-  "${JUNO_WEB_COVER_BIN}" > "${LOG_DIR}/juno-web.log" 2>&1 &
-else
-  GOCOVERDIR="${RAW_WEB}" "${JUNO_WEB_COVER_BIN}" > "${LOG_DIR}/juno-web.log" 2>&1 &
-fi
-JUNO_WEB_PID=$!
-
-# Persist PIDs and log dir for the teardown script
-printf 'JUNO_PID=%s\nJUNO_WEB_PID=%s\nLOG_DIR=%s\nNO_COVER=%s\n' "${JUNO_PID}" "${JUNO_WEB_PID}" "${LOG_DIR}" "${NO_COVER}" > "${PID_FILE}"
+# Persist PID and log dir for the teardown script
+printf 'CONDUCTOR_PID=%s\nLOG_DIR=%s\nNO_COVER=%s\n' "${CONDUCTOR_PID}" "${LOG_DIR}" "${NO_COVER}" > "${PID_FILE}"
 
 # ------------------------------------------------------------------
 # 6. Wait for juno REST to be ready
