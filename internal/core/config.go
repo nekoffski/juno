@@ -14,6 +14,7 @@ type Config struct {
 	RestPort         int    `env:"JUNO_REST_PORT" envDefault:"6000"`
 	WebPort          int    `env:"JUNO_WEB_PORT" envDefault:"6001"`
 	YeelightSsdpAddr string `env:"JUNO_YEELIGHT_SSDP_ADDR" envDefault:"239.255.255.250:1982"`
+	LanAgentURL      string `env:"JUNO_LAN_AGENT_URL" envDefault:""`
 	DB               DBConfig
 }
 

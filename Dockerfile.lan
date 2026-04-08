@@ -1,0 +1,28 @@
+FROM golang:1.26-alpine AS builder
+
+RUN apk add --no-cache git
+
+WORKDIR /app
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+
+RUN CGO_ENABLED=0 GOOS=linux go build -o bin/juno-lan-agent ./cmd/juno-lan-agent
+
+FROM alpine:3.21
+
+WORKDIR /app
+
+COPY --from=builder /app/bin/juno-lan-agent .
+
+ARG JUNO_LAN_AGENT_PORT=7000
+ARG JUNO_LAN_AGENT_ADDR=0.0.0.0
+
+ENV JUNO_LAN_AGENT_ADDR=${JUNO_LAN_AGENT_ADDR} \
+    JUNO_LAN_AGENT_PORT=${JUNO_LAN_AGENT_PORT}
+
+EXPOSE ${JUNO_LAN_AGENT_PORT}
+
+CMD ["./juno-lan-agent"]

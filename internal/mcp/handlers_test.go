@@ -11,7 +11,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// mockJunoClient is a test double for JunoClient.
 type mockJunoClient struct {
 	devices       []Device
 	devicesByID   map[int]*Device
@@ -44,7 +43,6 @@ func (m *mockJunoClient) PerformAction(_ context.Context, id int, _ string, _ ma
 	return nil
 }
 
-// setupMCPSession creates an in-process MCP server+client session with the given mock client.
 func setupMCPSession(t *testing.T, mock JunoClient) *sdkmcp.ClientSession {
 	t.Helper()
 	ctx := context.Background()

@@ -35,7 +35,7 @@ func main() {
 		device.NewDeviceService(
 			device.NewPgxRepository(pool),
 			map[device.DeviceVendor]device.VendorAdapter{
-				device.DeviceVendorYeelight: yeelight.NewAdapter(cfg.YeelightSsdpAddr),
+				device.DeviceVendorYeelight: yeelight.NewAdapter(cfg.YeelightSsdpAddr, cfg.LanAgentURL),
 			},
 		),
 		rest.NewRestService(cfg),

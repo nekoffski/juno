@@ -34,6 +34,10 @@ if [[ -f "${PID_FILE}" ]]; then
       sleep 0.1
     done
   fi
+  if [[ -n "${LAN_AGENT_PID:-}" ]] && kill -0 "${LAN_AGENT_PID}" 2>/dev/null; then
+    echo "Stopping lan-agent (pid ${LAN_AGENT_PID})"
+    kill -TERM "${LAN_AGENT_PID}" || true
+  fi
   rm -f "${PID_FILE}"
 else
   echo "WARNING: PID file not found at ${PID_FILE}, conductor may still be running" >&2

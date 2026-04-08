@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"net/http"
+	"net/url"
 	"strconv"
 	"sync"
 	"sync/atomic"
@@ -52,8 +54,56 @@ type client struct {
 	onNotification          notificationCallback
 }
 
-func newClient(ctx context.Context, addr device.DeviceAddr) (*client, error) {
-	conn, err := net.Dial("tcp", net.JoinHostPort(addr.Ip, strconv.Itoa(addr.Port)))
+func dialViaProxy(proxyURL string, deviceAddr string) (net.Conn, error) {
+	u, err := url.Parse(proxyURL)
+	if err != nil {
+		return nil, fmt.Errorf("invalid lan-agent URL: %w", err)
+	}
+
+	proxyHost := u.Host
+	conn, err := net.Dial("tcp", proxyHost)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to lan-agent: %w", err)
+	}
+
+	connectReq := &http.Request{
+		Method: http.MethodConnect,
+		URL:    &url.URL{Host: deviceAddr},
+		Host:   deviceAddr,
+		Header: make(http.Header),
+	}
+	if err := connectReq.Write(conn); err != nil {
+		conn.Close()
+		return nil, fmt.Errorf("failed to write CONNECT request: %w", err)
+	}
+
+	br := bufio.NewReaderSize(conn, 1)
+	resp, err := http.ReadResponse(br, connectReq)
+	if err != nil {
+		conn.Close()
+		return nil, fmt.Errorf("failed to read CONNECT response: %w", err)
+	}
+	resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		conn.Close()
+		return nil, fmt.Errorf("CONNECT to %s via lan-agent returned %d", deviceAddr, resp.StatusCode)
+	}
+
+	return conn, nil
+}
+
+func newClient(ctx context.Context, addr device.DeviceAddr, lanAgentURL string) (*client, error) {
+	deviceAddr := net.JoinHostPort(addr.Ip, strconv.Itoa(addr.Port))
+
+	var conn net.Conn
+	var err error
+
+	if lanAgentURL != "" {
+		conn, err = dialViaProxy(lanAgentURL, deviceAddr)
+	} else {
+		conn, err = net.Dial("tcp", deviceAddr)
+	}
 	if err != nil {
 		return nil, err
 	}

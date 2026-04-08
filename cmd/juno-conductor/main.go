@@ -43,7 +43,6 @@ func loadConfig(path string) (*Config, error) {
 	return &cfg, nil
 }
 
-// prefixWriter wraps a writer and prepends every line with a prefix.
 type prefixWriter struct {
 	prefix string
 	dst    io.Writer
@@ -97,9 +96,6 @@ func runProcess(ctx context.Context, pd ProcessDef) {
 		cmd.Stdout = stdout
 		cmd.Stderr = stderr
 
-		// Place the child in its own process group so that SIGTERM is sent to
-		// the group, not just the direct child. Pdeathsig ensures the child is
-		// terminated if the conductor exits unexpectedly.
 		cmd.SysProcAttr = &syscall.SysProcAttr{
 			Setpgid:   true,
 			Pdeathsig: syscall.SIGTERM,
@@ -125,8 +121,6 @@ func runProcess(ctx context.Context, pd ProcessDef) {
 
 		select {
 		case <-ctx.Done():
-			// Graceful shutdown: SIGTERM the process group so Go's coverage
-			// instrumentation (GOCOVERDIR) has a chance to flush to disk.
 			_ = syscall.Kill(-cmd.Process.Pid, syscall.SIGTERM)
 			<-done
 			return

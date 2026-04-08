@@ -26,6 +26,12 @@ def web_url():
     return f"http://localhost:{port}"
 
 
+@pytest.fixture(scope="session")
+def lan_agent_url():
+    port = os.environ.get("JUNO_LAN_AGENT_PORT", "7000")
+    return f"http://localhost:{port}"
+
+
 @pytest.fixture(scope="session", autouse=True)
 def clean_devices(base_url):
     """Delete all devices at session start to clear any state left by a previous crashed run."""

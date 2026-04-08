@@ -13,7 +13,6 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// Device mirrors the REST API Device model.
 type Device struct {
 	Id           int                    `json:"id"`
 	Name         string                 `json:"name"`
@@ -84,7 +83,6 @@ func (h *Handlers) PerformAction(c echo.Context) error {
 	}
 	defer resp.Body.Close()
 
-	// Re-fetch device and render updated widget.
 	deviceResp, err := h.client.Get(fmt.Sprintf("%s/device/id/%s", h.restBase, id))
 	if err != nil {
 		return fmt.Errorf("could not get device: %w", err)
@@ -152,8 +150,6 @@ func hexToRGB(hex string) (r, g, b int) {
 	return int(val >> 16 & 0xff), int(val >> 8 & 0xff), int(val & 0xff)
 }
 
-// SSE connects to the REST API SSE stream, receives JSON Device updates,
-// renders them as HTML fragments, and re-streams them to the browser.
 func (h *Handlers) SSE(c echo.Context) error {
 	restResp, err := h.client.Get(h.restBase + "/events")
 	if err != nil {

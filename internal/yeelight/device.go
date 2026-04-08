@@ -107,8 +107,8 @@ func (d *Device) onNotification(n notification) {
 	d.publisher.Publish("device.events", device.DeviceUpdatedEvent{Device: d.Model()})
 }
 
-func createDevice(ctx context.Context, id int, addr device.DeviceAddr, name string, publisher *bus.Publisher) (device.Device, error) {
-	c, err := newClient(ctx, addr)
+func createDevice(ctx context.Context, id int, addr device.DeviceAddr, name string, publisher *bus.Publisher, lanAgentURL string) (device.Device, error) {
+	c, err := newClient(ctx, addr, lanAgentURL)
 	if err != nil {
 		return nil, err
 	}

@@ -7,7 +7,7 @@ on:
     branches: ["**"]
 
 jobs:
-  test:
+  juno:
     runs-on: ubuntu-latest
 
     steps:

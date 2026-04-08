@@ -2,10 +2,12 @@ APP_SERVER    := juno-server
 APP_WEB       := juno-web
 APP_MCP       := juno-mcp
 APP_CONDUCTOR := juno-conductor
+APP_LAN       := juno-lan-agent
 CMD_SERVER    := ./cmd/juno-server
 CMD_WEB       := ./cmd/juno-web
 CMD_MCP       := ./cmd/juno-mcp
 CMD_CONDUCTOR := ./cmd/juno-conductor
+CMD_LAN       := ./cmd/juno-lan-agent
 BIN_DIR       := bin
 OAPI_CODEGEN  := $(shell go env GOPATH)/bin/oapi-codegen
 REST_OPENAPI_SPEC := api/rest-openapi.yaml
@@ -14,7 +16,7 @@ VENV_DIR        := tests/.venv
 ENV_FILE        := $(or $(ENV_FILE),conf/.env.example)
 CONDUCTOR_CFG   := $(or $(CONDUCTOR_CFG),conf/conductor.yaml)
 
-.PHONY: all build run run-web run-mcp run-conductor unit-test unit-test-verbose unit-test-cover unit-test-cover-ci unit-coverage \
+.PHONY: all build run run-web run-mcp run-conductor run-lan-agent unit-test unit-test-verbose unit-test-cover unit-test-cover-ci unit-coverage \
         integration-test-setup integration-test-run integration-test-teardown \
         clean lint fmt vet tidy generate gen-api \
         docker-build docker-up docker-up-interactive docker-down docker-logs docker-restart \
@@ -32,6 +34,7 @@ build: generate
 	go build -o $(BIN_DIR)/$(APP_WEB) $(CMD_WEB)
 	go build -o $(BIN_DIR)/$(APP_MCP) $(CMD_MCP)
 	go build -o $(BIN_DIR)/$(APP_CONDUCTOR) $(CMD_CONDUCTOR)
+	go build -o $(BIN_DIR)/$(APP_LAN) $(CMD_LAN)
 
 run-server:
 	env $(shell grep -v '^#' $(ENV_FILE) | grep '=' | xargs) go run $(CMD_SERVER)
@@ -44,6 +47,9 @@ run-mcp:
 
 run-conductor:
 	env $(shell grep -v '^#' $(ENV_FILE) | grep '=' | xargs) go run $(CMD_CONDUCTOR) -config $(CONDUCTOR_CFG)
+
+run-lan-agent:
+	env $(shell grep -v '^#' $(ENV_FILE) | grep '=' | xargs) go run $(CMD_LAN)
 
 unit-test:
 	go test ./...

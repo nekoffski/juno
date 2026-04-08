@@ -14,9 +14,11 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 ENV_FILE="${ENV_FILE:-${REPO_ROOT}/conf/.env.example}"
 
-JUNO_COVER_BIN="${REPO_ROOT}/bin/juno-server-cover"
-JUNO_WEB_COVER_BIN="${REPO_ROOT}/bin/juno-web-cover"
-JUNO_CONDUCTOR_BIN="${REPO_ROOT}/bin/juno-conductor"
+JUNO_SERVER_BIN="${REPO_ROOT}/bin/juno-server-cover"
+JUNO_WEB_BIN="${REPO_ROOT}/bin/juno-web-cover"
+JUNO_MCP_BIN="${REPO_ROOT}/bin/juno-mcp-cover"
+JUNO_CONDUCTOR_BIN="${REPO_ROOT}/bin/juno-conductor-cover"
+JUNO_LAN_BIN="${REPO_ROOT}/bin/juno-lan-agent-cover"
 
 RAW_ALL="${REPO_ROOT}/coverage/integration-raw/all"
 CONDUCTOR_TEST_CFG="${REPO_ROOT}/.conductor-test.yaml"
@@ -47,23 +49,25 @@ done
 # 2. Build binaries
 # ------------------------------------------------------------------
 cd "${REPO_ROOT}"
+echo "--- Building binaries ---"
 if [[ "${NO_COVER}" == "1" ]]; then
-  echo "--- Building binaries (no coverage) ---"
-  go build -o "${JUNO_COVER_BIN}" ./cmd/juno-server
-  go build -o "${JUNO_WEB_COVER_BIN}" ./cmd/juno-web
+  go build -o "${JUNO_SERVER_BIN}"    ./cmd/juno-server
+  go build -o "${JUNO_WEB_BIN}"       ./cmd/juno-web
+  go build -o "${JUNO_MCP_BIN}"       ./cmd/juno-mcp
+  go build -o "${JUNO_CONDUCTOR_BIN}" ./cmd/juno-conductor
+  go build -o "${JUNO_LAN_BIN}"       ./cmd/juno-lan-agent
 else
-  echo "--- Building instrumented binaries ---"
-  go build -cover -o "${JUNO_COVER_BIN}" ./cmd/juno-server
-  go build -cover -o "${JUNO_WEB_COVER_BIN}" ./cmd/juno-web
+  go build -cover -o "${JUNO_SERVER_BIN}"    ./cmd/juno-server
+  go build -cover -o "${JUNO_WEB_BIN}"       ./cmd/juno-web
+  go build -cover -o "${JUNO_MCP_BIN}"       ./cmd/juno-mcp
+  go build -cover -o "${JUNO_CONDUCTOR_BIN}" ./cmd/juno-conductor
+  go build -cover -o "${JUNO_LAN_BIN}"       ./cmd/juno-lan-agent
 fi
-go build -o "${JUNO_CONDUCTOR_BIN}" ./cmd/juno-conductor
 
 # ------------------------------------------------------------------
 # 3. Prepare raw coverage directories
 # ------------------------------------------------------------------
-if [[ "${NO_COVER}" != "1" ]]; then
-  mkdir -p "${RAW_ALL}"
-fi
+mkdir -p "${RAW_ALL}"
 
 # ------------------------------------------------------------------
 # 4. Load env vars from ENV_FILE (skip comments and blank lines)
@@ -78,6 +82,12 @@ set +o allexport
 POSTGRES_HOST=localhost
 # juno-web proxies to the REST API, also on localhost when running on the host
 JUNO_REST_BASE_URL="http://localhost:${JUNO_REST_PORT:-6001}"
+# Use overrides for local testing: agent runs on localhost,
+# JUNO_LAN_AGENT_PORT/ADDR come from ENV_FILE (default 7000 / 0.0.0.0)
+JUNO_LAN_AGENT_PORT="${JUNO_LAN_AGENT_PORT:-7000}"
+JUNO_LAN_AGENT_ADDR="${JUNO_LAN_AGENT_ADDR:-127.0.0.1}"
+JUNO_LAN_AGENT_URL="http://localhost:${JUNO_LAN_AGENT_PORT}"
+export JUNO_LAN_AGENT_URL JUNO_LAN_AGENT_PORT JUNO_LAN_AGENT_ADDR
 
 # ------------------------------------------------------------------
 # 4a. Generate conductor test config pointing at instrumented binaries
@@ -85,16 +95,42 @@ JUNO_REST_BASE_URL="http://localhost:${JUNO_REST_PORT:-6001}"
 cat > "${CONDUCTOR_TEST_CFG}" <<EOF
 processes:
   - name: juno-server
-    binary: ${JUNO_COVER_BIN}
+    binary: ${JUNO_SERVER_BIN}
   - name: juno-web
-    binary: ${JUNO_WEB_COVER_BIN}
+    binary: ${JUNO_WEB_BIN}
+  - name: juno-mcp
+    binary: ${JUNO_MCP_BIN}
 EOF
 
 # ------------------------------------------------------------------
-# 5. Start conductor (manages all instrumented binaries)
+# 5. Start lan-agent
 # ------------------------------------------------------------------
 LOG_DIR="${REPO_ROOT}/logs"
 mkdir -p "${LOG_DIR}"
+
+echo "--- Starting lan-agent on ${JUNO_LAN_AGENT_ADDR}:${JUNO_LAN_AGENT_PORT} ---"
+if [[ "${NO_COVER}" == "1" ]]; then
+  JUNO_LAN_AGENT_PORT="${JUNO_LAN_AGENT_PORT}" JUNO_LAN_AGENT_ADDR="${JUNO_LAN_AGENT_ADDR}" "${JUNO_LAN_BIN}" > "${LOG_DIR}/lan-agent.log" 2>&1 &
+else
+  GOCOVERDIR="${RAW_ALL}" JUNO_LAN_AGENT_PORT="${JUNO_LAN_AGENT_PORT}" JUNO_LAN_AGENT_ADDR="${JUNO_LAN_AGENT_ADDR}" "${JUNO_LAN_BIN}" > "${LOG_DIR}/lan-agent.log" 2>&1 &
+fi
+LAN_AGENT_PID=$!
+
+for i in $(seq 1 15); do
+  if curl -sf "http://localhost:${JUNO_LAN_AGENT_PORT}/health" > /dev/null 2>&1; then
+    echo "lan-agent is ready (attempt ${i})"
+    break
+  fi
+  if [[ "${i}" -eq 15 ]]; then
+    echo "ERROR: lan-agent did not become ready" >&2
+    exit 1
+  fi
+  sleep 0.5
+done
+
+# ------------------------------------------------------------------
+# 5b. Start conductor (manages all instrumented binaries)
+# ------------------------------------------------------------------
 
 echo "--- Starting conductor ---"
 if [[ "${NO_COVER}" == "1" ]]; then
@@ -104,8 +140,8 @@ else
 fi
 CONDUCTOR_PID=$!
 
-# Persist PID and log dir for the teardown script
-printf 'CONDUCTOR_PID=%s\nLOG_DIR=%s\nNO_COVER=%s\n' "${CONDUCTOR_PID}" "${LOG_DIR}" "${NO_COVER}" > "${PID_FILE}"
+# Persist PIDs and log dir for the teardown script
+printf 'CONDUCTOR_PID=%s\nLAN_AGENT_PID=%s\nLOG_DIR=%s\nNO_COVER=%s\n' "${CONDUCTOR_PID}" "${LAN_AGENT_PID}" "${LOG_DIR}" "${NO_COVER}" > "${PID_FILE}"
 
 # ------------------------------------------------------------------
 # 6. Wait for juno REST to be ready
