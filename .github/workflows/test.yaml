@@ -27,7 +27,7 @@ jobs:
       - name: Run vet
         run: make vet
 
-  build-and-test:
+  build-and-unit-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -53,3 +53,33 @@ jobs:
           files: coverage.txt
           flags: unit
           token: ${{ secrets.CODECOV_TOKEN }}
+
+  functional-tests:
+    needs: build-and-unit-test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Download dependencies
+        run: go mod download
+      - name: Install tools
+        run: |
+          go install github.com/deepmap/oapi-codegen/cmd/oapi-codegen@v1.16.3
+          go install github.com/boumenot/gocover-cobertura@latest
+      - name: Generate code
+        run: make generate
+
+  docker-build:
+    needs: build-and-unit-test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build lan agent container
+        run: |
+          docker build -f Dockerfile.lan .
+      - name: Build core containers
+        run: |
+          docker compose --env-file ./conf/.env.example.docker build
