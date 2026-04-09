@@ -24,59 +24,63 @@ def _load_env_file(path):
 
 class Runner(object):
     def __init__(self, config):
-        self.cfg = config
-        self.use_postgres = config.get("postgres-enabled", False)
-        self.conductor_config = os.path.join(
+        self._cfg = config
+        self._use_postgres = config.get("postgres-enabled", False)
+        self._conductor_config = os.path.join(
             REPO_ROOT, config["conductor-config"])
-        self.conductor_cmd = os.path.join(REPO_ROOT, config["conductor-cmd"])
+        self._conductor_cmd = os.path.join(REPO_ROOT, config["conductor-cmd"])
         env_file = config.get(
             "env-file", os.path.join(REPO_ROOT, "conf", ".env.example"))
-        self.env_file = os.path.abspath(env_file)
-        self.env = _load_env_file(self.env_file)
-        self.pytest_args = config.get("pytest-args", [])
-        self.pytest_path = os.path.join(
+        self._env_file = os.path.abspath(env_file)
+        self._env = _load_env_file(self._env_file)
+        self._pytest_args = config.get("pytest-args", [])
+        self._pytest_path = os.path.join(
             REPO_ROOT, config.get("pytest-path", "tests"))
-        self.log_dir = os.path.join(REPO_ROOT, "logs")
+        self._log_dir = os.path.join(REPO_ROOT, "logs")
         gocoverdir = config.get("gocoverdir", "")
-        self.gocoverdir = os.path.abspath(gocoverdir) if gocoverdir else ""
+        self._gocoverdir = os.path.abspath(gocoverdir) if gocoverdir else ""
         lan = config.get("lan-agent-cmd", "")
-        self.lan_agent_cmd = os.path.join(REPO_ROOT, lan) if lan else ""
+        self._lan_agent_cmd = os.path.join(REPO_ROOT, lan) if lan else ""
         self._lan_agent_proc = None
         self._lan_agent_log = None
         self._conductor_proc = None
         self._conductor_log = None
         self._postgres_log = None
         self._postgres_logs_proc = None
+        self._skip_init = config.get("skip-init", False)
+        self._skip_cleanup = config.get("skip-cleanup", False)
 
         assert os.path.isfile(
-            self.env_file), f"Env file {self.env_file} does not exist"
+            self._env_file), f"Env file {self._env_file} does not exist"
 
-        for key, value in self.env.items():
+        for key, value in self._env.items():
             print(f"  {key}={value}")
 
     def start(self):
         try:
-            self._init()
+            if not self._skip_init:
+                self._init()
             self._run()
         finally:
-            self._cleanup()
+            if not self._skip_cleanup:
+                self._cleanup()
 
     def _init(self):
-        os.makedirs(self.log_dir, exist_ok=True)
-        if self.use_postgres:
+        os.makedirs(self._log_dir, exist_ok=True)
+        if self._use_postgres:
             self._start_postgres()
-        if self.lan_agent_cmd:
+        if self._lan_agent_cmd:
             self._start_lan_agent()
         self._start_conductor()
 
     def _start_postgres(self):
         print("$ Starting postgres via docker compose...")
-        env = {**os.environ, "ENV_FILE": self.env_file}
-        log_path = os.path.join(self.log_dir, "postgres.log")
+        env = {**os.environ, "ENV_FILE": self._env_file}
+        log_path = os.path.join(self._log_dir, "postgres.log")
         self._postgres_log = open(log_path, "w")
 
         subprocess.run(
-            ["docker", "compose", "--env-file", self.env_file,
+            ["docker", "compose", "--env-file", self._env_file,
                 "up", "-d", "--wait", "postgres"],
             cwd=REPO_ROOT,
             env=env,
@@ -87,7 +91,7 @@ class Runner(object):
 
         # Stream live container logs into the same file
         self._postgres_logs_proc = subprocess.Popen(
-            ["docker", "compose", "--env-file", self.env_file,
+            ["docker", "compose", "--env-file", self._env_file,
                 "logs", "-f", "--no-color", "postgres"],
             cwd=REPO_ROOT,
             env=env,
@@ -97,14 +101,14 @@ class Runner(object):
         print(f"$ Postgres is ready, logs: {log_path}.")
 
     def _start_lan_agent(self):
-        print(f"$ Starting juno-lan-agent ({self.lan_agent_cmd})...")
-        env = {**os.environ, **self.env}
-        if self.gocoverdir:
-            env["GOCOVERDIR"] = self.gocoverdir
-        log_path = os.path.join(self.log_dir, "lan-agent.log")
+        print(f"$ Starting juno-lan-agent ({self._lan_agent_cmd})...")
+        env = {**os.environ, **self._env}
+        if self._gocoverdir:
+            env["GOCOVERDIR"] = self._gocoverdir
+        log_path = os.path.join(self._log_dir, "lan-agent.log")
         self._lan_agent_log = open(log_path, "w")
         self._lan_agent_proc = subprocess.Popen(
-            [self.lan_agent_cmd],
+            [self._lan_agent_cmd],
             cwd=REPO_ROOT,
             env=env,
             stdout=self._lan_agent_log,
@@ -114,15 +118,15 @@ class Runner(object):
             f"$ juno-lan-agent started (pid={self._lan_agent_proc.pid}), logs: {log_path}.")
 
     def _start_conductor(self):
-        print(f"$ Starting juno-conductor ({self.conductor_cmd})...")
-        env = {**os.environ, **self.env}
-        if self.gocoverdir:
-            os.makedirs(self.gocoverdir, exist_ok=True)
-            env["GOCOVERDIR"] = self.gocoverdir
-        log_path = os.path.join(self.log_dir, "conductor.log")
+        print(f"$ Starting juno-conductor ({self._conductor_cmd})...")
+        env = {**os.environ, **self._env}
+        if self._gocoverdir:
+            os.makedirs(self._gocoverdir, exist_ok=True)
+            env["GOCOVERDIR"] = self._gocoverdir
+        log_path = os.path.join(self._log_dir, "conductor.log")
         self._conductor_log = open(log_path, "w")
         self._conductor_proc = subprocess.Popen(
-            [self.conductor_cmd, "-config", self.conductor_config],
+            [self._conductor_cmd, "-config", self._conductor_config],
             cwd=REPO_ROOT,
             env=env,
             stdout=self._conductor_log,
@@ -133,11 +137,11 @@ class Runner(object):
 
     def _run(self):
         print("$ Running pytest...")
-        log_path = os.path.join(self.log_dir, "pytest.log")
-        env = {**os.environ, **self.env}
+        log_path = os.path.join(self._log_dir, "pytest.log")
+        env = {**os.environ, **self._env}
         with open(log_path, "w") as log_file:
             proc = subprocess.Popen(
-                ["pytest", *self.pytest_args, self.pytest_path],
+                ["pytest", *self._pytest_args, self._pytest_path],
                 cwd=REPO_ROOT,
                 env=env,
                 stdout=subprocess.PIPE,
@@ -163,7 +167,7 @@ class Runner(object):
     def _cleanup(self):
         self._stop_conductor()
         self._stop_lan_agent()
-        if self.use_postgres:
+        if self._use_postgres:
             self._stop_postgres()
 
     def _stop_conductor(self):
@@ -204,9 +208,9 @@ class Runner(object):
             self._postgres_logs_proc.terminate()
             self._postgres_logs_proc.wait()
             self._postgres_logs_proc = None
-        env = {**os.environ, "ENV_FILE": self.env_file}
+        env = {**os.environ, "ENV_FILE": self._env_file}
         subprocess.run(
-            ["docker", "compose", "--env-file", self.env_file, "down", "postgres"],
+            ["docker", "compose", "--env-file", self._env_file, "down", "postgres"],
             cwd=REPO_ROOT,
             env=env,
             stdout=self._postgres_log,

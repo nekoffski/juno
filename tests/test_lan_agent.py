@@ -12,6 +12,7 @@ def test_lan_agent_health(lan_agent_url):
     resp = requests.get(f"{lan_agent_url}/health")
     assert resp.status_code == 200
 
+
 def test_lan_agent_discover_missing_addr(lan_agent_url):
     resp = requests.post(
         f"{lan_agent_url}/discover",
@@ -40,6 +41,7 @@ def test_lan_agent_discover_invalid_json(lan_agent_url):
 def test_lan_agent_discover_wrong_method(lan_agent_url):
     resp = requests.get(f"{lan_agent_url}/discover")
     assert resp.status_code == 405
+
 
 def test_lan_agent_discover_finds_yeelight(lan_agent_url, mock_yeelight):
     import os
@@ -75,11 +77,13 @@ def test_lan_agent_discover_finds_yeelight(lan_agent_url, mock_yeelight):
         d for d in devices
         if "yeelight" in d.get("raw_response", "").lower()
     ]
-    assert len(yeelight_devices) >= 1, "No Yeelight device found through lan-agent discover"
+    assert len(
+        yeelight_devices) >= 1, "No Yeelight device found through lan-agent discover"
     d = yeelight_devices[0]
     assert "ip" in d
     assert "raw_response" in d
     assert d["ip"] != ""
+
 
 def test_lan_agent_discover_no_responders(lan_agent_url):
     resp = requests.post(
@@ -90,6 +94,7 @@ def test_lan_agent_discover_no_responders(lan_agent_url):
     assert resp.status_code == 200
     body = resp.json()
     assert body["devices"] == []
+
 
 def _connect_via_proxy(proxy_addr: str, target_addr: str) -> socket.socket:
     host, port = proxy_addr.split("//", 1)[1].rsplit(":", 1)
@@ -118,7 +123,8 @@ def test_lan_agent_connect_tunnel(lan_agent_url, mock_yeelight):
     target = f"127.0.0.1:{mock_yeelight.tcp_port}"
     sock = _connect_via_proxy(lan_agent_url, target)
     try:
-        req = json.dumps({"id": 1, "method": "get_prop", "params": ["power"]}) + "\r\n"
+        req = json.dumps({"id": 1, "method": "get_prop",
+                         "params": ["power"]}) + "\r\n"
         sock.settimeout(3.0)
         sock.sendall(req.encode())
 
@@ -155,6 +161,7 @@ def test_lan_agent_connect_bad_target(lan_agent_url):
         assert "502" in response
     finally:
         sock.close()
+
 
 def test_device_discovered_via_lan_agent(base_url, mock_yeelight):
     devices = discover_and_wait(base_url, timeout=12.0)

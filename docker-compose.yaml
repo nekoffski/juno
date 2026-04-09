@@ -14,12 +14,14 @@ services:
       timeout: 5s
       retries: 10
 
-  juno-conductor:
+  conductor:
     build:
       context: .
       dockerfile: Dockerfile
     env_file:
       - ${ENV_FILE}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "${JUNO_REST_PORT}:${JUNO_REST_PORT}"
       - "${JUNO_WEB_PORT}:${JUNO_WEB_PORT}"

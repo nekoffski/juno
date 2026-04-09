@@ -71,6 +71,18 @@ jobs:
           go install github.com/boumenot/gocover-cobertura@latest
       - name: Generate code
         run: make generate
+      - name: Build binaries with coverage
+        run: make coverage-build
+      - name: Generate test venv
+        run: make test-venv
+      - name: Run functional tests
+        run: ./cicd/run-functional-tests.sh
+      - name: Merge coverage profiles
+        run: ./cicd/generate-coverage.sh
+      - name: Upload functional coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage/functional-coverage.txt
 
   docker-build:
     needs: build-and-unit-test
@@ -83,3 +95,6 @@ jobs:
       - name: Build core containers
         run: |
           docker compose --env-file ./conf/.env.example.docker build
+      - name: Run smoke tests
+        run: |
+          ./cicd/run-docker-smoke-tests.sh
