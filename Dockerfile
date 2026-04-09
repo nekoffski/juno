@@ -11,6 +11,7 @@ RUN go mod download
 
 COPY . .
 
+
 RUN /go/bin/oapi-codegen --config api/rest-oapi-codegen.yaml api/rest-openapi.yaml > internal/rest/api.gen.go
 
 RUN CGO_ENABLED=0 GOOS=linux go build -o bin/juno-server ./cmd/juno-server
@@ -26,6 +27,6 @@ COPY --from=builder /app/bin/juno-server .
 COPY --from=builder /app/bin/juno-web .
 COPY --from=builder /app/bin/juno-mcp .
 COPY --from=builder /app/bin/juno-conductor .
-COPY --from=builder /app/conf/conductor.yaml conf/conductor.yaml
+COPY --from=builder /app/conf/conductor.json conf/conductor.json
 
-CMD ["./juno-conductor", "-config", "conf/conductor.yaml"]
+CMD ["./juno-conductor", "-config", "conf/conductor.json"]

@@ -13,17 +13,17 @@ import (
 	"syscall"
 	"time"
 
-	"gopkg.in/yaml.v3"
+	"encoding/json"
 )
 
 type ProcessDef struct {
-	Name   string   `yaml:"name"`
-	Binary string   `yaml:"binary"`
-	Args   []string `yaml:"args"`
+	Name   string
+	Binary string   `json:"binary"`
+	Args   []string `json:"args"`
 }
 
 type Config struct {
-	Processes []ProcessDef `yaml:"processes"`
+	Processes []ProcessDef
 }
 
 func loadConfig(path string) (*Config, error) {
@@ -33,12 +33,25 @@ func loadConfig(path string) (*Config, error) {
 	}
 	defer f.Close()
 
-	var cfg Config
-	if err := yaml.NewDecoder(f).Decode(&cfg); err != nil {
+	var raw struct {
+		Processes map[string]struct {
+			Binary string   `json:"binary"`
+			Args   []string `json:"args"`
+		} `json:"processes"`
+	}
+	if err := json.NewDecoder(f).Decode(&raw); err != nil {
 		return nil, fmt.Errorf("decode: %w", err)
 	}
-	if len(cfg.Processes) == 0 {
+	if len(raw.Processes) == 0 {
 		return nil, fmt.Errorf("no processes defined in config")
+	}
+	var cfg Config
+	for name, p := range raw.Processes {
+		cfg.Processes = append(cfg.Processes, ProcessDef{
+			Name:   name,
+			Binary: p.Binary,
+			Args:   p.Args,
+		})
 	}
 	return &cfg, nil
 }
@@ -145,7 +158,7 @@ func runProcess(ctx context.Context, pd ProcessDef) {
 }
 
 func main() {
-	configPath := flag.String("config", "conf/conductor.yaml", "path to conductor config file")
+	configPath := flag.String("config", "conf/conductor.json", "path to conductor config file")
 	flag.Parse()
 
 	cfg, err := loadConfig(*configPath)

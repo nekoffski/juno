@@ -1,0 +1,13 @@
+{
+  "processes": {
+    "juno-server": {
+      "binary": "./bin/juno-server"
+    },
+    "juno-web": {
+      "binary": "./bin/juno-web"
+    },
+    "juno-mcp": {
+      "binary": "./bin/juno-mcp"
+    }
+  }
+}

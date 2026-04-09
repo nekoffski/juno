@@ -3,7 +3,7 @@ REST_OPENAPI_SPEC := api/rest-openapi.yaml
 REST_OAPI_CFG     := api/rest-oapi-codegen.yaml
 VENV_DIR        := tests/.venv
 ENV_FILE        := $(or $(ENV_FILE),conf/.env.example)
-CONDUCTOR_CFG   := $(or $(CONDUCTOR_CFG),conf/conductor.yaml)
+CONDUCTOR_CFG   := $(or $(CONDUCTOR_CFG),conf/conductor.json)
 TARGETS = juno-server juno-web juno-mcp juno-conductor juno-lan-agent
 GO = go
 GOLANGCI_LINT := $(shell $(GO) env GOPATH)/bin/golangci-lint
@@ -42,7 +42,7 @@ tidy:
 	go mod tidy
 
 clean:
-	rm -rf bin/ coverage.out coverage *coverage.txt $(VENV_DIR)
+	rm -rf bin/ coverage.out coverage *ut-coverage.txt $(VENV_DIR)
 	find . -name '*.gen.go' -delete
 
 unit-test:
@@ -52,12 +52,12 @@ unit-test-verbose:
 	go test -v ./...
 
 unit-test-cover:
-	go test -coverprofile=coverage.txt ./...
-	grep -v 'gen\.go:' coverage.txt > coverage.txt.tmp && mv coverage.txt.tmp coverage.txt
+	go test -coverprofile=ut-coverage.txt ./...
+	grep -v 'gen\.go:' ut-coverage.txt > ut-coverage.txt.tmp && mv ut-coverage.txt.tmp ut-coverage.txt
 
 .PHONY: all build generate gen-rest-api build lint fmt vet tidy clean
 
-# test-venv:
-# 	python3 -m venv $(VENV_DIR)
-# 	$(VENV_DIR)/bin/pip install -r tests/requirements.txt
+test-venv:
+	python3 -m venv $(VENV_DIR)
+	$(VENV_DIR)/bin/pip install -r tests/requirements.txt
 
