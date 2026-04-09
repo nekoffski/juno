@@ -17,11 +17,12 @@ jobs:
           go-version-file: go.mod
       - name: Download dependencies
         run: go mod download
+      - name: Install deps
+        run: |
+          go install github.com/deepmap/oapi-codegen/cmd/oapi-codegen@v1.16.3
+          go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.8
       - name: Generate code
         run: make generate
-      - name: Install linters
-        run: |
-          go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.8
       - name: Run formatter
         run: make test-fmt
       - name: Run linter
