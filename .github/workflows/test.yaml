@@ -91,7 +91,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build lan agent container
         run: |
-          docker build -f Dockerfile.lan .
+          docker build -f Dockerfile.lan . -t juno-lan-agent:latest
       - name: Build core containers
         run: |
           docker compose --project-name juno --env-file ./conf/.env.example.docker build
