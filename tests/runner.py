@@ -53,6 +53,9 @@ class Runner(object):
         assert os.path.isfile(
             self._env_file), f"Env file {self._env_file} does not exist"
 
+        if not os.path.exists(self._log_dir):
+            os.makedirs(self._log_dir)
+
         for key, value in self._env.items():
             print(f"  {key}={value}")
 
