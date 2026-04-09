@@ -25,7 +25,7 @@ func (h *HealthHandlers) GetDeviceServiceHealth(
 	ctx context.Context,
 	_ GetDeviceServiceHealthRequestObject,
 ) (GetDeviceServiceHealthResponseObject, error) {
-	f, err := h.sender.Request("device-service", core.HeartbeatRequest{Magic: "ping"})
+	f, _ := h.sender.Request("device-service", core.HeartbeatRequest{Magic: "ping"})
 	r, err := bus.AwaitFor[core.HeartbeatResponse](ctx, f, time.Second)
 
 	if err != nil {

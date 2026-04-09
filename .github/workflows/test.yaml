@@ -1,0 +1,105 @@
+name: Juno Test Pipeline
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Download dependencies
+        run: go mod download
+      - name: Install deps
+        run: |
+          go install github.com/deepmap/oapi-codegen/cmd/oapi-codegen@v1.16.3
+          go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.8
+      - name: Generate code
+        run: make generate
+      - name: Run formatter
+        run: make test-fmt
+      - name: Run linter
+        run: make lint
+      - name: Run vet
+        run: make vet
+
+  build-and-unit-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Download dependencies
+        run: go mod download
+      - name: Install tools
+        run: |
+          go install github.com/deepmap/oapi-codegen/cmd/oapi-codegen@v1.16.3
+          go install github.com/boumenot/gocover-cobertura@latest
+      - name: Generate code
+        run: make generate
+      - name: Build binaries
+        run: make build
+      - name: Run unit tests with coverage
+        run: make unit-test-cover
+      - name: Upload unit coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: ut-coverage.txt
+          flags: unit
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  functional-tests:
+    needs: build-and-unit-test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Download dependencies
+        run: go mod download
+      - name: Install tools
+        run: |
+          go install github.com/deepmap/oapi-codegen/cmd/oapi-codegen@v1.16.3
+          go install github.com/boumenot/gocover-cobertura@latest
+      - name: Generate code
+        run: make generate
+      - name: Build binaries with coverage
+        run: make coverage-build
+      - name: Generate test venv
+        run: make test-venv
+      - name: Run functional tests
+        run: make functional-tests
+      - name: Merge coverage profiles
+        run: make generate-coverage
+      - name: Upload functional coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage/functional-coverage.txt
+
+  docker-build:
+    needs: build-and-unit-test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build lan agent container
+        run: |
+          docker build -f Dockerfile.lan . -t juno-lan-agent:latest
+      - name: Build core containers
+        run: |
+          docker compose --project-name juno --env-file ./conf/.env.example.docker build
+      - name: Make test venv
+        run: make test-venv
+      - name: Run smoke tests
+        run: make docker-smoke-tests
+          

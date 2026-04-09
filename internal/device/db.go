@@ -26,7 +26,7 @@ func (r *pgxpoolRepository) InsertDevice(ctx context.Context, addr DeviceAddr, v
 	if err != nil {
 		return 0, "", err
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 
 	var id int
 	err = tx.QueryRow(ctx, `

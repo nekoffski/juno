@@ -21,8 +21,10 @@ func setupHandlers(t *testing.T, handler func(bus.Message)) (*DeviceHandlers, *H
 	return &DeviceHandlers{sender: mb.NewSender()}, &HealthHandlers{sender: mb.NewSender()}
 }
 
-func awaitCtx() context.Context {
-	ctx, _ := context.WithTimeout(context.Background(), time.Second)
+func awaitCtx(t *testing.T) context.Context {
+	t.Helper()
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	t.Cleanup(cancel)
 	return ctx
 }
 
@@ -34,7 +36,7 @@ func TestGetDevices_OK(t *testing.T) {
 			},
 		}})
 	})
-	resp, err := devs.GetDevices(awaitCtx(), GetDevicesRequestObject{})
+	resp, err := devs.GetDevices(awaitCtx(t), GetDevicesRequestObject{})
 	require.NoError(t, err)
 	res := resp.(GetDevices200JSONResponse)
 	require.Len(t, res, 1)
@@ -47,7 +49,7 @@ func TestGetDeviceById_Found(t *testing.T) {
 			Device: &device.DeviceModel{Id: 42, Name: "lamp"},
 		}})
 	})
-	resp, err := devs.GetDeviceById(awaitCtx(), GetDeviceByIdRequestObject{Id: 42})
+	resp, err := devs.GetDeviceById(awaitCtx(t), GetDeviceByIdRequestObject{Id: 42})
 	require.NoError(t, err)
 	res := resp.(GetDeviceById200JSONResponse)
 	assert.Equal(t, 42, res.Id)
@@ -57,7 +59,7 @@ func TestGetDeviceById_NotFound(t *testing.T) {
 	devs, _ := setupHandlers(t, func(msg bus.Message) {
 		msg.Reply(bus.Response{Err: core.ErrDeviceNotFound})
 	})
-	resp, err := devs.GetDeviceById(awaitCtx(), GetDeviceByIdRequestObject{Id: 99})
+	resp, err := devs.GetDeviceById(awaitCtx(t), GetDeviceByIdRequestObject{Id: 99})
 	require.NoError(t, err)
 	_, ok := resp.(GetDeviceById404Response)
 	assert.True(t, ok)
@@ -65,7 +67,7 @@ func TestGetDeviceById_NotFound(t *testing.T) {
 
 func TestDiscoverDevices_OK(t *testing.T) {
 	devs, _ := setupHandlers(t, func(msg bus.Message) {})
-	resp, err := devs.DiscoverDevices(awaitCtx(), DiscoverDevicesRequestObject{})
+	resp, err := devs.DiscoverDevices(awaitCtx(t), DiscoverDevicesRequestObject{})
 	require.NoError(t, err)
 	_, ok := resp.(DiscoverDevices202Response)
 	assert.True(t, ok)
@@ -78,7 +80,7 @@ func TestGetDeviceProperties_Found(t *testing.T) {
 			Properties: map[string]any{"brightness": 80},
 		}})
 	})
-	resp, err := devs.GetDeviceProperties(awaitCtx(), GetDevicePropertiesRequestObject{
+	resp, err := devs.GetDeviceProperties(awaitCtx(t), GetDevicePropertiesRequestObject{
 		Id:     1,
 		Params: GetDevicePropertiesParams{Fields: &fields},
 	})
@@ -92,7 +94,7 @@ func TestGetDeviceProperties_NotFound(t *testing.T) {
 	devs, _ := setupHandlers(t, func(msg bus.Message) {
 		msg.Reply(bus.Response{Err: core.ErrDeviceNotFound})
 	})
-	resp, err := devs.GetDeviceProperties(awaitCtx(), GetDevicePropertiesRequestObject{
+	resp, err := devs.GetDeviceProperties(awaitCtx(t), GetDevicePropertiesRequestObject{
 		Id:     99,
 		Params: GetDevicePropertiesParams{Fields: &fields},
 	})
@@ -105,7 +107,7 @@ func TestDeleteDevice_OK(t *testing.T) {
 	devs, _ := setupHandlers(t, func(msg bus.Message) {
 		msg.Reply(bus.Response{Payload: device.AckResponse{}})
 	})
-	resp, err := devs.DeleteDevice(awaitCtx(), DeleteDeviceRequestObject{Id: 1})
+	resp, err := devs.DeleteDevice(awaitCtx(t), DeleteDeviceRequestObject{Id: 1})
 	require.NoError(t, err)
 	_, ok := resp.(DeleteDevice200Response)
 	assert.True(t, ok)
@@ -115,7 +117,7 @@ func TestDeleteDevice_NotFound(t *testing.T) {
 	devs, _ := setupHandlers(t, func(msg bus.Message) {
 		msg.Reply(bus.Response{Err: core.ErrDeviceNotFound})
 	})
-	resp, err := devs.DeleteDevice(awaitCtx(), DeleteDeviceRequestObject{Id: 99})
+	resp, err := devs.DeleteDevice(awaitCtx(t), DeleteDeviceRequestObject{Id: 99})
 	require.NoError(t, err)
 	_, ok := resp.(DeleteDevice404Response)
 	assert.True(t, ok)
@@ -125,7 +127,7 @@ func TestPerformDeviceAction_OK(t *testing.T) {
 	devs, _ := setupHandlers(t, func(msg bus.Message) {
 		msg.Reply(bus.Response{Payload: device.AckResponse{}})
 	})
-	resp, err := devs.PerformDeviceAction(awaitCtx(), PerformDeviceActionRequestObject{
+	resp, err := devs.PerformDeviceAction(awaitCtx(t), PerformDeviceActionRequestObject{
 		Id:     1,
 		Action: "on",
 		Body:   &PerformDeviceActionJSONRequestBody{},
@@ -139,7 +141,7 @@ func TestPerformDeviceAction_NotFound(t *testing.T) {
 	devs, _ := setupHandlers(t, func(msg bus.Message) {
 		msg.Reply(bus.Response{Err: core.ErrDeviceNotFound})
 	})
-	resp, err := devs.PerformDeviceAction(awaitCtx(), PerformDeviceActionRequestObject{
+	resp, err := devs.PerformDeviceAction(awaitCtx(t), PerformDeviceActionRequestObject{
 		Id:     99,
 		Action: "on",
 		Body:   &PerformDeviceActionJSONRequestBody{},
@@ -151,7 +153,7 @@ func TestPerformDeviceAction_NotFound(t *testing.T) {
 
 func TestGetHealth_OK(t *testing.T) {
 	_, health := setupHandlers(t, func(msg bus.Message) {})
-	resp, err := health.GetHealth(awaitCtx(), GetHealthRequestObject{})
+	resp, err := health.GetHealth(awaitCtx(t), GetHealthRequestObject{})
 	require.NoError(t, err)
 	res := resp.(GetHealth200JSONResponse)
 	assert.Equal(t, "ok", res.Status)
@@ -161,7 +163,7 @@ func TestGetDeviceServiceHealth_OK(t *testing.T) {
 	_, health := setupHandlers(t, func(msg bus.Message) {
 		msg.Reply(bus.Response{Payload: core.HeartbeatResponse{Healthy: true, Magic: "ping"}})
 	})
-	resp, err := health.GetDeviceServiceHealth(awaitCtx(), GetDeviceServiceHealthRequestObject{})
+	resp, err := health.GetDeviceServiceHealth(awaitCtx(t), GetDeviceServiceHealthRequestObject{})
 	require.NoError(t, err)
 	res := resp.(GetDeviceServiceHealth200JSONResponse)
 	assert.Equal(t, "ok", res.Status)
@@ -171,7 +173,7 @@ func TestGetDeviceServiceHealth_Unhealthy(t *testing.T) {
 	_, health := setupHandlers(t, func(msg bus.Message) {
 		msg.Reply(bus.Response{Payload: core.HeartbeatResponse{Healthy: false, Magic: "ping"}})
 	})
-	resp, err := health.GetDeviceServiceHealth(awaitCtx(), GetDeviceServiceHealthRequestObject{})
+	resp, err := health.GetDeviceServiceHealth(awaitCtx(t), GetDeviceServiceHealthRequestObject{})
 	require.NoError(t, err)
 	res := resp.(GetDeviceServiceHealth200JSONResponse)
 	assert.Equal(t, "unhealthy", res.Status)

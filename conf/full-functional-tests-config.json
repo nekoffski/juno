@@ -1,0 +1,12 @@
+{
+  "postgres-enabled": true,
+  "conductor-config": "conf/conductor.local.json",
+  "conductor-cmd": "bin/juno-conductor",
+  "lan-agent-cmd": "bin/juno-lan-agent",
+  "env-file": "conf/.env.example",
+  "gocoverdir": "coverage/raw",
+  "pytest-args": ["-v", "--disable-warnings"],
+  "pytest-path": "tests",
+  "skip-init": false,
+  "skip-cleanup": false
+}

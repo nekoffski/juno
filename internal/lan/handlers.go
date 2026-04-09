@@ -53,7 +53,7 @@ func handleDiscover(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(discoverResponse{Devices: devices})
+	_ = json.NewEncoder(w).Encode(discoverResponse{Devices: devices})
 }
 
 func handleHealth(w http.ResponseWriter, r *http.Request) {
@@ -105,13 +105,13 @@ func handleConnect(w http.ResponseWriter, r *http.Request) {
 	go func() {
 		defer wg.Done()
 		defer deviceConn.Close()
-		io.Copy(deviceConn, bufrw)
+		_, _ = io.Copy(deviceConn, bufrw)
 	}()
 
 	go func() {
 		defer wg.Done()
 		defer clientConn.Close()
-		io.Copy(bufrw, deviceConn)
+		_, _ = io.Copy(bufrw, deviceConn)
 	}()
 
 	wg.Wait()

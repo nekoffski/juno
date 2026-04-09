@@ -75,7 +75,7 @@ func (d *Device) writerLoop(ctx context.Context) {
 				log.Printf("Device %d failed to get response for action: %v", d.model.Id, err)
 				continue
 			}
-			d.publisher.Publish("device.events", device.DeviceUpdatedEvent{Device: d.Model()})
+			_ = d.publisher.Publish("device.events", device.DeviceUpdatedEvent{Device: d.Model()})
 		case <-ctx.Done():
 			log.Printf("Device %d writer loop exiting", d.model.Id)
 			return
@@ -104,7 +104,7 @@ func (d *Device) onNotification(n notification) {
 		d.modelMtx.Unlock()
 	}
 
-	d.publisher.Publish("device.events", device.DeviceUpdatedEvent{Device: d.Model()})
+	_ = d.publisher.Publish("device.events", device.DeviceUpdatedEvent{Device: d.Model()})
 }
 
 func createDevice(ctx context.Context, id int, addr device.DeviceAddr, name string, publisher *bus.Publisher, lanAgentURL string) (device.Device, error) {

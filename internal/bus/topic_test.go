@@ -21,15 +21,6 @@ func recv(t *testing.T, ch <-chan any) any {
 	}
 }
 
-func noRecv(t *testing.T, ch <-chan any) {
-	t.Helper()
-	select {
-	case v := <-ch:
-		t.Fatalf("unexpected event received: %v", v)
-	case <-time.After(20 * time.Millisecond):
-	}
-}
-
 func TestTopic_SingleSubscriber(t *testing.T) {
 	topic := newTopic()
 	ch, unsub := topic.subscribe()
@@ -173,8 +164,8 @@ func TestSubscriber_MultipleTopics(t *testing.T) {
 	require.NoError(t, sub.Subscribe("b"))
 
 	pub := mb.NewPublisher()
-	pub.Publish("a", "from-a")
-	pub.Publish("b", "from-b")
+	_ = pub.Publish("a", "from-a")
+	_ = pub.Publish("b", "from-b")
 
 	got := map[any]bool{recv(t, sub.Events()): true, recv(t, sub.Events()): true}
 	assert.True(t, got["from-a"])
