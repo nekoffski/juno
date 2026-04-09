@@ -94,7 +94,7 @@ jobs:
           docker build -f Dockerfile.lan .
       - name: Build core containers
         run: |
-          docker compose --env-file ./conf/.env.example.docker build
+          docker compose --project-name juno --env-file ./conf/.env.example.docker build
       - name: Run smoke tests
         run: |
           ./cicd/run-docker-smoke-tests.sh
