@@ -53,7 +53,7 @@ func makeLanAgentServer(t *testing.T, devices []lanDiscoveryResult) *httptest.Se
 		require.Equal(t, http.MethodPost, r.Method)
 		require.Equal(t, "/discover", r.URL.Path)
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(lanDiscoverResponse{Devices: devices})
+		_ = json.NewEncoder(w).Encode(lanDiscoverResponse{Devices: devices})
 	}))
 }
 

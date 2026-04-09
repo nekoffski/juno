@@ -76,9 +76,9 @@ jobs:
       - name: Generate test venv
         run: make test-venv
       - name: Run functional tests
-        run: ./cicd/run-functional-tests.sh
+        run: make functional-tests
       - name: Merge coverage profiles
-        run: ./cicd/generate-coverage.sh
+        run: make generate-coverage
       - name: Upload functional coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
@@ -96,8 +96,7 @@ jobs:
         run: |
           docker compose --project-name juno --env-file ./conf/.env.example.docker build
       - name: Make test venv
-        run: |
-          make test-venv
+        run: make test-venv
       - name: Run smoke tests
-        run: |
-          ./cicd/run-docker-smoke-tests.sh
+        run: make docker-smoke-tests
+          

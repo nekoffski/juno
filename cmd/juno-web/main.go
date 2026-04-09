@@ -45,7 +45,15 @@ func main() {
 	}
 
 	e := echo.New()
-	e.Use(middleware.Logger())
+	e.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
+		LogMethod: true,
+		LogURI:    true,
+		LogStatus: true,
+		LogValuesFunc: func(c echo.Context, v middleware.RequestLoggerValues) error {
+			log.Printf("method=%s uri=%s status=%d", v.Method, v.URI, v.Status)
+			return nil
+		},
+	}))
 	e.Use(middleware.Recover())
 
 	e.GET("/static/*", echo.WrapHandler(

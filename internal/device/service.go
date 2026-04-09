@@ -194,9 +194,11 @@ func (s *DeviceService) Init(ctx context.Context, mb *bus.MessageBus) error {
 		return err
 	}
 
-	mb.RegisterReceiver(ctx, s.Name(), func(msg bus.Message) {
+	if err := mb.RegisterReceiver(ctx, s.Name(), func(msg bus.Message) {
 		s.onMessage(msg)
-	})
+	}); err != nil {
+		return err
+	}
 
 	go s.loadDevices(ctx)
 	return nil

@@ -25,7 +25,7 @@ func TestGetDevices_OK(t *testing.T) {
 		assert.Equal(t, http.MethodGet, r.Method)
 		assert.Equal(t, "/device", r.URL.Path)
 		w.Header().Set("Content-Type", "application/json")
-		w.Write(body)
+		_, _ = w.Write(body)
 	})
 	client := NewHTTPClient(srv.URL)
 	got, err := client.GetDevices(context.Background())
@@ -38,7 +38,7 @@ func TestGetDevices_OK(t *testing.T) {
 func TestGetDevices_Empty(t *testing.T) {
 	srv := fakeRestServer(t, func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte("[]"))
+		_, _ = w.Write([]byte("[]"))
 	})
 	client := NewHTTPClient(srv.URL)
 	got, err := client.GetDevices(context.Background())
@@ -62,7 +62,7 @@ func TestGetDevice_Found(t *testing.T) {
 		assert.Equal(t, http.MethodGet, r.Method)
 		assert.Equal(t, "/device/id/42", r.URL.Path)
 		w.Header().Set("Content-Type", "application/json")
-		w.Write(body)
+		_, _ = w.Write(body)
 	})
 	client := NewHTTPClient(srv.URL)
 	got, err := client.GetDevice(context.Background(), 42)

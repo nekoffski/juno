@@ -83,12 +83,12 @@ func TestHandleDiscover_WithResponder(t *testing.T) {
 	go func() {
 		defer wg.Done()
 		buf := make([]byte, 1024)
-		pc.SetReadDeadline(time.Now().Add(3 * time.Second))
+		_ = pc.SetReadDeadline(time.Now().Add(3 * time.Second))
 		n, src, err := pc.ReadFrom(buf)
 		if err != nil || n == 0 {
 			return
 		}
-		pc.WriteTo([]byte(reply), src)
+		_, _ = pc.WriteTo([]byte(reply), src)
 	}()
 
 	body, _ := json.Marshal(discoverRequest{
@@ -120,7 +120,7 @@ func TestHandleConnect_Success(t *testing.T) {
 			return
 		}
 		defer conn.Close()
-		io.Copy(conn, conn)
+		_, _ = io.Copy(conn, conn)
 	}()
 
 	targetAddr := ln.Addr().String()
@@ -138,12 +138,12 @@ func TestHandleConnect_Success(t *testing.T) {
 	require.NoError(t, err)
 
 	buf := make([]byte, 512)
-	conn.SetReadDeadline(time.Now().Add(2 * time.Second))
+	_ = conn.SetReadDeadline(time.Now().Add(2 * time.Second))
 	n, err := conn.Read(buf)
 	require.NoError(t, err)
 	assert.Contains(t, string(buf[:n]), "200")
 
-	conn.SetDeadline(time.Now().Add(2 * time.Second))
+	_ = conn.SetDeadline(time.Now().Add(2 * time.Second))
 	_, err = conn.Write([]byte("hello"))
 	require.NoError(t, err)
 
@@ -165,7 +165,7 @@ func TestHandleConnect_BadTarget(t *testing.T) {
 	require.NoError(t, err)
 
 	buf := make([]byte, 512)
-	conn.SetReadDeadline(time.Now().Add(2 * time.Second))
+	_ = conn.SetReadDeadline(time.Now().Add(2 * time.Second))
 	n, _ := conn.Read(buf)
 	assert.Contains(t, string(buf[:n]), "502")
 }

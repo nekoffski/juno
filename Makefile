@@ -55,9 +55,21 @@ unit-test-cover:
 	go test -coverprofile=ut-coverage.txt ./...
 	grep -v 'gen\.go:' ut-coverage.txt > ut-coverage.txt.tmp && mv ut-coverage.txt.tmp ut-coverage.txt
 
-.PHONY: all build generate gen-rest-api build lint fmt vet tidy clean
-
 test-venv:
 	python3 -m venv $(VENV_DIR)
 	$(VENV_DIR)/bin/pip install -r tests/requirements.txt
+
+functional-tests:
+	./cicd/run-functional-tests.sh
+
+docker-smoke-tests:
+	./cicd/run-docker-smoke-tests.sh
+
+generate-coverage:
+	./cicd/generate-coverage.sh
+
+.PHONY: all build generate gen-rest-api build lint fmt vet tidy clean test-venv unit-test unit-test-verbose unit-test-cover\
+	functional-tests docker-smoke-tests generate-coverage
+
+
 

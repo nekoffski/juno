@@ -54,7 +54,7 @@ func TestDevicesTab_OK(t *testing.T) {
 	body, _ := json.Marshal(devices)
 	srv := fakeRestServer(t, func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write(body)
+		_, _ = w.Write(body)
 	})
 	h := NewHandlers(srv.URL, parseTemplates(t))
 	e := echo.New()
@@ -101,7 +101,7 @@ func TestPerformAction_OK(t *testing.T) {
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		w.Write(devBody)
+		_, _ = w.Write(devBody)
 	})
 	h := NewHandlers(srv.URL, parseTemplates(t))
 	e := echo.New()
