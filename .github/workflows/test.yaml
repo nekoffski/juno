@@ -95,9 +95,9 @@ jobs:
       - name: Build core containers
         run: |
           docker compose --project-name juno --env-file ./conf/.env.example.docker build
-      - name: Make test env
+      - name: Make test venv
         run: |
-          make test-env
+          make test-venv
       - name: Run smoke tests
         run: |
           ./cicd/run-docker-smoke-tests.sh
