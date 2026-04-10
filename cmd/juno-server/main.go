@@ -10,6 +10,7 @@ import (
 	"github.com/nekoffski/juno/internal/rest"
 	"github.com/nekoffski/juno/internal/supervisor"
 	"github.com/nekoffski/juno/internal/yeelight"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog/log"
 )
 
@@ -21,18 +22,23 @@ func main() {
 		log.Fatal().Err(err).Msg("failed to load config")
 	}
 
+	registry := prometheus.NewRegistry()
+	tracer := db.NewQueryTracer(registry)
+
 	pool, err := db.Open(context.Background(), db.Config{
 		Host:     cfg.DB.Host,
 		Port:     cfg.DB.Port,
 		User:     cfg.DB.User,
 		Password: cfg.DB.Password,
 		Name:     cfg.DB.Name,
-	})
+	}, tracer)
 
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to open database")
 	}
 	defer pool.Close()
+
+	db.NewPoolCollector(pool, registry)
 
 	s := supervisor.NewSupervisor(
 		device.NewDeviceService(
@@ -41,7 +47,7 @@ func main() {
 				device.DeviceVendorYeelight: yeelight.NewAdapter(cfg.YeelightSsdpAddr, cfg.LanAgentURL),
 			},
 		),
-		rest.NewRestService(cfg),
+		rest.NewRestService(cfg, registry),
 	)
 
 	if err := s.Run(); err != nil {

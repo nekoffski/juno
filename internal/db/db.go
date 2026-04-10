@@ -8,6 +8,7 @@ import (
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/pgx/v5"
 	"github.com/golang-migrate/migrate/v4/source/iofs"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -36,12 +37,18 @@ func (c Config) poolDSN() string {
 	)
 }
 
-func Open(ctx context.Context, cfg Config) (*pgxpool.Pool, error) {
+func Open(ctx context.Context, cfg Config, tracer pgx.QueryTracer) (*pgxpool.Pool, error) {
 	if err := runMigrations(cfg.migrationDSN()); err != nil {
 		return nil, fmt.Errorf("db migrations: %w", err)
 	}
 
-	pool, err := pgxpool.New(ctx, cfg.poolDSN())
+	poolCfg, err := pgxpool.ParseConfig(cfg.poolDSN())
+	if err != nil {
+		return nil, fmt.Errorf("db parse config: %w", err)
+	}
+	poolCfg.ConnConfig.Tracer = tracer
+
+	pool, err := pgxpool.NewWithConfig(ctx, poolCfg)
 	if err != nil {
 		return nil, fmt.Errorf("db open pool: %w", err)
 	}
