@@ -3,18 +3,22 @@ package main
 import (
 	"fmt"
 	"html/template"
+	"io"
 	"io/fs"
-	"log"
 	"net/http"
 	"os"
 	"strconv"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/nekoffski/juno/internal/logger"
 	"github.com/nekoffski/juno/internal/web"
+	"github.com/rs/zerolog/log"
 )
 
 func main() {
+	logger.Init("juno-web")
+
 	restBase := envOr("JUNO_REST_BASE_URL", "http://localhost:6000")
 	webPort := envIntOr("JUNO_WEB_PORT", 6001)
 
@@ -34,23 +38,26 @@ func main() {
 		},
 	}).ParseFS(web.TemplateFS, "templates/*.html")
 	if err != nil {
-		log.Fatalf("failed to parse templates: %v", err)
+		log.Fatal().Err(err).Msg("failed to parse templates")
 	}
 
 	h := web.NewHandlers(restBase, tmpl)
 
 	staticSub, err := fs.Sub(web.TemplateFS, "static")
 	if err != nil {
-		log.Fatalf("failed to get static sub-fs: %v", err)
+		log.Fatal().Err(err).Msg("failed to get static sub-fs")
 	}
 
 	e := echo.New()
+	e.HideBanner = true
+	e.HidePort = true
+	e.Logger.SetOutput(io.Discard)
 	e.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
 		LogMethod: true,
 		LogURI:    true,
 		LogStatus: true,
 		LogValuesFunc: func(c echo.Context, v middleware.RequestLoggerValues) error {
-			log.Printf("method=%s uri=%s status=%d", v.Method, v.URI, v.Status)
+			log.Info().Str("method", v.Method).Str("uri", v.URI).Int("status", v.Status).Msg("request")
 			return nil
 		},
 	}))
@@ -67,7 +74,7 @@ func main() {
 	e.POST("/device/:id/action/:action", h.PerformAction)
 	e.GET("/sse", h.SSE)
 
-	log.Fatal(e.Start(fmt.Sprintf(":%d", webPort)))
+	log.Fatal().Err(e.Start(fmt.Sprintf(":%d", webPort))).Msg("web server stopped")
 }
 
 func envOr(key, def string) string {

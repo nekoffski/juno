@@ -2,13 +2,13 @@ package yeelight
 
 import (
 	"context"
-	"log"
 	"sync"
 	"time"
 
 	"github.com/nekoffski/juno/internal/bus"
 	"github.com/nekoffski/juno/internal/core"
 	"github.com/nekoffski/juno/internal/device"
+	"github.com/rs/zerolog/log"
 )
 
 func getYeelightCapabilities() []string {
@@ -33,10 +33,10 @@ func (d *Device) Model() device.DeviceModel {
 func (d *Device) EnqueueAction(action device.Action) error {
 	select {
 	case d.actionsQueue <- action:
-		log.Printf("Enqueued action %s with params %v for device %d", action.Method, action.Params, d.model.Id)
+		log.Info().Int("id", d.model.Id).Str("action", action.Method).Interface("params", action.Params).Msg("enqueued action")
 		return nil
 	default:
-		log.Printf("Device %d is busy, cannot enqueue action %s with params %v", d.model.Id, action.Method, action.Params)
+		log.Warn().Int("id", d.model.Id).Str("action", action.Method).Msg("device busy, cannot enqueue action")
 		return core.ErrDeviceBusy
 	}
 }
@@ -59,35 +59,35 @@ func (d *Device) writerLoop(ctx context.Context) {
 	for {
 		select {
 		case action := <-d.actionsQueue:
-			log.Printf("Device %d processing action: %s with params %v", d.model.Id, action.Method, action.Params)
+			log.Info().Int("id", d.model.Id).Str("action", action.Method).Interface("params", action.Params).Msg("processing action")
 
 			method, params, err := toYeelightAction(action)
 			if err != nil {
-				log.Printf("Device %d failed to convert action: %v", d.model.Id, err)
+				log.Error().Err(err).Int("id", d.model.Id).Msg("failed to convert action")
 				continue
 			}
 			pr, err := d.client.sendRequest(ctx, method, params)
 			if err != nil {
-				log.Printf("Device %d failed to perform action: %v", d.model.Id, err)
+				log.Error().Err(err).Int("id", d.model.Id).Msg("failed to send action")
 			}
 			_, err = waitForResponse(ctx, pr)
 			if err != nil {
-				log.Printf("Device %d failed to get response for action: %v", d.model.Id, err)
+				log.Error().Err(err).Int("id", d.model.Id).Msg("failed to get response for action")
 				continue
 			}
 			_ = d.publisher.Publish("device.events", device.DeviceUpdatedEvent{Device: d.Model()})
 		case <-ctx.Done():
-			log.Printf("Device %d writer loop exiting", d.model.Id)
+			log.Info().Int("id", d.model.Id).Msg("writer loop exiting")
 			return
 		case <-d.done:
-			log.Printf("Device %d writer loop received done signal", d.model.Id)
+			log.Info().Int("id", d.model.Id).Msg("writer loop received done signal")
 			return
 		}
 	}
 }
 
 func (d *Device) onNotification(n notification) {
-	log.Printf("Device %d received notification: %v", d.model.Id, n.Params)
+	log.Debug().Int("id", d.model.Id).Interface("params", n.Params).Msg("received notification")
 
 	for k, v := range n.Params {
 		nk, nv := mapProperty(k, v)

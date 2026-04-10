@@ -4,13 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
+	"io"
 	"net/http"
 	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/nekoffski/juno/internal/bus"
 	"github.com/nekoffski/juno/internal/core"
+	"github.com/rs/zerolog/log"
 )
 
 type RestService struct {
@@ -38,6 +39,8 @@ func (s *RestService) Init(ctx context.Context, mb *bus.MessageBus) error {
 func (s *RestService) Run(ctx context.Context) error {
 	e := echo.New()
 	e.HideBanner = true
+	e.HidePort = true
+	e.Logger.SetOutput(io.Discard)
 	RegisterHandlers(e, NewStrictHandler(s, nil))
 	e.GET("/events", newSSEHandler(s.mb))
 
@@ -49,7 +52,7 @@ func (s *RestService) Run(ctx context.Context) error {
 	}()
 
 	addr := fmt.Sprintf(":%d", s.port)
-	log.Printf("Starting REST api on %s", addr)
+	log.Info().Str("addr", addr).Msg("starting REST API")
 
 	if err := e.Start(addr); !errors.Is(err, http.ErrServerClosed) {
 		return err

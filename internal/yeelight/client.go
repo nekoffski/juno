@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net"
 	"net/http"
 	"net/url"
@@ -14,6 +13,7 @@ import (
 	"sync/atomic"
 
 	"github.com/nekoffski/juno/internal/device"
+	"github.com/rs/zerolog/log"
 )
 
 type request struct {
@@ -140,10 +140,10 @@ func (c *client) readLoop(ctx context.Context) {
 	for scanner.Scan() {
 		var msg response
 		if err := json.Unmarshal(scanner.Bytes(), &msg); err != nil {
-			log.Printf("Could not unmarshal message: %v", err)
+			log.Error().Err(err).Msg("could not unmarshal message")
 			continue
 		}
-		log.Printf("Received message: %s", scanner.Bytes())
+		log.Debug().RawJSON("message", scanner.Bytes()).Msg("received message")
 
 		if msg.Method == "props" {
 			if c.notificationCallbackSet.Load() && c.onNotification != nil {
@@ -160,7 +160,7 @@ func (c *client) readLoop(ctx context.Context) {
 		c.mu.Unlock()
 
 		if !ok {
-			log.Printf("Received response for unknown request ID %d", msg.ID)
+			log.Warn().Int("id", msg.ID).Msg("received response for unknown request ID")
 			continue
 		}
 
@@ -233,7 +233,7 @@ func (c *client) sendRequest(ctx context.Context, method string, params []any) (
 	default:
 	}
 
-	log.Printf("Sending message: %s", data)
+	log.Debug().Str("data", string(data)).Msg("sending message")
 	if _, err := c.conn.Write(data); err != nil {
 		return nil, err
 	}

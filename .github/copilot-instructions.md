@@ -6,7 +6,23 @@ Trust these instructions. Only search the codebase if the information here is in
 
 ## What This Repository Does
 
-Juno is a home automation server written in Go. It exposes a REST API, a web UI, and an MCP (Model Context Protocol) server for device control. Devices are discovered/controlled via vendor adapters (currently Yeelight). A separate LAN agent process handles local network communication. A conductor process supervises all binaries.
+Juno is a home automation server written in Go. It exposes a REST API, a web UI, and an MCP (Model Context Protocol) server for device control. Devices are discovered/controlled via vendor adapters (currently Yeelight).
+
+### Deployment topology
+
+The system is split into two independent deployment units:
+
+**Core services container** — Built by `Dockerfile`, managed by `docker-compose.yaml`. Contains three binaries supervised by `juno-conductor`:
+
+- `juno-server` — REST API + device service + PostgreSQL access. Multiple internal sub-services (device, REST) wired together through the `supervisor.Supervisor` and the in-process message bus.
+- `juno-web` — Web UI, proxies requests to `juno-server`.
+- `juno-mcp` — MCP server, proxies requests to `juno-server`.
+
+`juno-conductor` is a process supervisor that starts, restarts-on-crash, and shuts down these three binaries. It is not a Go `supervisor.Service`; it operates at the OS-process level.
+
+PostgreSQL runs as a separate service in the same `docker-compose.yaml`.
+
+**LAN agent container** — Built by `Dockerfile.lan`, deployed as a separate container **inside the local network**. Contains only `juno-lan-agent`. This binary is intentionally simple: it has no supervisor, no message bus, and no database. It exposes a plain HTTP API (`/health`, `/discover`, CONNECT proxy) that `juno-server` calls to reach LAN devices (e.g. Yeelight bulbs). Do not apply the `supervisor.Service` pattern to this binary — it does not need it.
 
 ## Language, Runtime, and Tools
 
@@ -15,7 +31,7 @@ Juno is a home automation server written in Go. It exposes a REST API, a web UI,
 - **Database**: PostgreSQL 17; migrations are embedded in the binary via `//go:embed`
 - **Config**: environment variables parsed with `caarlos0/env`; local defaults in `conf/.env.example`
 - **REST code gen**: `oapi-codegen` v1.16.3 (CI-pinned version); spec lives at `api/rest-openapi.yaml`
-- **Linter**: `golangci-lint` v1.52.2 (CI-pinned)
+- **Linter**: `golangci-lint` v1.64.8 (CI-pinned)
 - **Functional tests**: Python 3 + pytest, in `tests/`
 
 ## Build & Validate — Always Use Make Targets
@@ -26,7 +42,7 @@ All commands must be run from the repository root.
 
 ```
 go install github.com/deepmap/oapi-codegen/cmd/oapi-codegen@v1.16.3
-go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.52.2
+go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.8
 ```
 
 ### Normal development workflow (in order)
@@ -63,8 +79,9 @@ cmd/                        # main() entry points — one directory per binary (
   juno-web/main.go          # Web UI service
   juno-mcp/main.go          # MCP server
   juno-conductor/main.go    # Process supervisor (manages other binaries)
-  juno-lan-agent/main.go    # LAN agent (runs separately, often containerized)
-                            # NOTE: the canonical binary list lives in TARGETS in the Makefile
+  juno-lan-agent/main.go    # LAN agent — standalone binary, separate LAN-network container
+                            #   Simple HTTP server only; no supervisor, no bus, no DB.
+                            #   NOTE: the canonical binary list lives in TARGETS in the Makefile
 
 internal/
   core/config.go            # Env-var config structs (LoadConfig)
@@ -92,9 +109,9 @@ conf/
 
 .github/workflows/test.yaml # CI pipeline (lint → build+unit-test → functional → docker)
 Makefile                    # All scripted steps
-Dockerfile                  # Multi-stage build for core services
-Dockerfile.lan              # Build for juno-lan-agent
-docker-compose.yaml         # postgres + conductor services
+Dockerfile                  # Multi-stage build for core services (juno-server, juno-web, juno-mcp, juno-conductor)
+Dockerfile.lan              # Build for juno-lan-agent (separate container, deployed in LAN)
+docker-compose.yaml         # PostgreSQL + conductor container (runs core services)
 ```
 
 ## Adding or Changing REST API Endpoints
@@ -121,7 +138,13 @@ Functional tests require a running PostgreSQL instance (started by the test runn
 
 ## Service Design Pattern
 
-Each internal service implements `supervisor.Service` (Name, Init, Run). The `supervisor.Supervisor` orchestrates Init then concurrent Run for all registered services. The message bus (`internal/bus`) is passed to each service during Init for inter-service communication.
+**Applies to `juno-server` only.** The core server binary wires multiple internal services through `supervisor.Supervisor`, which calls `Init` then `Run` concurrently on each. The message bus (`internal/bus`) is passed to each service during `Init` for decoupled inter-service communication.
+
+Services following this pattern: `device.DeviceService`, `rest.RestService`.
+
+**Does NOT apply to `juno-lan-agent`.** The LAN agent is a standalone HTTP server (`lan.Service`) with a simple `Run(ctx)` method and no supervisor, no bus, and no DB. When adding code to `internal/lan`, keep it simple — plain `net/http`, context cancellation for shutdown, nothing more.
+
+**Does NOT apply to `juno-web` or `juno-mcp`.** These binaries are standalone HTTP servers that forward requests to `juno-server` over HTTP. They have no internal bus and do not implement `supervisor.Service`.
 
 ## Environment Variables (key ones)
 

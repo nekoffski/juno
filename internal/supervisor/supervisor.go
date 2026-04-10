@@ -4,13 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"os/signal"
 	"sync"
 	"syscall"
 
 	"github.com/nekoffski/juno/internal/bus"
+	"github.com/rs/zerolog/log"
 )
 
 type Supervisor struct {
@@ -27,7 +27,7 @@ func NewSupervisor(services ...Service) *Supervisor {
 
 func (s *Supervisor) initServices(ctx context.Context) error {
 	for _, svc := range s.services {
-		log.Printf("initializing %s", svc.Name())
+		log.Info().Str("service_name", svc.Name()).Msg("initializing")
 		if err := svc.Init(ctx, s.messageBus); err != nil {
 			return fmt.Errorf("failed to init %s: %w", svc.Name(), err)
 		}
@@ -43,7 +43,7 @@ func (s *Supervisor) startServices(ctx context.Context) error {
 		wg.Add(1)
 		go func(svc Service) {
 			defer wg.Done()
-			log.Printf("starting %s", svc.Name())
+			log.Info().Str("service_name", svc.Name()).Msg("starting")
 			if err := svc.Run(ctx); err != nil {
 				errCh <- fmt.Errorf("%s: %w", svc.Name(), err)
 			}
@@ -70,7 +70,7 @@ func (s *Supervisor) Run() error {
 	defer cancel()
 
 	if e := s.initServices(ctx); e != nil {
-		log.Fatalf("Could not init services: %v", e)
+		log.Fatal().Err(e).Msg("could not init services")
 		return e
 	}
 	return s.startServices(ctx)

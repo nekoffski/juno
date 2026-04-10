@@ -3,10 +3,11 @@ package lan
 import (
 	"encoding/json"
 	"io"
-	"log"
 	"net"
 	"net/http"
 	"sync"
+
+	"github.com/rs/zerolog/log"
 )
 
 type discoverRequest struct {
@@ -43,7 +44,7 @@ func handleDiscover(w http.ResponseWriter, r *http.Request) {
 
 	devices, err := discoverDevices(req.Addr, req.Message, timeout)
 	if err != nil {
-		log.Printf("discovery error: %v", err)
+		log.Error().Err(err).Msg("discovery error")
 		http.Error(w, "discovery failed", http.StatusInternalServerError)
 		return
 	}
@@ -69,7 +70,7 @@ func handleConnect(w http.ResponseWriter, r *http.Request) {
 
 	deviceConn, err := net.DialTimeout("tcp", target, 10e9)
 	if err != nil {
-		log.Printf("CONNECT: failed to dial %s: %v", target, err)
+		log.Error().Err(err).Str("target", target).Msg("CONNECT: failed to dial")
 		http.Error(w, "bad gateway", http.StatusBadGateway)
 		return
 	}

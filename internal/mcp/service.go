@@ -3,11 +3,11 @@ package mcp
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/caarlos0/env/v11"
 	sdkmcp "github.com/modelcontextprotocol/go-sdk/mcp"
+	"github.com/rs/zerolog/log"
 )
 
 type Config struct {
@@ -42,7 +42,7 @@ func Start(ctx context.Context, cfg Config) error {
 
 	errCh := make(chan error, 1)
 	go func() {
-		log.Printf("MCP server listening on %s", addr)
+		log.Info().Str("addr", addr).Msg("MCP server listening")
 		if err := httpSrv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			errCh <- err
 		}

@@ -2,10 +2,9 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
-	"io"
-	"log"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -13,7 +12,8 @@ import (
 	"syscall"
 	"time"
 
-	"encoding/json"
+	"github.com/nekoffski/juno/internal/logger"
+	"github.com/rs/zerolog/log"
 )
 
 type ProcessDef struct {
@@ -56,38 +56,6 @@ func loadConfig(path string) (*Config, error) {
 	return &cfg, nil
 }
 
-type prefixWriter struct {
-	prefix string
-	dst    io.Writer
-	buf    []byte
-}
-
-func newPrefixWriter(prefix string, dst io.Writer) *prefixWriter {
-	return &prefixWriter{prefix: prefix, dst: dst}
-}
-
-func (w *prefixWriter) Write(p []byte) (int, error) {
-	w.buf = append(w.buf, p...)
-	for {
-		idx := -1
-		for i, b := range w.buf {
-			if b == '\n' {
-				idx = i
-				break
-			}
-		}
-		if idx < 0 {
-			break
-		}
-		line := w.buf[:idx+1]
-		if _, err := fmt.Fprintf(w.dst, "[%s] %s", w.prefix, line); err != nil {
-			return 0, err
-		}
-		w.buf = append([]byte{}, w.buf[idx+1:]...)
-	}
-	return len(p), nil
-}
-
 func runProcess(ctx context.Context, pd ProcessDef) {
 	const (
 		backoffInitial = 500 * time.Millisecond
@@ -95,8 +63,6 @@ func runProcess(ctx context.Context, pd ProcessDef) {
 		backoffFactor  = 2
 	)
 
-	stdout := newPrefixWriter(pd.Name, os.Stdout)
-	stderr := newPrefixWriter(pd.Name, os.Stderr)
 	backoff := backoffInitial
 
 	for {
@@ -106,20 +72,20 @@ func runProcess(ctx context.Context, pd ProcessDef) {
 
 		cmd := exec.Command(pd.Binary, pd.Args...)
 		cmd.Env = os.Environ()
-		cmd.Stdout = stdout
-		cmd.Stderr = stderr
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
 
 		cmd.SysProcAttr = &syscall.SysProcAttr{
 			Setpgid:   true,
 			Pdeathsig: syscall.SIGTERM,
 		}
 
-		log.Printf("[conductor] starting %s (%s %v)", pd.Name, pd.Binary, pd.Args)
+		log.Info().Str("process", pd.Name).Str("binary", pd.Binary).Strs("args", pd.Args).Msg("starting process")
 		if err := cmd.Start(); err != nil {
 			if ctx.Err() != nil {
 				return
 			}
-			log.Printf("[conductor] failed to start %s: %v; retrying in %s", pd.Name, err, backoff)
+			log.Error().Err(err).Str("process", pd.Name).Str("backoff", backoff.String()).Msg("failed to start process")
 			select {
 			case <-ctx.Done():
 				return
@@ -142,9 +108,9 @@ func runProcess(ctx context.Context, pd ProcessDef) {
 				return
 			}
 			if err != nil {
-				log.Printf("[conductor] %s exited with error: %v; restarting in %s", pd.Name, err, backoff)
+				log.Error().Err(err).Str("process", pd.Name).Str("backoff", backoff.String()).Msg("process exited with error, restarting")
 			} else {
-				log.Printf("[conductor] %s exited cleanly; restarting in %s", pd.Name, backoff)
+				log.Warn().Str("process", pd.Name).Str("backoff", backoff.String()).Msg("process exited cleanly, restarting")
 			}
 		}
 
@@ -158,12 +124,14 @@ func runProcess(ctx context.Context, pd ProcessDef) {
 }
 
 func main() {
+	logger.Init("conductor")
+
 	configPath := flag.String("config", "conf/conductor.json", "path to conductor config file")
 	flag.Parse()
 
 	cfg, err := loadConfig(*configPath)
 	if err != nil {
-		log.Fatalf("[conductor] failed to load config: %v", err)
+		log.Fatal().Err(err).Msg("failed to load config")
 	}
 
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)
@@ -179,5 +147,5 @@ func main() {
 	}
 
 	wg.Wait()
-	log.Println("[conductor] all processes stopped")
+	log.Info().Msg("all processes stopped")
 }

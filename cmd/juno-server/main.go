@@ -2,20 +2,23 @@ package main
 
 import (
 	"context"
-	"log"
 
 	"github.com/nekoffski/juno/internal/core"
 	"github.com/nekoffski/juno/internal/db"
 	"github.com/nekoffski/juno/internal/device"
+	"github.com/nekoffski/juno/internal/logger"
 	"github.com/nekoffski/juno/internal/rest"
 	"github.com/nekoffski/juno/internal/supervisor"
 	"github.com/nekoffski/juno/internal/yeelight"
+	"github.com/rs/zerolog/log"
 )
 
 func main() {
+	logger.Init("juno-server")
+
 	cfg, err := core.LoadConfig()
 	if err != nil {
-		log.Fatalf("failed to load config: %v", err)
+		log.Fatal().Err(err).Msg("failed to load config")
 	}
 
 	pool, err := db.Open(context.Background(), db.Config{
@@ -27,7 +30,7 @@ func main() {
 	})
 
 	if err != nil {
-		log.Fatalf("failed to open database: %v", err)
+		log.Fatal().Err(err).Msg("failed to open database")
 	}
 	defer pool.Close()
 
@@ -42,6 +45,6 @@ func main() {
 	)
 
 	if err := s.Run(); err != nil {
-		log.Fatalf("Failed to start supervisor: %v", err)
+		log.Fatal().Err(err).Msg("supervisor failed")
 	}
 }

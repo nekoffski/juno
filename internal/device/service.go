@@ -2,12 +2,12 @@ package device
 
 import (
 	"context"
-	"log"
 	"sync"
 	"time"
 
 	"github.com/nekoffski/juno/internal/bus"
 	"github.com/nekoffski/juno/internal/core"
+	"github.com/rs/zerolog/log"
 )
 
 type DeviceService struct {
@@ -34,31 +34,31 @@ func (s *DeviceService) Name() string {
 func (s *DeviceService) onMessage(msg bus.Message) {
 	switch req := msg.Payload.(type) {
 	case core.HeartbeatRequest:
-		log.Printf("Got heartbeat request")
+		log.Info().Msg("got heartbeat request")
 		s.onHeartbeatRequest(&msg, req)
 
 	case DiscoverDevicesRequest:
-		log.Printf("Got discover devices request")
+		log.Info().Msg("got discover devices request")
 		s.onDiscoverDevicesRequest()
 
 	case GetDevicesRequest:
-		log.Printf("Got get devices request")
+		log.Info().Msg("got get devices request")
 		s.onGetDevicesRequest(&msg)
 
 	case GetDeviceByIdRequest:
-		log.Printf("Got get device by id request for id %d", req.Id)
+		log.Info().Int("id", req.Id).Msg("got get device by id request")
 		s.onGetDeviceByIdRequest(&msg, req)
 
 	case GetDevicePropertiesRequest:
-		log.Printf("Got get device properties request for id %d and properties %v", req.Id, req.Properties)
+		log.Info().Int("id", req.Id).Strs("properties", req.Properties).Msg("got get device properties request")
 		s.onGetDevicePropertiesRequest(&msg, req)
 
 	case PerformDeviceActionRequest:
-		log.Printf("Got perform device action request for id %d and action %s with params %v", req.Id, req.Action, req.Params)
+		log.Info().Int("id", req.Id).Str("action", req.Action).Interface("params", req.Params).Msg("got perform device action request")
 		s.onPerformDeviceActionRequest(&msg, req)
 
 	case DeleteDeviceRequest:
-		log.Printf("Got delete device request for id %d", req.Id)
+		log.Info().Int("id", req.Id).Msg("got delete device request")
 		s.onDeleteDeviceRequest(&msg, req)
 	}
 }
@@ -84,10 +84,10 @@ func (s *DeviceService) onDeleteDeviceRequest(msg *bus.Message, req DeleteDevice
 	s.devicesMtx.Unlock()
 
 	if err := devToClose.Close(); err != nil {
-		log.Printf("Error closing device %d: %v", req.Id, err)
+		log.Error().Err(err).Int("id", req.Id).Msg("error closing device")
 	}
 	if err := s.repo.DeleteDevice(context.Background(), req.Id); err != nil {
-		log.Printf("Error deleting device %d from database: %v", req.Id, err)
+		log.Error().Err(err).Int("id", req.Id).Msg("error deleting device from database")
 	}
 	msg.Reply(bus.Response{Payload: AckResponse{}})
 }
@@ -147,7 +147,7 @@ func (s *DeviceService) onHeartbeatRequest(msg *bus.Message, req core.HeartbeatR
 func (s *DeviceService) onDiscoverDevicesRequest() {
 	go func() {
 		if err := s.discover(context.Background()); err != nil {
-			log.Printf("Failed to discover devices: %v", err)
+			log.Error().Err(err).Msg("failed to discover devices")
 		}
 	}()
 }
@@ -240,7 +240,7 @@ func (s *DeviceService) loadDevices(ctx context.Context) {
 
 			dev, err := s.adapters[vendor].CreateDevice(ctx, id, addr, name, s.publisher)
 			if err != nil {
-				log.Printf("Failed to create device with adapter: %v", err)
+				log.Error().Err(err).Msg("failed to create device with adapter")
 				return
 			}
 
@@ -250,22 +250,22 @@ func (s *DeviceService) loadDevices(ctx context.Context) {
 		}()
 	})
 	if err != nil {
-		log.Printf("Failed to load devices from database: %v", err)
+		log.Error().Err(err).Msg("failed to load devices from database")
 	}
 }
 
 func (s *DeviceService) addDevice(ctx context.Context, addr DeviceAddr, vendor DeviceVendor) {
-	log.Printf("Adding device at %s:%d", addr.Ip, addr.Port)
+	log.Info().Str("ip", addr.Ip).Int("port", addr.Port).Msg("adding device")
 
 	id, name, err := s.repo.InsertDevice(ctx, addr, vendor)
 	if err != nil {
-		log.Printf("Failed to insert device: %v", err)
+		log.Error().Err(err).Msg("failed to insert device")
 		return
 	}
 
 	dev, err := s.adapters[vendor].CreateDevice(ctx, id, addr, name, s.publisher)
 	if err != nil {
-		log.Printf("Failed to create device with adapter: %v", err)
+		log.Error().Err(err).Msg("failed to create device with adapter")
 		return
 	}
 
@@ -276,14 +276,14 @@ func (s *DeviceService) addDevice(ctx context.Context, addr DeviceAddr, vendor D
 
 func (s *DeviceService) discover(ctx context.Context) error {
 	for vendor, adapter := range s.adapters {
-		log.Printf("Discovering devices for vendor %s", vendor)
+		log.Info().Str("vendor", string(vendor)).Msg("discovering devices")
 
 		discoverCtx, cancel := context.WithTimeout(ctx, time.Second*5)
 		defer cancel()
 
 		devices, err := adapter.Discover(discoverCtx)
 		if err != nil {
-			log.Printf("Failed to discover devices for vendor %s: %v", vendor, err)
+			log.Error().Err(err).Str("vendor", string(vendor)).Msg("failed to discover devices")
 			continue
 		}
 

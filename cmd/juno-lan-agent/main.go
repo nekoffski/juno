@@ -2,16 +2,19 @@ package main
 
 import (
 	"context"
-	"log"
 	"os"
 	"os/signal"
 	"strconv"
 	"syscall"
 
 	"github.com/nekoffski/juno/internal/lan"
+	"github.com/nekoffski/juno/internal/logger"
+	"github.com/rs/zerolog/log"
 )
 
 func main() {
+	logger.Init("juno-lan-agent")
+
 	addr := os.Getenv("JUNO_LAN_AGENT_ADDR")
 	if addr == "" {
 		addr = "0.0.0.0"
@@ -21,7 +24,7 @@ func main() {
 	if v := os.Getenv("JUNO_LAN_AGENT_PORT"); v != "" {
 		p, err := strconv.Atoi(v)
 		if err != nil {
-			log.Fatalf("invalid JUNO_LAN_AGENT_PORT: %v", err)
+			log.Fatal().Err(err).Msg("invalid JUNO_LAN_AGENT_PORT")
 		}
 		port = p
 	}
@@ -31,8 +34,8 @@ func main() {
 
 	svc := lan.NewService(lan.Config{Addr: addr, Port: port})
 
-	log.Printf("juno-lan-agent starting on %s:%d", addr, port)
+	log.Info().Str("addr", addr).Int("port", port).Msg("juno-lan-agent starting")
 	if err := svc.Run(ctx); err != nil {
-		log.Fatalf("juno-lan-agent exited with error: %v", err)
+		log.Fatal().Err(err).Msg("juno-lan-agent exited with error")
 	}
 }

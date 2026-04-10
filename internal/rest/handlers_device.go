@@ -6,10 +6,10 @@ import (
 	"maps"
 
 	"github.com/labstack/echo/v4"
-	"github.com/labstack/gommon/log"
 	"github.com/nekoffski/juno/internal/bus"
 	"github.com/nekoffski/juno/internal/core"
 	"github.com/nekoffski/juno/internal/device"
+	"github.com/rs/zerolog/log"
 )
 
 type DeviceHandlers struct {
@@ -33,13 +33,13 @@ func (h *DeviceHandlers) GetDevices(
 ) (GetDevicesResponseObject, error) {
 	f, err := h.sender.Request("device-service", device.GetDevicesRequest{})
 	if err != nil {
-		log.Errorf("Could not send get devices request: %v", err)
+		log.Error().Err(err).Msg("could not send get devices request")
 		return nil, echo.NewHTTPError(500, fmt.Sprintf("Failed to send get devices request: %v", err))
 	}
 
 	r, err := bus.AwaitFor[device.GetDevicesResponse](ctx, f, bus.DefaultRequestTimeout)
 	if err != nil {
-		log.Errorf("Failed to await get devices response: %v", err)
+		log.Error().Err(err).Msg("failed to await get devices response")
 		return nil, echo.NewHTTPError(500, fmt.Sprintf("Failed to await get devices response: %v", err))
 	}
 
@@ -58,7 +58,7 @@ func (h *DeviceHandlers) GetDeviceById(
 ) (GetDeviceByIdResponseObject, error) {
 	f, err := h.sender.Request("device-service", device.GetDeviceByIdRequest{Id: req.Id})
 	if err != nil {
-		log.Errorf("Could not send get device by id request: %v", err)
+		log.Error().Err(err).Msg("could not send get device by id request")
 		return nil, echo.NewHTTPError(500, fmt.Sprintf("Failed to send get device by id request: %v", err))
 	}
 
@@ -68,7 +68,7 @@ func (h *DeviceHandlers) GetDeviceById(
 		if err == core.ErrDeviceNotFound {
 			return GetDeviceById404Response{}, nil
 		}
-		log.Errorf("Failed to await get device by id response: %v", err)
+		log.Error().Err(err).Msg("failed to await get device by id response")
 		return nil, echo.NewHTTPError(500, fmt.Sprintf("Failed to await get device by id response: %v", err))
 	}
 
@@ -88,7 +88,7 @@ func (h *DeviceHandlers) DiscoverDevices(
 	_ DiscoverDevicesRequestObject,
 ) (DiscoverDevicesResponseObject, error) {
 	if err := h.sender.Send("device-service", device.DiscoverDevicesRequest{}); err != nil {
-		log.Errorf("Could not send discover request: %v", err)
+		log.Error().Err(err).Msg("could not send discover request")
 		return nil, echo.NewHTTPError(500, fmt.Sprintf("Failed to send discover request: %v", err))
 	}
 	return DiscoverDevices202Response{}, nil
@@ -107,7 +107,7 @@ func (h *DeviceHandlers) GetDeviceProperties(
 		Properties: fields,
 	})
 	if err != nil {
-		log.Errorf("Could not send get device properties request: %v", err)
+		log.Error().Err(err).Msg("could not send get device properties request")
 		return nil, echo.NewHTTPError(500, fmt.Sprintf("Failed to send get device properties request: %v", err))
 	}
 
@@ -116,7 +116,7 @@ func (h *DeviceHandlers) GetDeviceProperties(
 		if err == core.ErrDeviceNotFound {
 			return GetDeviceProperties404Response{}, nil
 		}
-		log.Errorf("Failed to await get device properties response: %v", err)
+		log.Error().Err(err).Msg("failed to await get device properties response")
 		return nil, echo.NewHTTPError(500, fmt.Sprintf("Failed to await get device properties response: %v", err))
 	}
 
@@ -131,7 +131,7 @@ func (h *DeviceHandlers) DeleteDevice(
 ) (DeleteDeviceResponseObject, error) {
 	f, err := h.sender.Request("device-service", device.DeleteDeviceRequest{Id: req.Id})
 	if err != nil {
-		log.Errorf("Could not send delete device request: %v", err)
+		log.Error().Err(err).Msg("could not send delete device request")
 		return nil, echo.NewHTTPError(500, fmt.Sprintf("Failed to send delete device request: %v", err))
 	}
 
@@ -140,7 +140,7 @@ func (h *DeviceHandlers) DeleteDevice(
 		if err == core.ErrDeviceNotFound {
 			return DeleteDevice404Response{}, nil
 		}
-		log.Errorf("Failed to await delete device response: %v", err)
+		log.Error().Err(err).Msg("failed to await delete device response")
 		return nil, echo.NewHTTPError(500, fmt.Sprintf("Failed to await delete device response: %v", err))
 	}
 	return DeleteDevice200Response{}, nil
@@ -161,7 +161,7 @@ func (h *DeviceHandlers) PerformDeviceAction(
 		Params: params,
 	})
 	if err != nil {
-		log.Errorf("Could not send perform device action request: %v", err)
+		log.Error().Err(err).Msg("could not send perform device action request")
 		return nil, echo.NewHTTPError(500, fmt.Sprintf("Failed to send perform device action request: %v", err))
 	}
 
@@ -171,7 +171,7 @@ func (h *DeviceHandlers) PerformDeviceAction(
 		case core.ErrDeviceNotFound:
 			return PerformDeviceAction404Response{}, nil
 		}
-		log.Errorf("Failed to await perform device action response: %v", err)
+		log.Error().Err(err).Msg("failed to await perform device action response")
 		return nil, echo.NewHTTPError(500, fmt.Sprintf("Failed to await perform device action response: %v", err))
 	}
 	return PerformDeviceAction200Response{}, nil
