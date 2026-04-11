@@ -39,6 +39,7 @@ if [[ "${TYPE}" == "core" ]]; then
         envsubst "${SUBST_VARS}" < "${template}" > "${output}"
     done
 
+    cp conf/postgres/init.sql "${DEPLOY_DIR}/init.sql"
     cp -rf cicd/template/grafana* "${DEPLOY_DIR}/"
 else
     export JUNO_LOKI_URL="${JUNO_CORE_ADDR}:${JUNO_NGINX_PORT}/_internal/loki"
