@@ -9,7 +9,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./conf/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -34,6 +34,8 @@ services:
       - "--config.file=/etc/prometheus/prometheus.yml"
       - "--storage.tsdb.path=/prometheus"
       - "--storage.tsdb.retention.time=30d"
+      - "--web.external-url=/prometheus/"
+      - "--web.route-prefix=/"
     restart: unless-stopped
 
   loki:
@@ -60,14 +62,29 @@ services:
       - GF_AUTH_ANONYMOUS_ENABLED=true
       - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
       - GF_AUTH_DISABLE_LOGIN_FORM=false
+      - GF_SERVER_ROOT_URL=http://%(domain)s/_internal/
+      - GF_SERVER_SERVE_FROM_SUB_PATH=true
+
     volumes:
-      - ./conf/grafana/provisioning:/etc/grafana/provisioning:ro
-      - ./conf/grafana/dashboards:/etc/grafana/dashboards:ro
+      - ./grafana-provisioning:/etc/grafana/provisioning:ro
+      - ./grafana-dashboards:/etc/grafana/dashboards:ro
       - grafana_data:/var/lib/grafana
     restart: unless-stopped
     depends_on:
       - prometheus
       - loki
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "${JUNO_NGINX_PORT}:${JUNO_NGINX_PORT}"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    restart: unless-stopped
+    depends_on:
+      - conductor
+      - grafana
+      - prometheus
 
 volumes:
   postgres_data:

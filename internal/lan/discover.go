@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net"
 	"time"
+
+	"github.com/rs/zerolog/log"
 )
 
 type DiscoveryResult struct {
@@ -17,6 +19,8 @@ func discoverDevices(addr string, message string, timeoutSec int) ([]DiscoveryRe
 		return nil, fmt.Errorf("failed to open UDP socket: %w", err)
 	}
 	defer conn.Close()
+
+	log.Debug().Str("message", message).Str("addr", addr).Int("timeout_sec", timeoutSec).Msg("starting device discovery")
 
 	dest, err := net.ResolveUDPAddr("udp4", addr)
 	if err != nil {
@@ -47,9 +51,12 @@ func discoverDevices(addr string, message string, timeoutSec int) ([]DiscoveryRe
 			continue
 		}
 
+		res := string(buf[:n])
+		log.Debug().Str("src", udpAddr.String()).Str("response", res).Msg("received discovery response")
+
 		results = append(results, DiscoveryResult{
 			IP:          udpAddr.IP.String(),
-			RawResponse: string(buf[:n]),
+			RawResponse: res,
 		})
 	}
 

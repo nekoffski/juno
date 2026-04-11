@@ -15,47 +15,41 @@ set -a
 set +a
 
 if [[ "${TYPE}" == "core" ]]; then
-    export JUNO_LOKI_ADDR="loki"
+    export JUNO_LOKI_URL="loki:3100"
 
     DEPLOY_DIR="deployments/core/${DEPLOYMENT_NAME}"
     TEMPLATES=(
         "cicd/template/docker-compose.core.yaml"
-        "cicd/template/docker-compose.edge.yaml"
         "cicd/template/prometheus.yaml"
         "cicd/template/loki.yaml"
         "cicd/template/promtail.yaml"
+        "cicd/template/nginx.conf"
     )
 
     echo "Creating deployment '${DEPLOYMENT_NAME}' in ${DEPLOY_DIR}"
-
-    if [ -d "${DEPLOY_DIR}" ]; then
-        rm -rf "${DEPLOY_DIR}"
-    fi
-
     mkdir -p "${DEPLOY_DIR}"
 
+
+    SUBST_VARS=$(grep -E '^[A-Z_]+=' "${ENV_FILE}" | cut -d= -f1 | sed 's/^/\${/' | sed 's/$/}/' | tr '\n' ' ')
+    SUBST_VARS="${SUBST_VARS} \${JUNO_LOKI_URL}"
 
     for template in "${TEMPLATES[@]}"; do
         output="${DEPLOY_DIR}/$(basename "${template}")"
         echo "  Rendering ${template} -> ${output}"
-        envsubst < "${template}" > "${output}"
+        envsubst "${SUBST_VARS}" < "${template}" > "${output}"
     done
 
     cp -rf cicd/template/grafana* "${DEPLOY_DIR}/"
 else
-    export JUNO_LOKI_ADDR=${JUNO_CORE_ADDR}
+    export JUNO_LOKI_URL="${JUNO_CORE_ADDR}:${JUNO_NGINX_PORT}/_internal/loki"
 
     DEPLOY_DIR="deployments/edge/${DEPLOYMENT_NAME}"
     TEMPLATES=(
         "cicd/template/docker-compose.edge.yaml"
+        "cicd/template/promtail.yaml"
     )
 
     echo "Creating deployment '${DEPLOYMENT_NAME}' in ${DEPLOY_DIR}"
-
-    if [ -d "${DEPLOY_DIR}" ]; then
-        rm -rf "${DEPLOY_DIR}"
-    fi
-
     mkdir -p "${DEPLOY_DIR}"
 
     for template in "${TEMPLATES[@]}"; do
