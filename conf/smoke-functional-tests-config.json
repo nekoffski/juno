@@ -3,7 +3,7 @@
   "conductor-config": "conf/conductor.local.json",
   "conductor-cmd": "bin/juno-conductor",
   "lan-agent-cmd": "bin/juno-lan-agent",
-  "env-file": "conf/.env.example.docker",
+  "env-file": "conf/.env.cicd",
   "pytest-args": ["-v", "--disable-warnings", "-k health"],
   "pytest-path": "tests",
   "skip-init": true,

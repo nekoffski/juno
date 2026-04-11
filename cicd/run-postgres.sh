@@ -2,10 +2,10 @@
 
 set -euo pipefail
 
-source ./conf/.env.example
+source ./conf/.env.cicd
 
-docker run -d --name postgres \
-  --env-file ./conf/.env.example \
+docker run -d --name postgres --rm \
+  --env-file ./conf/.env.cicd \
   -p 5432:5432 \
   -v postgres_data:/var/lib/postgresql/data \
   -v ./conf/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro \

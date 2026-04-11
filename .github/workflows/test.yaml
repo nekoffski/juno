@@ -102,8 +102,8 @@ jobs:
         run: make test-venv
       - name: Generate deployments
         run: |
-          ./cicd/generate-deployment.sh test ./conf/env.example core
-          ./cicd/generate-deployment.sh test ./conf/env.example edge
+          ./cicd/generate-deployment.sh test ./conf/.env.example core
+          ./cicd/generate-deployment.sh test ./conf/.env.example edge
       - name: Run containers
         run: |
           docker compose --project-name juno --file ./deployments/test/edge/docker-compose.edge.yaml up -d

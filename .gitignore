@@ -40,7 +40,6 @@ __pycache__/
 htmlcov/
 
 # Environment variables
-.env.local*
 .env.prod
 
 # IDE / Editor
