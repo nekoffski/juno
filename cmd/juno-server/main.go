@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/nekoffski/juno/internal/core"
 	"github.com/nekoffski/juno/internal/db"
@@ -44,7 +45,7 @@ func main() {
 		device.NewDeviceService(
 			device.NewPgxRepository(pool),
 			map[device.DeviceVendor]device.VendorAdapter{
-				device.DeviceVendorYeelight: yeelight.NewAdapter(cfg.YeelightSsdpAddr, cfg.LanAgentURL),
+				device.DeviceVendorYeelight: yeelight.NewAdapter(yeelightSsdpAddr(cfg), lanAgentURL(cfg)),
 			},
 		),
 		rest.NewRestService(cfg, registry),
@@ -53,4 +54,15 @@ func main() {
 	if err := s.Run(); err != nil {
 		log.Fatal().Err(err).Msg("supervisor failed")
 	}
+}
+
+func yeelightSsdpAddr(cfg *core.Config) string {
+	return fmt.Sprintf("%s:%d", cfg.YeelightSsdpAddr, cfg.YeelightSsdpPort)
+}
+
+func lanAgentURL(cfg *core.Config) string {
+	if cfg.LanAgentAddr == "" {
+		return ""
+	}
+	return fmt.Sprintf("http://%s:%d", cfg.LanAgentAddr, cfg.LanAgentPort)
 }

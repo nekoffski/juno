@@ -80,6 +80,10 @@ jobs:
         run: make test-venv
       - name: Run functional tests
         run: make functional-tests
+      - uses: actions/upload-artifact@v7
+        with:
+          name: logs
+          path: ./logs
       - name: Merge coverage profiles
         run: make generate-coverage
       - name: Upload functional coverage to Codecov
@@ -94,12 +98,22 @@ jobs:
       - uses: actions/checkout@v5
       - name: Build lan agent container
         run: |
-          docker build -f Dockerfile.lan . -t juno-lan-agent:latest
-      - name: Build core containers
+          docker build -f Dockerfile.lanagent . -t juno-lan-agent:latest
+      - name: Build conductor container
         run: |
-          docker compose --project-name juno --env-file ./conf/.env.example.docker build
+          docker build -f Dockerfile.conductor . -t juno-conductor:latest
       - name: Make test venv
         run: make test-venv
+      - name: Generate deployments
+        run: |
+          ./cicd/generate-deployment.sh test ./conf/.env.example core
+          ./cicd/generate-deployment.sh test ./conf/.env.example edge
+      - name: Run containers
+        run: |
+          docker compose --project-name juno --file ./deployments/core/test/docker-compose.core.yaml up -d postgres
+          docker compose --project-name juno --file ./deployments/core/test/docker-compose.core.yaml up -d conductor
+          docker compose --project-name juno --file ./deployments/core/test/docker-compose.core.yaml up -d nginx
+          docker compose --project-name juno --file ./deployments/edge/test/docker-compose.edge.yaml up -d lan-agent
       - name: Run smoke tests
         run: make docker-smoke-tests
           

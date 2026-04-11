@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+
+	"github.com/rs/zerolog/log"
 )
 
 type Config struct {
@@ -26,6 +28,7 @@ func NewService(cfg Config) *Service {
 }
 
 func (s *Service) Run(ctx context.Context) error {
+	log.Info().Str("addr", s.server.Addr).Msg("starting LAN agent")
 	errCh := make(chan error, 1)
 	go func() {
 		if err := s.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {

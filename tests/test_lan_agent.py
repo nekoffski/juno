@@ -45,10 +45,12 @@ def test_lan_agent_discover_wrong_method(lan_agent_url):
 
 def test_lan_agent_discover_finds_yeelight(lan_agent_url, mock_yeelight):
     import os
-    ssdp_addr = os.environ.get("JUNO_YEELIGHT_SSDP_ADDR", "127.0.0.1:19820")
+    ssdp_addr = os.environ.get("JUNO_YEELIGHT_SSDP_ADDR", "127.0.0.1")
+    ssdp_port = os.environ.get("JUNO_YEELIGHT_SSDP_PORT", "1982")
+
     ssdp_msg = (
         "M-SEARCH * HTTP/1.1\r\n"
-        "HOST: 239.255.255.250:1982\r\n"
+        f"HOST: {ssdp_addr}:{ssdp_port}\r\n"
         'MAN: "ssdp:discover"\r\n'
         "ST: wifi_bulb\r\n\r\n"
     )
@@ -58,7 +60,8 @@ def test_lan_agent_discover_finds_yeelight(lan_agent_url, mock_yeelight):
     while time.monotonic() < deadline:
         resp = requests.post(
             f"{lan_agent_url}/discover",
-            json={"addr": ssdp_addr, "message": ssdp_msg, "timeout_sec": 2},
+            json={"addr": f"{ssdp_addr}:{ssdp_port}",
+                  "message": ssdp_msg, "timeout_sec": 2},
             timeout=10,
         )
         assert resp.status_code == 200

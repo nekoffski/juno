@@ -102,7 +102,6 @@ api/
 
 conf/
   .env.example              # Local dev environment variables (copy and fill in)
-  .env.example.docker       # Docker env vars
   conductor.json            # Conductor config for containerized deployment
   conductor.local.json      # Conductor config for local functional tests
   postgres/init.sql         # Postgres DB initialization

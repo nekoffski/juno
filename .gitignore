@@ -40,7 +40,6 @@ __pycache__/
 htmlcov/
 
 # Environment variables
-.env.local*
 .env.prod
 
 # IDE / Editor
@@ -53,3 +52,7 @@ htmlcov/
 # OS
 .DS_Store
 Thumbs.db
+
+
+# deployment
+deployments

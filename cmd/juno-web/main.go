@@ -19,8 +19,9 @@ import (
 func main() {
 	logger.Init("juno-web")
 
-	restBase := envOr("JUNO_REST_BASE_URL", "http://localhost:6000")
-	webPort := envIntOr("JUNO_WEB_PORT", 6001)
+	restPort := envIntOr("JUNO_REST_PORT", 6001)
+	restBase := fmt.Sprintf("http://127.0.0.1:%d", restPort)
+	webPort := envIntOr("JUNO_WEB_PORT", 6002)
 
 	tmpl, err := template.New("").Funcs(template.FuncMap{
 		"rgbHex": func(v interface{}) string {
@@ -75,13 +76,6 @@ func main() {
 	e.GET("/sse", h.SSE)
 
 	log.Fatal().Err(e.Start(fmt.Sprintf(":%d", webPort))).Msg("web server stopped")
-}
-
-func envOr(key, def string) string {
-	if v := os.Getenv(key); v != "" {
-		return v
-	}
-	return def
 }
 
 func envIntOr(key string, def int) int {

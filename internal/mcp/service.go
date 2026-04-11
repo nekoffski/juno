@@ -11,8 +11,8 @@ import (
 )
 
 type Config struct {
-	Port        int    `env:"JUNO_MCP_PORT"      envDefault:"6003"`
-	RestBaseURL string `env:"JUNO_REST_BASE_URL" envDefault:"http://localhost:6000"`
+	Port     int `env:"JUNO_MCP_PORT"      envDefault:"6003"`
+	RestPort int `env:"JUNO_REST_PORT"     envDefault:"6001"`
 }
 
 func LoadConfig() (Config, error) {
@@ -24,7 +24,8 @@ func LoadConfig() (Config, error) {
 }
 
 func Start(ctx context.Context, cfg Config) error {
-	client := NewHTTPClient(cfg.RestBaseURL)
+	restBase := fmt.Sprintf("http://127.0.0.1:%d", cfg.RestPort)
+	client := NewHTTPClient(restBase)
 
 	srv := sdkmcp.NewServer(&sdkmcp.Implementation{
 		Name:    "juno-mcp",

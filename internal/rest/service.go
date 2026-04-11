@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/labstack/echo-contrib/echoprometheus"
@@ -48,7 +48,8 @@ func (s *RestService) Run(ctx context.Context) error {
 	e := echo.New()
 	e.HideBanner = true
 	e.HidePort = true
-	e.Logger.SetOutput(io.Discard)
+	e.Logger.SetOutput(&zerologWriter{})
+	e.Use(requestLogger())
 	e.Use(echoprometheus.NewMiddlewareWithConfig(echoprometheus.MiddlewareConfig{
 		Registerer: s.registry,
 		Subsystem:  "juno",
@@ -59,7 +60,7 @@ func (s *RestService) Run(ctx context.Context) error {
 	metrics := echo.New()
 	metrics.HideBanner = true
 	metrics.HidePort = true
-	metrics.Logger.SetOutput(io.Discard)
+	metrics.Logger.SetOutput(&zerologWriter{})
 	metrics.GET("/metrics", echoprometheus.NewHandlerWithConfig(echoprometheus.HandlerConfig{
 		Gatherer: s.registry,
 	}))
@@ -87,4 +88,23 @@ func (s *RestService) Run(ctx context.Context) error {
 		return err
 	}
 	return nil
+}
+
+type zerologWriter struct{}
+
+func (zerologWriter) Write(p []byte) (int, error) {
+	log.Debug().Msg(strings.TrimSpace(string(p)))
+	return len(p), nil
+}
+
+func requestLogger() echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			req := c.Request()
+			log.Debug().Str("method", req.Method).Str("path", req.URL.Path).Msg("incoming request")
+			err := next(c)
+			log.Debug().Str("method", req.Method).Str("path", req.URL.Path).Int("status", c.Response().Status).Msg("request handled")
+			return err
+		}
+	}
 }

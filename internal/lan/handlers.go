@@ -21,6 +21,7 @@ type discoverResponse struct {
 }
 
 func handleDiscover(w http.ResponseWriter, r *http.Request) {
+	log.Debug().Str("remote", r.RemoteAddr).Msg("discover request")
 	if r.Method != http.MethodPost {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -49,6 +50,8 @@ func handleDiscover(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Debug().Int("count", len(devices)).Msg("discovery complete")
+
 	if devices == nil {
 		devices = []DiscoveryResult{}
 	}
@@ -58,11 +61,13 @@ func handleDiscover(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleHealth(w http.ResponseWriter, r *http.Request) {
+	log.Debug().Str("remote", r.RemoteAddr).Msg("health request")
 	w.WriteHeader(http.StatusOK)
 }
 
 func handleConnect(w http.ResponseWriter, r *http.Request) {
 	target := r.Host
+	log.Debug().Str("target", target).Str("remote", r.RemoteAddr).Msg("CONNECT request")
 	if target == "" {
 		http.Error(w, "missing target host", http.StatusBadRequest)
 		return
