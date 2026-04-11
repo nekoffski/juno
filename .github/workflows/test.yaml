@@ -106,8 +106,8 @@ jobs:
           ./cicd/generate-deployment.sh test ./conf/.env.example edge
       - name: Run containers
         run: |
-          docker compose --project-name juno --file ./deployments/test/edge/docker-compose.edge.yaml up -d
-          docker compose --project-name juno --file ./deployments/test/core/docker-compose.core.yaml up -d
+          docker compose --project-name juno --file ./deployments/edge/test/docker-compose.edge.yaml up -d
+          docker compose --project-name juno --file ./deployments/core/test/docker-compose.core.yaml up -d
       - name: Run smoke tests
         run: make docker-smoke-tests
           
