@@ -80,6 +80,10 @@ jobs:
         run: make test-venv
       - name: Run functional tests
         run: make functional-tests
+      - uses: actions/upload-artifact@v7
+        with:
+          name: logs
+          path: ./logs
       - name: Merge coverage profiles
         run: make generate-coverage
       - name: Upload functional coverage to Codecov
@@ -106,9 +110,9 @@ jobs:
           ./cicd/generate-deployment.sh test ./conf/.env.example edge
       - name: Run containers
         run: |
-          docker compose --project-name juno --file ./deployments/edge/test/docker-compose.edge.yaml up -d juno-postgres
-          docker compose --project-name juno --file ./deployments/edge/test/docker-compose.edge.yaml up -d juno-conductor
-          docker compose --project-name juno --file ./deployments/core/test/docker-compose.core.yaml up -d juno-lan-agent
+          docker compose --project-name juno --file ./deployments/edge/test/docker-compose.edge.yaml up -d postgres
+          docker compose --project-name juno --file ./deployments/edge/test/docker-compose.edge.yaml up -d conductor
+          docker compose --project-name juno --file ./deployments/core/test/docker-compose.core.yaml up -d lan-agent
       - name: Run smoke tests
         run: make docker-smoke-tests
           
