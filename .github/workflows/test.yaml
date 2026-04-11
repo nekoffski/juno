@@ -112,6 +112,7 @@ jobs:
         run: |
           docker compose --project-name juno --file ./deployments/core/test/docker-compose.core.yaml up -d postgres
           docker compose --project-name juno --file ./deployments/core/test/docker-compose.core.yaml up -d conductor
+          docker compose --project-name juno --file ./deployments/core/test/docker-compose.core.yaml up -d nginx
           docker compose --project-name juno --file ./deployments/edge/test/docker-compose.edge.yaml up -d lan-agent
       - name: Run smoke tests
         run: make docker-smoke-tests
