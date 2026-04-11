@@ -116,4 +116,9 @@ jobs:
           docker compose --project-name juno --file ./deployments/edge/test/docker-compose.edge.yaml up -d lan-agent
       - name: Run smoke tests
         run: make docker-smoke-tests
-          
+      - name: Push image
+        if: github.ref == 'refs/heads/main'
+        env:
+          DOCKER_USER: ${{ secrets.DOCKER_AUTH_USER }}
+          DOCKER_TOKEN: ${{ secrets.DOCKER_AUTH_TOKEN }}
+        run: ./cicd/push-images.sh
