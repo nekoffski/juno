@@ -83,6 +83,8 @@ services:
     restart: unless-stopped
     depends_on:
       - conductor
+      - grafana
+      - prometheus
 
 volumes:
   postgres_data:
