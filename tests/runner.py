@@ -67,6 +67,7 @@ class Runner(object):
         try:
             if not self._skip_init:
                 self._init()
+            self._wait_for_server()
             self._run()
         finally:
             if not self._skip_cleanup:
@@ -148,11 +149,15 @@ class Runner(object):
         )
         print(
             f"$ juno-conductor started (pid={self._conductor_proc.pid}), logs: {log_path}.")
-        self._wait_for_server()
+
+    def _get_url(self):
+        if self._api_url:
+            return self._api_url
+        rest_port = self._env.get("JUNO_REST_PORT", "6001")
+        return f"http://localhost:{rest_port}"
 
     def _wait_for_server(self):
-        rest_port = self._env.get("JUNO_REST_PORT", "6001")
-        url = f"http://localhost:{rest_port}/health"
+        url = f"{self._get_url()}/health"
         print(f"$ Waiting for juno-server to be ready at {url}...")
         for _ in range(30):
             try:
