@@ -5,6 +5,8 @@ import signal
 import subprocess
 import threading
 import time
+import urllib.request
+import urllib.error
 
 
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -105,7 +107,7 @@ class Runner(object):
 
         # Stream live container logs into the same file
         self._postgres_logs_proc = subprocess.Popen(
-            ["docker", "logs", "-f", "--no-color", "postgres"],
+            ["docker", "logs", "-f", "postgres"],
             stdout=self._postgres_log,
             stderr=self._postgres_log,
         )
@@ -145,6 +147,20 @@ class Runner(object):
         )
         print(
             f"$ juno-conductor started (pid={self._conductor_proc.pid}), logs: {log_path}.")
+        self._wait_for_server()
+
+    def _wait_for_server(self):
+        rest_port = self._env.get("JUNO_REST_PORT", "6001")
+        url = f"http://localhost:{rest_port}/health"
+        print(f"$ Waiting for juno-server to be ready at {url}...")
+        for _ in range(30):
+            try:
+                urllib.request.urlopen(url, timeout=1)
+                print("$ juno-server is ready.")
+                return
+            except (urllib.error.URLError, OSError):
+                time.sleep(1)
+        raise RuntimeError("juno-server did not become ready in time")
 
     def _run(self):
         print("$ Running pytest...")

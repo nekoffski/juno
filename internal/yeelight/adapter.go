@@ -12,6 +12,7 @@ import (
 
 	"github.com/nekoffski/juno/internal/bus"
 	"github.com/nekoffski/juno/internal/device"
+	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -88,6 +89,7 @@ func readResponses(conn net.PacketConn) ([]device.DeviceAddr, error) {
 }
 
 func (a *Adapter) discoverViaLanAgent(ctx context.Context) ([]device.DeviceAddr, error) {
+	log.Debug().Str("url", a.lanAgentURL).Str("ssdp_addr", a.ssdpAddr).Msg("discovering via lan-agent")
 	reqBody := lanDiscoverRequest{
 		Addr:       a.ssdpAddr,
 		Message:    ssdpSearchMsg,
@@ -125,6 +127,7 @@ func (a *Adapter) discoverViaLanAgent(ctx context.Context) ([]device.DeviceAddr,
 			devices = append(devices, d)
 		}
 	}
+	log.Debug().Int("count", len(devices)).Msg("lan-agent discovery complete")
 	return devices, nil
 }
 
@@ -133,6 +136,7 @@ func (a *Adapter) Discover(ctx context.Context) ([]device.DeviceAddr, error) {
 		return a.discoverViaLanAgent(ctx)
 	}
 
+	log.Debug().Str("ssdp_addr", a.ssdpAddr).Msg("discovering via local SSDP")
 	conn, err := net.ListenPacket("udp4", ":0")
 	if err != nil {
 		return nil, fmt.Errorf("failed to open UDP socket: %w", err)

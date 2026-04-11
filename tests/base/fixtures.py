@@ -44,9 +44,9 @@ def clean_devices(base_url):
 @pytest.fixture()
 def mock_yeelight():
     """Start a mock Yeelight device and tear it down after each test."""
-    ssdp_addr = os.environ.get("JUNO_YEELIGHT_SSDP_ADDR", "127.0.0.1:19820")
-    host, port_str = ssdp_addr.rsplit(":", 1)
-    device = MockYeelightDevice(ssdp_host=host, ssdp_port=int(port_str))
+    ssdp_addr = os.environ.get("JUNO_YEELIGHT_SSDP_ADDR", "127.0.0.1")
+    ssdp_port = os.environ.get("JUNO_YEELIGHT_SSDP_PORT", "19820")
+    device = MockYeelightDevice(ssdp_host=ssdp_addr, ssdp_port=int(ssdp_port))
     device.start()
     yield device
     device.stop()
