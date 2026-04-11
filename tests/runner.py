@@ -4,6 +4,7 @@ import os
 import signal
 import subprocess
 import threading
+import time
 
 
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -77,27 +78,34 @@ class Runner(object):
         self._start_conductor()
 
     def _start_postgres(self):
-        print("$ Starting postgres via docker compose...")
-        env = {**os.environ, "ENV_FILE": self._env_file}
+        print("$ Starting postgres...")
         log_path = os.path.join(self._log_dir, "postgres.log")
         self._postgres_log = open(log_path, "w")
 
         subprocess.run(
-            ["docker", "compose", "--env-file", self._env_file,
-                "up", "-d", "--wait", "postgres"],
+            [os.path.join(REPO_ROOT, "cicd", "run-postgres.sh")],
             cwd=REPO_ROOT,
-            env=env,
             stdout=self._postgres_log,
             stderr=self._postgres_log,
             check=True,
         )
 
+        for _ in range(30):
+            result = subprocess.run(
+                ["docker", "inspect",
+                    "--format={{.State.Health.Status}}", "postgres"],
+                capture_output=True,
+                text=True,
+            )
+            if result.stdout.strip() == "healthy":
+                break
+            time.sleep(1)
+        else:
+            raise RuntimeError("Postgres did not become healthy in time")
+
         # Stream live container logs into the same file
         self._postgres_logs_proc = subprocess.Popen(
-            ["docker", "compose", "--env-file", self._env_file,
-                "logs", "-f", "--no-color", "postgres"],
-            cwd=REPO_ROOT,
-            env=env,
+            ["docker", "logs", "-f", "--no-color", "postgres"],
             stdout=self._postgres_log,
             stderr=self._postgres_log,
         )
@@ -206,16 +214,14 @@ class Runner(object):
         print("$ juno-lan-agent stopped.")
 
     def _stop_postgres(self):
-        print("$ Stopping postgres via docker compose...")
+        print("$ Stopping postgres...")
         if self._postgres_logs_proc is not None:
             self._postgres_logs_proc.terminate()
             self._postgres_logs_proc.wait()
             self._postgres_logs_proc = None
-        env = {**os.environ, "ENV_FILE": self._env_file}
         subprocess.run(
-            ["docker", "compose", "--env-file", self._env_file, "down", "postgres"],
+            [os.path.join(REPO_ROOT, "cicd", "stop-postgres.sh")],
             cwd=REPO_ROOT,
-            env=env,
             stdout=self._postgres_log,
             stderr=self._postgres_log,
             check=False,
