@@ -7,5 +7,6 @@
   "pytest-args": ["-v", "--disable-warnings", "-k health"],
   "pytest-path": "tests",
   "skip-init": true,
-  "skip-cleanup": true
+  "skip-cleanup": true,
+  "api-url": "http://localhost:80/api"
 }

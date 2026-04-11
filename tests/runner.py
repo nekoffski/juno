@@ -52,6 +52,7 @@ class Runner(object):
         self._postgres_logs_proc = None
         self._skip_init = config.get("skip-init", False)
         self._skip_cleanup = config.get("skip-cleanup", False)
+        self._api_url = config.get("api-url", None)
 
         assert os.path.isfile(
             self._env_file), f"Env file {self._env_file} does not exist"
@@ -166,6 +167,10 @@ class Runner(object):
         print("$ Running pytest...")
         log_path = os.path.join(self._log_dir, "pytest.log")
         env = {**os.environ, **self._env}
+
+        if self._api_url:
+            env["TEST_API_URL"] = self._api_url
+
         with open(log_path, "w") as log_file:
             proc = subprocess.Popen(
                 ["pytest", *self._pytest_args, self._pytest_path],

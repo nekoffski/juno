@@ -16,6 +16,9 @@ def _find_yeelight(devices: list[dict]) -> dict | None:
 
 @pytest.fixture(scope="session")
 def base_url():
+    api_url = os.environ.get("TEST_API_URL")
+    if api_url:
+        return api_url
     port = os.environ.get("JUNO_REST_PORT", "6000")
     return f"http://localhost:{port}"
 
