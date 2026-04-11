@@ -15,12 +15,9 @@ import (
 func main() {
 	logger.Init("juno-lan-agent")
 
-	addr := os.Getenv("JUNO_LAN_AGENT_ADDR")
-	if addr == "" {
-		addr = "0.0.0.0"
-	}
-
+	addr := "0.0.0.0"
 	port := 7000
+
 	if v := os.Getenv("JUNO_LAN_AGENT_PORT"); v != "" {
 		p, err := strconv.Atoi(v)
 		if err != nil {

@@ -17,10 +17,4 @@ WORKDIR /app
 
 COPY --from=builder /app/bin/juno-lan-agent .
 
-ARG JUNO_LAN_AGENT_PORT=7000
-ARG JUNO_LAN_AGENT_ADDR=0.0.0.0
-
-ENV JUNO_LAN_AGENT_ADDR=${JUNO_LAN_AGENT_ADDR} \
-    JUNO_LAN_AGENT_PORT=${JUNO_LAN_AGENT_PORT}
-
 CMD ["./juno-lan-agent"]
