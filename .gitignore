@@ -31,7 +31,8 @@ go.work.sum
 vendor/
 
 # Python
-tests/.venv/
+.venv
+
 __pycache__/
 *.py[cod]
 *.pyo
