@@ -19,6 +19,10 @@ def _env_template():
     return os.getenv("JUNO_DEPLOYMENT_ENV_TEMPLATE")
 
 
+TARGET_PATH = "/opt/juno"
+JUNO_REPO = "https://github.com/nekoffski/juno"
+
+
 @dataclasses.dataclass
 class Args:
     dry_run: bool
@@ -41,15 +45,19 @@ class Deployer(object):
             print("Dry run mode, skipping deployment")
             return
 
+        self._cmd(f"git clone {JUNO_REPO} {TARGET_PATH}")
+        print("-- Repo cloned")
+
     def _preflight_check(self):
         assert os.getenv(
             "JUNO_DEPLOYMENT_TOKEN") is not None, "JUNO_DEPLOYMENT_TOKEN environment variable must be set"
         assert os.getenv(
             "JUNO_DEPLOYMENT_ENV_TEMPLATE") is not None, "JUNO_DEPLOYMENT_ENV_TEMPLATE environment variable must be set"
         self._health()
+        print("-- Preflight check passed")
 
     def _cmd(self, cmd):
-        pass
+        return self._request(path="exec", args={"cmd": cmd})
 
     def _health(self):
         res = self._request(path="info")
