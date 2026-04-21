@@ -20,6 +20,7 @@ def _env_template():
 
 
 TARGET_PATH = "/opt/juno"
+LOG_FILE = "/tmp/juno-deployment.log"
 JUNO_REPO = "https://github.com/nekoffski/juno"
 
 
@@ -45,8 +46,12 @@ class Deployer(object):
             print("Dry run mode, skipping deployment")
             return
 
-        self._cmd(f"git clone {JUNO_REPO} {TARGET_PATH}")
+        self._cmd(
+            f"git clone {JUNO_REPO} {TARGET_PATH} > {LOG_FILE} 2>&1 && cd {TARGET_PATH} && git pull origin main > {LOG_FILE} 2>&1")
         print("-- Repo cloned")
+
+        self._cmd(
+            f"pushd {TARGET_PATH} && ./cicd/init-deployment.sh '{_env_template()}' {self._target.value} > {LOG_FILE} 2>&1 && popd")
 
     def _preflight_check(self):
         assert os.getenv(

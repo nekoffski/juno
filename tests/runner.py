@@ -32,8 +32,7 @@ class Runner(object):
         self._conductor_config = os.path.join(
             REPO_ROOT, config["conductor-config"])
         self._conductor_cmd = os.path.join(REPO_ROOT, config["conductor-cmd"])
-        env_file = config.get(
-            "env-file", os.path.join(REPO_ROOT, "conf", ".env.example"))
+        env_file = config.get("env-file")
         self._env_file = os.path.abspath(env_file)
         self._env = _load_env_file(self._env_file)
         self._pytest_args = config.get("pytest-args", [])
