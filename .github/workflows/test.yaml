@@ -104,7 +104,7 @@ jobs:
           platforms: arm
       - name: Build lan agent container
         run: |
-          docker buildx build --platform linux/amd64,linux/arm/v6 -f Dockerfile.lanagent . -t juno-lan-agent:latest
+          docker buildx build --platform linux/amd64 --load -f Dockerfile.lanagent . -t juno-lan-agent:latest
       - name: Build conductor container
         run: |
           docker build -f Dockerfile.conductor . -t juno-conductor:latest
@@ -127,4 +127,9 @@ jobs:
         env:
           DOCKER_USER: ${{ secrets.DOCKER_AUTH_USER }}
           DOCKER_TOKEN: ${{ secrets.DOCKER_AUTH_TOKEN }}
-        run: ./cicd/push-images.sh
+        run: |
+          echo $DOCKER_TOKEN | docker login --username $DOCKER_USER --password-stdin
+          docker buildx build --platform linux/amd64,linux/arm/v6 --push \
+            -f Dockerfile.lanagent . -t $DOCKER_USER/juno-lan-agent:latest
+          docker tag juno-conductor $DOCKER_USER/juno-conductor
+          docker push $DOCKER_USER/juno-conductor

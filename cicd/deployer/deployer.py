@@ -47,7 +47,10 @@ class Deployer(object):
             return
 
         self._cmd(
-            f"git clone {JUNO_REPO} {TARGET_PATH} > {LOG_FILE} 2>&1 && cd {TARGET_PATH} && git pull origin main > {LOG_FILE} 2>&1")
+            f"git -C {TARGET_PATH} reset --hard HEAD > {LOG_FILE} 2>&1 "
+            f"&& git -C {TARGET_PATH} pull origin main >> {LOG_FILE} 2>&1 "
+            f"|| git clone {JUNO_REPO} {TARGET_PATH} > {LOG_FILE} 2>&1"
+        )
         print("-- Repo cloned")
 
         self._cmd(
