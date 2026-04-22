@@ -42,7 +42,7 @@ if [[ "${TYPE}" == "core" ]]; then
     cp conf/postgres/init.sql "${DEPLOY_DIR}/init.sql"
     cp -rf cicd/template/grafana* "${DEPLOY_DIR}/"
 else
-    export JUNO_LOKI_URL="${JUNO_CORE_ADDR}:${JUNO_NGINX_PORT}/_internal/loki"
+    export JUNO_LOKI_URL="${JUNO_CORE_ADDR}:${JUNO_NGINX_PORT}/_loki"
 
     DEPLOY_DIR="deployments/edge/${DEPLOYMENT_NAME}"
     TEMPLATES=(
