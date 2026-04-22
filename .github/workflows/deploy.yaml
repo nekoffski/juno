@@ -17,9 +17,6 @@ on:
       server_id:
         description: "Server ID (leave empty to use CI_JUNO_DEPLOY_SERVER_ID secret)"
         required: false
-      deployment_token:
-        description: "Deployment token (leave empty to use CI_JUNO_DEPLOYMENT_TOKEN secret)"
-        required: false
       deployment_env_template:
         description: "Deployment env template (leave empty to use CI_JUNO_DEPLOYMENT_ENV_TEMPLATE secret)"
         required: false
@@ -28,9 +25,15 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     env:
-      JUNO_DEPLOYMENT_TOKEN: ${{ inputs.deployment_token || secrets.CI_JUNO_DEPLOYMENT_TOKEN }}
+      JUNO_DEPLOYMENT_TOKEN: ${{ secrets.CI_JUNO_DEPLOYMENT_TOKEN }}
       JUNO_DEPLOYMENT_ENV_TEMPLATE: ${{ inputs.deployment_env_template || secrets.CI_JUNO_DEPLOYMENT_ENV_TEMPLATE }}
     steps:
+      - name: Mask sensitive inputs
+        run: |
+          echo "::add-mask::${{ inputs.api_url || secrets.CI_JUNO_DEPLOY_API_URL }}"
+          echo "::add-mask::${{ inputs.server_id || secrets.CI_JUNO_DEPLOY_SERVER_ID }}"
+          echo "::add-mask::${{ inputs.deployment_env_template || secrets.CI_JUNO_DEPLOYMENT_ENV_TEMPLATE }}"
+
       - uses: actions/checkout@v5
 
       - name: Set up Python
