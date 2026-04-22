@@ -24,7 +24,7 @@ if [[ "${DEPLOYMENT_TYPE}" == "core" ]]; then
     popd 
 else
     EDGE_HOST=10.66.66.2
-    scp -r "${DEPLOYMENT_DIR}" "juno@${EDGE_HOST}:/home/juno/${DEPLOYMENT_NAME}"
+    scp -r "${DEPLOYMENT_DIR}" "juno@${EDGE_HOST}:/home/juno"
 
     DEPLOY_CMD="cd /home/juno/${DEPLOYMENT_NAME} \
      && docker compose --project-name juno -f docker-compose.${DEPLOYMENT_TYPE}.yaml down -v --remove-orphans \

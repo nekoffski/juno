@@ -1,0 +1,55 @@
+name: Juno Deploy Pipeline
+
+on:
+  workflow_dispatch:
+    inputs:
+      type:
+        description: "Deployment type"
+        required: true
+        type: choice
+        options:
+          - core
+          - edge
+          - both
+      api_url:
+        description: "Deployer API URL (leave empty to use CI_JUNO_DEPLOY_API_URL secret)"
+        required: false
+      server_id:
+        description: "Server ID (leave empty to use CI_JUNO_DEPLOY_SERVER_ID secret)"
+        required: false
+      deployment_token:
+        description: "Deployment token (leave empty to use CI_JUNO_DEPLOYMENT_TOKEN secret)"
+        required: false
+      deployment_env_template:
+        description: "Deployment env template (leave empty to use CI_JUNO_DEPLOYMENT_ENV_TEMPLATE secret)"
+        required: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      JUNO_DEPLOYMENT_TOKEN: ${{ inputs.deployment_token || secrets.CI_JUNO_DEPLOYMENT_TOKEN }}
+      JUNO_DEPLOYMENT_ENV_TEMPLATE: ${{ inputs.deployment_env_template || secrets.CI_JUNO_DEPLOYMENT_ENV_TEMPLATE }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Deploy core
+        if: ${{ inputs.type == 'core' || inputs.type == 'both' }}
+        run: |
+          ./cicd/deploy.sh \
+            --api-url "${{ inputs.api_url || secrets.CI_JUNO_DEPLOY_API_URL }}" \
+            --type core \
+            --server-id "${{ inputs.server_id || secrets.CI_JUNO_DEPLOY_SERVER_ID }}"
+
+      - name: Deploy edge
+        if: ${{ inputs.type == 'edge' || inputs.type == 'both' }}
+        run: |
+          ./cicd/deploy.sh \
+            --api-url "${{ inputs.api_url || secrets.CI_JUNO_DEPLOY_API_URL }}" \
+            --type edge \
+            --server-id "${{ inputs.server_id || secrets.CI_JUNO_DEPLOY_SERVER_ID }}"
