@@ -1,16 +1,23 @@
 {{define "devices.html"}}
 <div hx-ext="sse" sse-connect="/sse">
-  {{if not .}}
-    <div class="empty-state">
-      <span class="empty-state__icon">⊙</span>
-      <span class="empty-state__text">No devices found</span>
-    </div>
-  {{else}}
-  <div class="devices-grid">
+  <div class="devices-toolbar">
+    <button class="btn-discover"
+      hx-post="/discover"
+      hx-swap="none"
+      hx-indicator=".discover-spinner">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <span>Discover</span>
+      <span class="discover-spinner htmx-indicator"></span>
+    </button>
+  </div>
+
+  <div id="devices-grid" class="devices-grid" sse-swap="device.added" hx-swap="beforeend">
     {{range .}}
       {{template "device_widget.html" .}}
     {{end}}
   </div>
-  {{end}}
 </div>
 {{end}}

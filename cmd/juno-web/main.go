@@ -73,6 +73,7 @@ func main() {
 	e.GET("/tabs/metrics", h.MetricsTab)
 	e.GET("/tabs/events", h.EventsTab)
 	e.POST("/device/:id/action/:action", h.PerformAction)
+	e.POST("/discover", h.Discover)
 	e.GET("/sse", h.SSE)
 
 	log.Fatal().Err(e.Start(fmt.Sprintf(":%d", webPort))).Msg("web server stopped")

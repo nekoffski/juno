@@ -38,17 +38,24 @@ func newSSEHandler(mb *bus.MessageBus) echo.HandlerFunc {
 				if !ok {
 					return nil
 				}
-				e, ok := ev.(device.DeviceUpdatedEvent)
-				if !ok {
-					continue
+				switch e := ev.(type) {
+				case device.DeviceUpdatedEvent:
+					d := convertDeviceModel(&e.Device)
+					data, err := json.Marshal(d)
+					if err != nil {
+						continue
+					}
+					fmt.Fprintf(w, "event: device.updated\ndata: %s\n\n", data)
+					flusher.Flush()
+				case device.DeviceAddedEvent:
+					d := convertDeviceModel(&e.Device)
+					data, err := json.Marshal(d)
+					if err != nil {
+						continue
+					}
+					fmt.Fprintf(w, "event: device.added\ndata: %s\n\n", data)
+					flusher.Flush()
 				}
-				d := convertDeviceModel(&e.Device)
-				data, err := json.Marshal(d)
-				if err != nil {
-					continue
-				}
-				fmt.Fprintf(w, "event: device.updated\ndata: %s\n\n", data)
-				flusher.Flush()
 			case <-ctx.Done():
 				return nil
 			}

@@ -272,6 +272,8 @@ func (s *DeviceService) addDevice(ctx context.Context, addr DeviceAddr, vendor D
 	s.devicesMtx.Lock()
 	s.devices[addr] = dev
 	s.devicesMtx.Unlock()
+
+	_ = s.publisher.Publish("device.events", DeviceAddedEvent{Device: dev.Model()})
 }
 
 func (s *DeviceService) discover(ctx context.Context) error {

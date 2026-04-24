@@ -57,6 +57,14 @@ func (h *Handlers) DevicesTab(c echo.Context) error {
 	return h.tmpl.ExecuteTemplate(c.Response().Writer, "devices.html", devices)
 }
 
+func (h *Handlers) Discover(c echo.Context) error {
+	_, err := h.client.Post(h.restBase+"/device/discover", "application/json", nil)
+	if err != nil {
+		return fmt.Errorf("could not trigger discovery: %w", err)
+	}
+	return c.NoContent(http.StatusAccepted)
+}
+
 func (h *Handlers) MetricsTab(c echo.Context) error {
 	c.Response().Header().Set("Content-Type", "text/html; charset=utf-8")
 	return h.tmpl.ExecuteTemplate(c.Response().Writer, "metrics.html", nil)
@@ -187,13 +195,28 @@ func (h *Handlers) SSE(c echo.Context) error {
 		case strings.HasPrefix(line, "data:"):
 			dataLine = strings.TrimSpace(strings.TrimPrefix(line, "data:"))
 		case line == "" && eventType != "" && dataLine != "":
-			if eventType == "device.updated" {
+			switch eventType {
+			case "device.updated":
 				var d Device
 				if err := json.Unmarshal([]byte(dataLine), &d); err == nil {
 					var buf bytes.Buffer
 					if err := h.tmpl.ExecuteTemplate(&buf, "device_widget.html", d); err == nil {
 						html := buf.String()
 						fmt.Fprintf(w, "event: device-%d\n", d.Id)
+						for _, l := range strings.Split(html, "\n") {
+							fmt.Fprintf(w, "data: %s\n", l)
+						}
+						fmt.Fprint(w, "\n")
+						flusher.Flush()
+					}
+				}
+			case "device.added":
+				var d Device
+				if err := json.Unmarshal([]byte(dataLine), &d); err == nil {
+					var buf bytes.Buffer
+					if err := h.tmpl.ExecuteTemplate(&buf, "device_widget.html", d); err == nil {
+						html := buf.String()
+						fmt.Fprint(w, "event: device.added\n")
 						for _, l := range strings.Split(html, "\n") {
 							fmt.Fprintf(w, "data: %s\n", l)
 						}
