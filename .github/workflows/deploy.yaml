@@ -11,12 +11,6 @@ on:
           - core
           - edge
           - both
-      api_url:
-        description: "Deployer API URL (leave empty to use CI_JUNO_DEPLOY_API_URL secret)"
-        required: false
-      server_id:
-        description: "Server ID (leave empty to use CI_JUNO_DEPLOY_SERVER_ID secret)"
-        required: false
       deployment_env_template:
         description: "Deployment env template (leave empty to use CI_JUNO_DEPLOYMENT_ENV_TEMPLATE secret)"
         required: false
@@ -30,8 +24,9 @@ jobs:
     steps:
       - name: Mask sensitive inputs
         run: |
-          echo "::add-mask::${{ inputs.api_url || secrets.CI_JUNO_DEPLOY_API_URL }}"
-          echo "::add-mask::${{ inputs.server_id || secrets.CI_JUNO_DEPLOY_SERVER_ID }}"
+          echo "::add-mask::${{ secrets.CI_JUNO_DEPLOY_API_URL }}"
+          echo "::add-mask::${{ secrets.CI_JUNO_DEPLOY_SERVER_ID }}"
+          echo "::add-mask::${{ secrets.CI_JUNO_DEPLOYMENT_TOKEN }}"
           echo "::add-mask::${{ inputs.deployment_env_template || secrets.CI_JUNO_DEPLOYMENT_ENV_TEMPLATE }}"
 
       - uses: actions/checkout@v5
@@ -45,14 +40,14 @@ jobs:
         if: ${{ inputs.type == 'core' || inputs.type == 'both' }}
         run: |
           ./cicd/deploy.sh \
-            --api-url "${{ inputs.api_url || secrets.CI_JUNO_DEPLOY_API_URL }}" \
+            --api-url "${{ secrets.CI_JUNO_DEPLOY_API_URL }}" \
             --type core \
-            --server-id "${{ inputs.server_id || secrets.CI_JUNO_DEPLOY_SERVER_ID }}"
+            --server-id "${{ secrets.CI_JUNO_DEPLOY_SERVER_ID }}"
 
       - name: Deploy edge
         if: ${{ inputs.type == 'edge' || inputs.type == 'both' }}
         run: |
           ./cicd/deploy.sh \
-            --api-url "${{ inputs.api_url || secrets.CI_JUNO_DEPLOY_API_URL }}" \
+            --api-url "${{ secrets.CI_JUNO_DEPLOY_API_URL }}" \
             --type edge \
-            --server-id "${{ inputs.server_id || secrets.CI_JUNO_DEPLOY_SERVER_ID }}"
+            --server-id "${{ secrets.CI_JUNO_DEPLOY_SERVER_ID }}"

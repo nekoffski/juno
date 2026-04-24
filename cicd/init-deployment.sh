@@ -11,7 +11,7 @@ if [[ "${DEPLOYMENT_TYPE}" != "core" && "${DEPLOYMENT_TYPE}" != "edge" ]]; then
     exit 1
 fi
 
-./cicd/recreate-env.sh ${ENV_TEMPLATE} .env
+./cicd/recreate-env.sh "${ENV_TEMPLATE}" .env
 ./cicd/generate-deployment.sh $DEPLOYMENT_NAME .env ${DEPLOYMENT_TYPE}
 
 DEPLOYMENT_DIR="deployments/${DEPLOYMENT_TYPE}/${DEPLOYMENT_NAME}"

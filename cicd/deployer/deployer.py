@@ -92,7 +92,7 @@ class Deployer(object):
         res = requests.post(url, data=args, headers=headers)
         if res.status_code != 200:
             raise RuntimeError(
-                f"Request failed with status code {res.status_code}: {res.text}")
+                f"Request failed with status code {res.status_code}")
         return res.json()
 
 
